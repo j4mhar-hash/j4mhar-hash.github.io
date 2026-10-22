@@ -43,6 +43,9 @@ button:disabled{opacity:.5;cursor:default}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 #toggle{display:none}
 .toast{position:absolute;z-index:1100;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;display:none;max-width:90%}
+#hint{position:absolute;z-index:1100;top:12px;right:58px;left:12px;margin-left:auto;max-width:420px;background:#0f172a;color:#fff;padding:8px 12px;border-radius:999px;font-size:13px;text-align:center;box-shadow:0 4px 16px rgba(15,23,42,.25);pointer-events:none}
+#hint.error{background:#991b1b}
+#hint button{pointer-events:auto;margin-left:8px;padding:3px 8px;border-radius:999px;background:#fff;color:#0f172a;font-weight:600}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
 .popup a{color:var(--accent)}
 .mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
@@ -52,7 +55,8 @@ input[type=range]{flex:1}
   #panel.collapsed .tabs,#panel.collapsed .body{display:none}
   #toggle{display:inline-block}
   .leaflet-top.leaflet-left{top:0}
-  .toast{bottom:auto;top:14px}
+  .toast{bottom:auto;top:58px}
+  #hint{left:10px;right:58px;max-width:none}
 }
 </style>
 </head>
@@ -90,10 +94,11 @@ input[type=range]{flex:1}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="hint">Loading chargers…</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="data/uk-chargers.js"></script><!-- optional offline snapshot; app still works without it -->
+<script src="data/uk-chargers.js" onerror="window.__chargersFailed=1"></script><!-- UK snapshot; app shows an error if this fails -->
 <script>
 'use strict';
 // ---------- config ----------
@@ -102,6 +107,7 @@ const AUTO_ZOOM = 11; // chargers load automatically for the visible area from t
 const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
 const LIVE_URL = (window.EVMAP_LIVE_URL) || (location.protocol.startsWith('http') ? '/api/live' : null);
 const UK = L.latLngBounds([49.6,-11.5],[61.2,2.3]);
+const HOME = L.latLngBounds([49.9,-8.2],[56.2,1.8]); // Britain, sized so a phone can see it above the sheet
 const BANDS = [
   {id:'slow', label:'Slow <7kW', color:'var(--slow)', hex:'#3b82f6'},
   {id:'fast', label:'Fast 7–22kW', color:'var(--fast)', hex:'#10b981'},
@@ -145,7 +151,7 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
   if(t['payment:contactless']==='yes') o.cl=1; return o; }
 
 // ---------- map ----------
-const map = L.map('map', {preferCanvas:true, zoomControl:false, maxBounds:UK.pad(0.3), minZoom:5}).fitBounds(UK);
+const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
@@ -219,6 +225,66 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
     <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : 'OpenStreetMap'}</div></div>`; }
 
 let visible=[];
+let dataError = null;
+function mapPad(){
+  if(innerWidth>700 || $('#panel').classList.contains('collapsed')) return {paddingTopLeft:[16,16], paddingBottomRight:[16,16]};
+  const h = Math.round($('#panel').getBoundingClientRect().height);
+  return {paddingTopLeft:[8,8], paddingBottomRight:[8, h+8]};
+}
+function fitUk(){
+  // The phone sheet covers the lower map. Fit the UK into the visible strip, at the
+  // closest zoom that still fits, then keep panning inside a loose UK limit.
+  map.setMaxBounds(null);
+  const pad=mapPad();
+  if(!(innerWidth<=700 && !$('#panel').classList.contains('collapsed'))){
+    map.fitBounds(UK, Object.assign({animate:false}, pad));
+    map.setMaxBounds(UK.pad(0.6));
+    return;
+  }
+  const size=map.getSize();
+  const top=pad.paddingTopLeft[1], bottom=size.y-pad.paddingBottomRight[1];
+  const availH=bottom-top, availW=size.x-pad.paddingTopLeft[0]-pad.paddingBottomRight[0];
+  let best=map.getMinZoom();
+  for(let z=map.getMinZoom(); z<=8; z++){
+    const nw=map.project(HOME.getNorthWest(), z), se=map.project(HOME.getSouthEast(), z);
+    if(Math.abs(se.y-nw.y)<=availH && Math.abs(se.x-nw.x)<=availW) best=z;
+  }
+  map.setView(HOME.getCenter(), best, {animate:false});
+  const nw=map.latLngToContainerPoint(HOME.getNorthWest()), se=map.latLngToContainerPoint(HOME.getSouthEast());
+  map.panBy([(nw.x+se.x)/2-size.x/2, (nw.y+se.y)/2-(top+bottom)/2], {animate:false});
+  const limit=L.latLngBounds(UK.getSouthWest(), UK.getNorthEast());
+  const view=map.getBounds();
+  limit.extend(view.getSouthWest()); limit.extend(view.getNorthEast());
+  map.setMaxBounds(limit.pad(0.25));
+}
+// Keep a searched place in the part of the map that is not covered by the phone sheet.
+function showAt(lat, lon, zoom){
+  map.setView([lat, lon], zoom, {animate:false});
+  if(innerWidth<=700 && !$('#panel').classList.contains('collapsed')){
+    const size=map.getSize(), pad=mapPad().paddingBottomRight[1];
+    map.panBy([0, size.y/2 - (size.y-pad)/2], {animate:false});
+  }
+}
+function sightBounds(){
+  const size=map.getSize();
+  const covered=innerWidth<=700 && !$('#panel').classList.contains('collapsed');
+  const bottom=covered ? Math.max(48, $('#panel').getBoundingClientRect().top) : size.y;
+  return L.latLngBounds(map.containerPointToLatLng([0,0]), map.containerPointToLatLng([size.x, bottom]));
+}
+function inSight(list){ const b=sightBounds(); return list.filter(s=>b.contains([s.a,s.o])); }
+function setHint(msg, kind, onRetry){
+  const h=$('#hint'); h.className=kind||'';
+  if(!msg){ h.style.display='none'; h.textContent=''; return; }
+  h.style.display='block'; h.textContent=msg;
+  if(onRetry){ const b=document.createElement('button'); b.type='button'; b.textContent='Retry'; b.onclick=onRetry; h.appendChild(b); }
+}
+function updateHint(){
+  const n=inSight(visible).length;
+  if(dataError && n===0 && loading===0){ setHint(dataError, 'error', ()=>{ dataError=null; loadArea(true); }); return; }
+  if(loading>0 && n===0){ setHint('Loading chargers…'); return; }
+  if(map.getZoom()<AUTO_ZOOM && !state.route){ setHint('Zoom in to see chargers'); return; }
+  setHint('');
+}
 function rebuild(){
   cluster.clearLayers();
   const pool = state.route ? state.route.hits : stations;
@@ -229,14 +295,16 @@ function rebuild(){
 function kwBadge(s){ const b=bandOf(s); return `<span class="kw" style="background:${BAND[b].hex}">${s.k? Math.round(s.k)+' kW' : isEst(s)? 'DC?' : '?'}</span>`; }
 function itemHtml(s, extra){ return `<div class="item" data-id="${esc(s.id)}">${kwBadge(s)}<div><b>${esc(s.n||'EV charger')}</b><span class="small">${esc([s.op, s.ad].filter(Boolean).join(' · '))}${extra||''}</span> ${liveBadge(s)}</div></div>`; }
 const updateLists = debounce(()=>{
-    const bnd=map.getBounds(); const inView=visible.filter(s=>bnd.contains([s.a,s.o]));
+  const inView=inSight(visible);
   const counts={}; for(const s of inView){ const b=bandOf(s); counts[b]=(counts[b]||0)+1; }
-  $('#viewStat').innerHTML = map.getZoom()<AUTO_ZOOM && !state.route ? `Search a place or zoom in to load chargers for that area.${inView.length?` <b>${inView.length.toLocaleString()}</b> already loaded in view.`:''}`
+  $('#viewStat').innerHTML = dataError && !inView.length && !loading ? esc(dataError)
+    : map.getZoom()<AUTO_ZOOM && !state.route ? `Zoom in to see chargers.${inView.length?` <b>${inView.length.toLocaleString()}</b> on the map.`:''}`
     : `<b>${inView.length.toLocaleString()}</b> chargers in view<div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`;
   const c=map.getCenter();
   const near = map.getZoom()>=10 ? inView.map(s=>[kmBetween(c.lat,c.lng,s.a,s.o),s]).sort((x,y)=>x[0]-y[0]).slice(0,40) : [];
   $('#viewList').innerHTML = near.map(([d,s])=>itemHtml(s, ` · ${d.toFixed(1)} km from centre`)).join('');
   if(state.route) renderRouteList();
+  updateHint();
 }, 250);
 map.on('moveend', updateLists);
 function focusStation(id){ const s=byId.get(id)||state.route?.hits.find(x=>x.id===id); if(!s) return;
@@ -254,7 +322,7 @@ $('#est').onchange=e=>{ state.est=e.target.checked; rebuild(); };
 $('#liveOnly').onchange=e=>{ state.liveOnly=e.target.checked; rebuild(); };
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); });
-$('#toggle').onclick=()=>$('#panel').classList.toggle('collapsed');
+$('#toggle').onclick=()=>{ $('#panel').classList.toggle('collapsed'); updateLists(); };
 
 // ---------- geocoding (postcodes.io for UK postcodes, Nominatim otherwise; no autocomplete per Nominatim policy) ----------
 const PC = /^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})?$/i;
@@ -277,24 +345,27 @@ async function doSearch(){
     $('#qres').onclick=e=>{ const d=e.target.closest('[data-i]'); if(d){ $('#qres').hidden=true; goTo(res[+d.dataset.i]); } };
   }catch(err){ toast(err.message); } }
 function goTo(r){ searchLayer.clearLayers(); L.marker([r.lat,r.lon]).addTo(searchLayer).bindTooltip(r.name.split(',')[0]);
-  if(r.bbox){ const [s,n,w,e]=r.bbox.map(Number); const b=L.latLngBounds([s,w],[n,e]); if(kmBetween(s,w,n,e)<40) { map.fitBounds(b,{maxZoom:14}); if(map.getZoom()<12) map.setZoom(12); return; } }
-  map.setView([r.lat,r.lon],13); }
+  if(r.bbox){ const [s,n,w,e]=r.bbox.map(Number); const b=L.latLngBounds([s,w],[n,e]); if(kmBetween(s,w,n,e)<40) { map.fitBounds(b, Object.assign({maxZoom:14, animate:false}, mapPad())); if(map.getZoom()<12) showAt(r.lat,r.lon,12); return; } }
+  showAt(r.lat,r.lon,13); }
 $('#qgo').onclick=doSearch; map.on('click',()=>$('#qres').hidden=true); $('#q').onkeydown=e=>{ if(e.key==='Enter') doSearch(); };
 function myLocation(){ return new Promise((res,rej)=>navigator.geolocation? navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude,name:'My location'}),()=>rej(new Error('Location unavailable')),{timeout:10000}) : rej(new Error('Location unavailable'))); }
 $('#locate').onclick=async()=>{ try{ const p=await myLocation(); goTo(p); }catch(e){ toast(e.message);} };
 $('#fromMe').onclick=()=>{ $('#from').value='My location'; };
 
 // ---------- Overpass: on-demand loading for the visible area ----------
+function abortAfter(ms){ try{ return (typeof AbortSignal!=='undefined' && AbortSignal.timeout) ? AbortSignal.timeout(ms) : undefined; }catch{ return undefined; } }
 async function overpass(q){ let lastErr;
   // /api/overpass only exists with server.js. On Pages it 404s (often as HTML); drop it and use public mirrors.
+  // Saved UK data is enough to draw the map, so a public mirror is only tried once and with a short timeout.
   const urls=OVERPASS.slice();
-  for(let round=0; round<2; round++) for(const url of urls){ if(round && url.startsWith('/')) continue; if(!OVERPASS.includes(url)) continue; try{ const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:AbortSignal.timeout(url.startsWith('/')?500000:45000)});
+  const rounds=window.UK_CHARGERS?1:2;
+  for(let round=0; round<rounds; round++) for(const url of urls){ if(round && url.startsWith('/')) continue; if(!OVERPASS.includes(url)) continue; try{ const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:abortAfter(url.startsWith('/')?120000:12000)});
       const ct=r.headers.get('content-type')||'';
       if(r.status===404||r.status===405||ct.includes('text/html')){ if(url.startsWith('/')){ const i=OVERPASS.indexOf(url); if(i>=0) OVERPASS.splice(i,1); } continue; }
       if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); if(j.remark&&/runtime error|timed out/i.test(j.remark)) throw new Error(j.remark); return j; }catch(e){ lastErr=e; } }
-  throw new Error('OpenStreetMap servers are busy ('+(lastErr?.message||'')+'). Try again in a minute.'); }
+  throw new Error('OpenStreetMap servers are busy ('+(lastErr?.message||'')+'). Showing saved chargers.'); }
 const CELL=0.1, loadedCells=new Set(); let loading=0;
-function setLoading(d){ loading+=d; $('#refreshArea').disabled=loading>0; $('#refreshArea').textContent=loading>0?(window.UK_CHARGERS?'Checking OSM for newer data…':'Loading chargers…'):'↻ Update this area from OSM'; }
+function setLoading(d){ loading+=d; $('#refreshArea').disabled=loading>0; $('#refreshArea').textContent=loading>0?(window.UK_CHARGERS?'Checking OSM for newer data…':'Loading chargers…'):'↻ Update this area from OSM'; updateHint(); }
 async function loadArea(force){
   if(map.getZoom()<AUTO_ZOOM && !force){ updateLists(); return; }
   const b=map.getBounds();
@@ -307,8 +378,12 @@ async function loadArea(force){
   setLoading(1);
   try{ const j=await overpass(`[out:json][timeout:40];nwr["amenity"="charging_station"](${bb});out center tags;`);
     for(const [y,x] of miss) loadedCells.add(y+':'+x);
-    addOsm(j.elements.map(compactOsm).filter(Boolean)); rebuild(); if(force) toast(`Updated: ${j.elements.length} chargers in this area`);
-  }catch(e){ if(force||!window.UK_CHARGERS) toast(e.message,6000); } finally{ setLoading(-1); } }
+    addOsm(j.elements.map(compactOsm).filter(Boolean)); dataError=null; rebuild(); if(force) toast(`Updated: ${j.elements.length} chargers in this area`);
+  }catch(e){
+    const empty=!inSight(stations.filter(passes)).length;
+    if(empty){ dataError=e.message||"Couldn't load chargers for this area."; updateHint(); }
+    else if(force) toast(e.message,6000);
+  } finally{ setLoading(-1); } }
 $('#refreshArea').onclick=()=>loadArea(true);
 map.on('moveend', debounce(()=>{ if(!state.route) loadArea(false); }, 700));
 // load chargers along a route: Overpass "around" a polyline, in chunks
@@ -337,11 +412,11 @@ async function planRoute(){
     routeLayer.clearLayers(); searchLayer.clearLayers();
     L.polyline(coords,{color:'#fff',weight:9,opacity:.9}).addTo(routeLayer); L.polyline(coords,{color:'#0ea5e9',weight:5}).addTo(routeLayer);
     L.marker([a.lat,a.lon]).addTo(routeLayer).bindTooltip('Start: '+a.name.split(',')[0]); L.marker([b.lat,b.lon]).addTo(routeLayer).bindTooltip('End: '+b.name.split(',')[0]);
-    map.fitBounds(L.latLngBounds(coords),{padding:[30,30]});
+    map.fitBounds(L.latLngBounds(coords), Object.assign({animate:false}, mapPad()));
     const want=Math.max(+$('#corr').value,3), R=state.route; R.loadedKm=0;
     computeCorridor(); // instant result from data already loaded / snapshot
     loadCorridor(coords, want).then(()=>{ R.loadedKm=want; if(state.route===R) computeCorridor(); })
-      .catch(e=>{ if(!window.UK_CHARGERS) toast(e.message+' Showing chargers already loaded.',7000); });
+      .catch(e=>{ if(!(state.route&&state.route.hits&&state.route.hits.length)){ dataError=e.message||"Couldn't load chargers along this route."; updateHint(); } });
   }catch(e){ toast(e.message,5000); } finally{ $('#routeGo').disabled=false; $('#routeGo').textContent='Show chargers on route'; } }
 function computeCorridor(){
   const R=state.route, W=+$('#corr').value; const pts=R.coords; const lat0=pts[0][0]*Math.PI/180;
@@ -372,8 +447,10 @@ $('#routeGo').onclick=planRoute; $('#to').onkeydown=e=>{ if(e.key==='Enter') pla
 $('#routeClear').onclick=()=>{ state.route=null; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
 
 // ---------- start ----------
-$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in snapshot: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from OpenStreetMap (${esc(UK_CHARGERS.regions||'UK')}), built ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'On top of that, the latest OpenStreetMap data is fetched live (Overpass) for the area you view (zoom 11+) and along routes, whenever those servers respond.';
-rebuild(); loadLive();
+if(!window.UK_CHARGERS || !UK_CHARGERS.items || !UK_CHARGERS.items.length) dataError="Couldn't load charger data. Zoom in and tap Retry.";
+fitUk();
+$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites across ${esc(UK_CHARGERS.regions||'the UK')} from OpenStreetMap, saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.';
+rebuild(); updateHint(); loadLive();
 // URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
 const P=new URLSearchParams(location.search);
 if(P.get('corridor')){ $('#corr').value=P.get('corridor'); $('#corrVal').textContent=P.get('corridor')+' km'; }
