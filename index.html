@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UK EV Charger Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<style>
+:root{--slow:#3b82f6;--fast:#10b981;--rapid:#f59e0b;--ultra:#a21caf;--unknown:#94a3b8;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#fff;--accent:#0ea5e9}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+#map{position:absolute;inset:0}
+#panel{position:absolute;z-index:1000;top:12px;left:12px;width:360px;max-height:calc(100% - 24px);display:flex;flex-direction:column;background:var(--bg);border-radius:14px;box-shadow:0 6px 24px rgba(15,23,42,.18);overflow:hidden}
+#panel header{padding:12px 14px 8px;display:flex;align-items:center;gap:8px}
+#panel h1{font-size:16px;margin:0;flex:1}
+#panel h1 span{color:var(--accent)}
+.search{display:flex;gap:6px;padding:0 14px 10px;position:relative}
+input[type=text]{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+input[type=text]:focus{outline:2px solid var(--accent);border-color:transparent}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.results{position:absolute;top:42px;left:14px;right:14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:240px;overflow:auto}
+.results div{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line)}.results div:hover{background:#f1f5f9}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:8px 10px;color:var(--muted);font-weight:600}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.body{overflow:auto;padding:10px 14px 14px}
+.sec{margin-bottom:12px}.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);font-size:13px;cursor:pointer;user-select:none;background:#fff}
+.chip.on{background:#0f172a;color:#fff;border-color:#0f172a}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.small{font-size:12px;color:var(--muted)}
+.list{border-top:1px solid var(--line)}
+.item{padding:8px 2px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.item:hover{background:#f8fafc}.item b{display:block;font-weight:600}
+.kw{font-weight:700;font-size:12px;padding:2px 6px;border-radius:6px;color:#fff;white-space:nowrap}
+.stat{margin:8px 0;padding:8px 10px;background:#f1f5f9;border-radius:9px}
+.live{font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px}
+.live.ok{background:#dcfce7;color:#166534}.live.bad{background:#fee2e2;color:#991b1b}.live.busy{background:#fef3c7;color:#92400e}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+#toggle{display:none}
+.toast{position:absolute;z-index:1100;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;display:none;max-width:90%}
+.popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
+.popup a{color:var(--accent)}
+.mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+input[type=range]{flex:1}
+@media (max-width:700px){
+  #panel{top:auto;bottom:0;left:0;right:0;width:auto;border-radius:16px 16px 0 0;max-height:62%;padding-bottom:env(safe-area-inset-bottom)}
+  #panel.collapsed .tabs,#panel.collapsed .body{display:none}
+  #toggle{display:inline-block}
+  .leaflet-top.leaflet-left{top:0}
+  .toast{bottom:auto;top:14px}
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="panel">
+  <header><h1>⚡ UK <span>EV</span> Charger Map</h1><button id="locate" title="Use my location">◎</button><button id="toggle" title="Show/hide panel">▾</button></header>
+  <div class="search"><input id="q" type="text" placeholder="Search a town, place or postcode" autocomplete="off"><button id="qgo" class="primary">Go</button><div id="qres" class="results" hidden></div></div>
+  <div class="tabs"><button data-tab="explore" class="on">Explore</button><button data-tab="route">Route</button><button data-tab="about">Data</button></div>
+  <div class="body">
+    <div class="sec"><h3>Charger power</h3><div class="chips" id="bands"></div>
+      <label class="small" style="display:block;margin-top:6px"><input type="checkbox" id="est" checked> Treat untagged DC sites (CCS/CHAdeMO) as rapid (estimated)</label></div>
+    <div class="sec"><h3>Connector</h3><div class="chips" id="conns"></div><div class="small" style="margin-top:4px">None selected = any connector (incl. sites with no connector info)</div></div>
+    <div class="sec" id="liveSec" hidden><h3>Live status</h3><label class="small"><input type="checkbox" id="liveOnly"> Only show chargers with live status</label> <span class="small" id="liveInfo"></span></div>
+
+    <div data-pane="explore">
+      <div class="stat" id="viewStat">Loading chargers…</div>
+      <div class="row"><button id="refreshArea" title="Fetch the latest OpenStreetMap data for this area">↻ Update this area from OSM</button></div>
+      <div class="list" id="viewList"></div>
+    </div>
+    <div data-pane="route" hidden>
+      <div class="row"><input id="from" type="text" placeholder="From (place or postcode)"><button id="fromMe" title="Use my location">◎</button></div>
+      <div class="row"><input id="to" type="text" placeholder="To (place or postcode)"></div>
+      <div class="row"><span class="small">Corridor</span><input id="corr" type="range" min="0.5" max="10" step="0.5" value="3"><span id="corrVal" class="small" style="width:44px">3 km</span></div>
+      <div class="row"><button id="routeGo" class="primary" style="flex:1">Show chargers on route</button><button id="routeClear">Clear</button></div>
+      <div class="stat" id="routeStat" hidden></div>
+      <div class="list" id="routeList"></div>
+    </div>
+    <div data-pane="about" hidden>
+      <p class="small" id="dataInfo"></p>
+      <div class="legend" id="legend"></div>
+      <p class="small">Charger locations: © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL), via Overpass. Live status: open OCPI feeds published under the UK Public Charge Point Regulations 2023 (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
+      <p class="small">Power comes from OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Many sites don't have it tagged; they show as "Unknown" unless a DC connector is tagged, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="data/uk-chargers.js"></script><!-- optional offline snapshot; app still works without it -->
+<script>
+'use strict';
+// ---------- config ----------
+const OVERPASS = (location.protocol.startsWith('http') ? ['/api/overpass'] : []).concat(['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter']); // '/api/overpass' = caching proxy in server.js (skipped automatically if absent)
+const AUTO_ZOOM = 11; // chargers load automatically for the visible area from this zoom level
+const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
+const LIVE_URL = (window.EVMAP_LIVE_URL) || (location.protocol.startsWith('http') ? '/api/live' : null);
+const UK = L.latLngBounds([49.6,-11.5],[61.2,2.3]);
+const BANDS = [
+  {id:'slow', label:'Slow <7kW', color:'var(--slow)', hex:'#3b82f6'},
+  {id:'fast', label:'Fast 7–22kW', color:'var(--fast)', hex:'#10b981'},
+  {id:'rapid', label:'Rapid 23–99kW', color:'var(--rapid)', hex:'#f59e0b'},
+  {id:'ultra', label:'Ultra 100kW+', color:'var(--ultra)', hex:'#a21caf'},
+  {id:'unknown', label:'Unknown', color:'var(--unknown)', hex:'#94a3b8'}];
+const BAND = Object.fromEntries(BANDS.map(b=>[b.id,b]));
+const CONNS = {T2:'Type 2', CCS:'CCS', CHA:'CHAdeMO', T1:'Type 1', '3PIN':'3-pin', TSLA:'Tesla'};
+const state = {bands:new Set(['slow','fast','rapid','ultra','unknown']), conns:new Set(), est:true, liveOnly:false, route:null, tab:'explore'};
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT; function toast(msg, ms=3500){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toastT); if(ms) toastT=setTimeout(()=>t.style.display='none',ms); }
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+function bandOf(s){
+  const k=s.k;
+  if (k) return k<7?'slow':k<=22?'fast':k<100?'rapid':'ultra';
+  if (state.est && s.c && s.c.some(c=>c==='CCS'||c==='CHA'||c==='TSLA')) return 'rapid';
+  return 'unknown';
+}
+const isEst = s => !s.k && bandOf(s)!=='unknown';
+function kmBetween(a1,o1,a2,o2){ const r=Math.PI/180, x=(o2-o1)*r*Math.cos((a1+a2)/2*r), y=(a2-a1)*r; return Math.sqrt(x*x+y*y)*6371; }
+
+// ---------- parse OSM (same rules as scripts/build-data.js) ----------
+function parseKw(v){ if(!v) return null; let best=null;
+  for (const part of String(v).split(/[;,/]|\s+x\s+/)){ const m=part.trim().match(/([\d.]+)\s*(kw|kva|w|mw)?/i); if(!m) continue;
+    let n=parseFloat(m[1]); if(!isFinite(n)) continue; const u=(m[2]||'').toLowerCase();
+    if(u==='w'||(!u&&n>1000)) n=n/1000; else if(u==='mw') n*=1000; if(n>0&&n<=1000) best=Math.max(best||0,n); }
+  return best; }
+const OSMCONN={type2:'T2',type2_cable:'T2',type2_combo:'CCS',chademo:'CHA',type1:'T1',type1_combo:'CCS1',bs1363:'3PIN',tesla_supercharger:'TSLA',tesla_destination:'TSLA',tesla_supercharger_ccs:'CCS',schuko:'SCH',type3c:'T3'};
+function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=e.lon??e.center?.lon; if(lat==null) return null;
+  if(['private','no'].includes(t.access)) return null; let kw=null; const conns=new Set();
+  for(const [k,v] of Object.entries(t)){ const m=k.match(/^socket:([a-z0-9_]+)(?::(output|power))?$/);
+    if(m){ if(OSMCONN[m[1]]&&!m[2]&&v!=='0'&&v!=='no') conns.add(OSMCONN[m[1]]); if(m[2]) kw=Math.max(kw||0,parseKw(v)||0)||kw; }
+    if(/^(charging_station:output|maxpower|output|power)$/.test(k)) kw=Math.max(kw||0,parseKw(v)||0)||kw; }
+  const o={id:e.type[0]+e.id,a:+lat.toFixed(5),o:+lon.toFixed(5)}; if(kw) o.k=Math.round(kw*10)/10; if(conns.size) o.c=[...conns];
+  const name=t.name||t.brand||t.operator; if(name) o.n=name; if(t.operator&&t.operator!==name) o.op=t.operator;
+  if(t.capacity) o.cap=t.capacity; if(t.fee) o.fee=t.fee; if(t.access) o.acc=t.access; if(t.opening_hours) o.h=t.opening_hours;
+  const ad=[t['addr:housenumber'],t['addr:street'],t['addr:city']||t['addr:town'],t['addr:postcode']].filter(Boolean).join(' '); if(ad) o.ad=ad;
+  if(t['payment:contactless']==='yes') o.cl=1; return o; }
+
+// ---------- map ----------
+const map = L.map('map', {preferCanvas:true, zoomControl:false, maxBounds:UK.pad(0.3), minZoom:5}).fitBounds(UK);
+L.control.zoom({position:'topright'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+const RANK={unknown:0,slow:1,fast:2,rapid:3,ultra:4};
+const cluster = L.markerClusterGroup({chunkedLoading:true, showCoverageOnHover:false, maxClusterRadius:z=>z>=14?35:55, disableClusteringAtZoom:16,
+  iconCreateFunction(c){ const kids=c.getAllChildMarkers(); let top='unknown'; for(const m of kids){ const b=m.options.band; if(RANK[b]>RANK[top]) top=b; if(top==='ultra') break; }
+    const n=c.getChildCount(), sz=n<10?30:n<100?36:n<1000?42:48;
+    return L.divIcon({html:`<div class="mc" style="width:${sz}px;height:${sz}px;background:${BAND[top].hex}">${n}</div>`, className:'', iconSize:[sz,sz]}); }
+}).addTo(map);
+const routeLayer = L.layerGroup().addTo(map);
+const searchLayer = L.layerGroup().addTo(map);
+
+// ---------- data ----------
+// OSM stations are loaded on demand (visible area / route corridor) and cached in memory.
+// Live OCPI sites (server.js) replace any OSM site within 30 m of them.
+let stations = [];
+const byId = new Map(), osmById = new Map();
+let live = null, liveGrid = new Map();
+const gkey=(a,o)=>Math.round(a*300)+':'+Math.round(o*200);
+function liveMatch(s){ const ka=Math.round(s.a*300), ko=Math.round(s.o*200);
+  for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++) for(const l of liveGrid.get((ka+i)+':'+(ko+j))||[]) if(kmBetween(s.a,s.o,l.a,l.o)<0.03) return l; return null; }
+function addOsm(list){ for(const s of list){ s.src='osm'; const l=liveMatch(s); if(l){ l.osm=s.id; if(!l.c?.length) l.c=s.c; if(!l.cap) l.cap=s.cap; continue; } osmById.set(s.id,s); } recompute(); }
+function recompute(){ stations=[...osmById.values()].concat(live?.items||[]); byId.clear(); for(const s of stations) byId.set(s.id,s); }
+if (window.UK_CHARGERS) addOsm(window.UK_CHARGERS.items); // optional offline snapshot from scripts/build-data.js
+
+function liveUnavailable(note){
+  const sec=$('#liveSec'); sec.hidden=false; sec.style.opacity='.6';
+  const box=$('#liveOnly'); box.disabled=true; box.checked=false; state.liveOnly=false;
+  $('#liveInfo').textContent=note;
+}
+async function loadLive(){
+  // GitHub Pages has no server.js. A missing /api/live must not throw or keep polling.
+  if(!LIVE_URL){ liveUnavailable('Live status needs the local server (node server.js).'); return; }
+  try{ const r=await fetch(LIVE_URL); if(!r.ok){ liveUnavailable("Live status isn't available on this site."); return; } live=await r.json(); }
+  catch{ liveUnavailable("Live status isn't available on this site."); return; }
+  if(!live || !Array.isArray(live.items)){ live=null; liveUnavailable("Live status isn't available on this site."); return; }
+  if(!live.items.length){ $('#liveSec').hidden=false; $('#liveSec').style.opacity=''; $('#liveOnly').disabled=false; $('#liveInfo').textContent='(live feeds loading… '+(live.status||'')+')'; live=null; setTimeout(loadLive,15000); return; }
+  liveGrid=new Map(); for(const l of live.items){ l.src='live'; const k=gkey(l.a,l.o); (liveGrid.get(k)||liveGrid.set(k,[]).get(k)).push(l); }
+  for(const [id,s] of osmById){ const l=liveMatch(s); if(l){ l.osm=id; if(!l.c?.length) l.c=s.c; osmById.delete(id); } }
+  recompute();
+  $('#liveSec').hidden=false; $('#liveSec').style.opacity=''; $('#liveOnly').disabled=false;
+  $('#liveInfo').textContent=`${live.items.length.toLocaleString()} sites from ${(live.feeds||[]).join(', ')} · fetched ${new Date(live.updated).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;
+  rebuild();
+}
+function liveSummary(s){ if(s.src!=='live') return null; const ev=s.evses||[]; const c={}; for(const e of ev) c[e.st]=(c[e.st]||0)+1;
+  const ok=(c.AVAILABLE||0)+(c.WORKING||0), busy=(c.CHARGING||0)+(c.BLOCKED||0)+(c.RESERVED||0), bad=ev.length-ok-busy;
+  return {ok,busy,bad,total:ev.length,label: c.AVAILABLE!=null ? `${c.AVAILABLE||0}/${ev.length} available` : `${ok}/${ev.length} working`}; }
+function liveBadge(s){ const l=liveSummary(s); if(!l) return ''; const cls=l.ok? 'ok' : l.busy? 'busy':'bad'; return `<span class="live ${cls}">LIVE · ${esc(l.label)}</span>`; }
+
+// ---------- filtering & markers ----------
+function passes(s){
+  if(!state.bands.has(bandOf(s))) return false;
+  if(state.conns.size && !(s.c||[]).some(c=>state.conns.has(c==='CCS1'?'CCS':c))) return false;
+  if(state.liveOnly && s.src!=='live') return false;
+  return true; }
+function makeMarker(s){ const b=bandOf(s); const l=liveSummary(s);
+  const m=L.circleMarker([s.a,s.o],{radius:s.src==='live'?8:7, color: l? (l.ok?'#16a34a':l.busy?'#d97706':'#dc2626') : '#fff', weight:l?3:2, fillColor:BAND[b].hex, fillOpacity:.95, band:b});
+  m.bindPopup(()=>popupHtml(s), {maxWidth:300}); m.sid=s.id; return m; }
+function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
+  const rows=[]; const add=(k,v)=>{ if(v!=null&&v!=='') rows.push(`<tr><td>${k}</td><td>${v}</td></tr>`); };
+  add('Power', s.k? `${s.k} kW max` : isEst(s)? 'Not tagged – DC connector, likely rapid (estimated)' : 'Not tagged');
+  add('Type', `<span class="dot" style="background:${BAND[b].hex}"></span> ${BAND[b].label}`);
+  add('Connectors', (s.c||[]).map(c=>CONNS[c]||c).join(', ')||'Not tagged');
+  add('Operator', esc(s.op)); add('Address', esc(s.ad)); add('Points', esc(s.cap)); add('Fee', esc(s.fee)); add('Access', esc(s.acc)); add('Hours', esc(s.h));
+  if(s.cl) add('Payment','Contactless');
+  if(l){ add('Live', liveBadge(s)); add('Bays', (s.evses||[]).map(e=>`${esc(e.st)}${e.kw?` · ${e.kw} kW`:''}`).join('<br>')); add('Status updated', esc(new Date(s.upd||live.updated).toLocaleString('en-GB'))); }
+  if(s.dist!=null && state.route) add('On route', `${s.along.toFixed(0)} km from start · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`);
+  const osmId = s.src==='osm'? s.id : s.osm; const osmLink = osmId? ` · <a target="_blank" href="https://www.openstreetmap.org/${({n:'node',w:'way',r:'relation'})[osmId[0]]}/${osmId.slice(1)}">OSM</a>` : '';
+  return `<div class="popup"><b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
+    <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}</div>
+    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : 'OpenStreetMap'}</div></div>`; }
+
+let visible=[];
+function rebuild(){
+  cluster.clearLayers();
+  const pool = state.route ? state.route.hits : stations;
+  visible = pool.filter(passes);
+  cluster.addLayers(visible.map(makeMarker));
+  updateLists();
+}
+function kwBadge(s){ const b=bandOf(s); return `<span class="kw" style="background:${BAND[b].hex}">${s.k? Math.round(s.k)+' kW' : isEst(s)? 'DC?' : '?'}</span>`; }
+function itemHtml(s, extra){ return `<div class="item" data-id="${esc(s.id)}">${kwBadge(s)}<div><b>${esc(s.n||'EV charger')}</b><span class="small">${esc([s.op, s.ad].filter(Boolean).join(' · '))}${extra||''}</span> ${liveBadge(s)}</div></div>`; }
+const updateLists = debounce(()=>{
+    const bnd=map.getBounds(); const inView=visible.filter(s=>bnd.contains([s.a,s.o]));
+  const counts={}; for(const s of inView){ const b=bandOf(s); counts[b]=(counts[b]||0)+1; }
+  $('#viewStat').innerHTML = map.getZoom()<AUTO_ZOOM && !state.route ? `Search a place or zoom in to load chargers for that area.${inView.length?` <b>${inView.length.toLocaleString()}</b> already loaded in view.`:''}`
+    : `<b>${inView.length.toLocaleString()}</b> chargers in view<div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`;
+  const c=map.getCenter();
+  const near = map.getZoom()>=10 ? inView.map(s=>[kmBetween(c.lat,c.lng,s.a,s.o),s]).sort((x,y)=>x[0]-y[0]).slice(0,40) : [];
+  $('#viewList').innerHTML = near.map(([d,s])=>itemHtml(s, ` · ${d.toFixed(1)} km from centre`)).join('');
+  if(state.route) renderRouteList();
+}, 250);
+map.on('moveend', updateLists);
+function focusStation(id){ const s=byId.get(id)||state.route?.hits.find(x=>x.id===id); if(!s) return;
+  map.setView([s.a,s.o], Math.max(map.getZoom(),16)); setTimeout(()=>{ cluster.eachLayer(m=>{ if(m.sid===id){ cluster.zoomToShowLayer(m,()=>m.openPopup()); } }); }, 300);
+  if(innerWidth<=700) $('#panel').classList.add('collapsed'); }
+document.addEventListener('click', e=>{ const it=e.target.closest('.item'); if(it) focusStation(it.dataset.id); });
+
+// ---------- filter UI ----------
+$('#bands').innerHTML = BANDS.map(b=>`<span class="chip on" data-b="${b.id}"><span class="dot" style="background:${b.hex}"></span>${b.label}</span>`).join('');
+$('#conns').innerHTML = Object.entries(CONNS).map(([k,v])=>`<span class="chip" data-c="${k}">${v}</span>`).join('');
+$('#legend').innerHTML = BANDS.map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label}</span>`).join('') + '<span><span class="dot" style="border:3px solid #16a34a"></span> Live: working</span><span><span class="dot" style="border:3px solid #dc2626"></span> Live: fault</span>';
+$('#bands').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const b=c.dataset.b; state.bands.has(b)?state.bands.delete(b):state.bands.add(b); c.classList.toggle('on'); rebuild(); };
+$('#conns').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const k=c.dataset.c; state.conns.has(k)?state.conns.delete(k):state.conns.add(k); c.classList.toggle('on'); rebuild(); };
+$('#est').onchange=e=>{ state.est=e.target.checked; rebuild(); };
+$('#liveOnly').onchange=e=>{ state.liveOnly=e.target.checked; rebuild(); };
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); });
+$('#toggle').onclick=()=>$('#panel').classList.toggle('collapsed');
+
+// ---------- geocoding (postcodes.io for UK postcodes, Nominatim otherwise; no autocomplete per Nominatim policy) ----------
+const PC = /^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})?$/i;
+async function geocode(q){
+  q=q.trim(); if(!q) return [];
+  const pc=q.match(PC);
+  if(pc){ try{
+    if(pc[2]){ const r=await (await fetch('https://api.postcodes.io/postcodes/'+encodeURIComponent(q))).json(); if(r.result) return [{name:r.result.postcode+', '+(r.result.admin_district||r.result.region||''), lat:r.result.latitude, lon:r.result.longitude}]; }
+    else { const r=await (await fetch('https://api.postcodes.io/outcodes/'+encodeURIComponent(q))).json(); if(r.result) return [{name:r.result.outcode+' ('+(r.result.admin_district||[]).slice(0,2).join(', ')+')', lat:r.result.latitude, lon:r.result.longitude}]; }
+  }catch{} }
+  const u='https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=5&q='+encodeURIComponent(q);
+  const r=await fetch(u,{headers:{'Accept-Language':'en-GB'}}); if(!r.ok) throw new Error('Search failed ('+r.status+')');
+  return (await r.json()).map(x=>({name:x.display_name, lat:+x.lat, lon:+x.lon, bbox:x.boundingbox}));
+}
+async function doSearch(){
+  const q=$('#q').value; if(!q.trim()) return; $('#qres').hidden=true;
+  try{ const res=await geocode(q); if(!res.length) return toast('No UK place found for “'+q+'”');
+    goTo(res[0]); if(res.length===1) return;
+    $('#qres').innerHTML='<div class="small" style="cursor:default">Other matches:</div>'+res.slice(1).map((r,i)=>`<div data-i="${i+1}">${esc(r.name)}</div>`).join(''); $('#qres').hidden=false; clearTimeout(window._qt); window._qt=setTimeout(()=>$('#qres').hidden=true,8000);
+    $('#qres').onclick=e=>{ const d=e.target.closest('[data-i]'); if(d){ $('#qres').hidden=true; goTo(res[+d.dataset.i]); } };
+  }catch(err){ toast(err.message); } }
+function goTo(r){ searchLayer.clearLayers(); L.marker([r.lat,r.lon]).addTo(searchLayer).bindTooltip(r.name.split(',')[0]);
+  if(r.bbox){ const [s,n,w,e]=r.bbox.map(Number); const b=L.latLngBounds([s,w],[n,e]); if(kmBetween(s,w,n,e)<40) { map.fitBounds(b,{maxZoom:14}); if(map.getZoom()<12) map.setZoom(12); return; } }
+  map.setView([r.lat,r.lon],13); }
+$('#qgo').onclick=doSearch; map.on('click',()=>$('#qres').hidden=true); $('#q').onkeydown=e=>{ if(e.key==='Enter') doSearch(); };
+function myLocation(){ return new Promise((res,rej)=>navigator.geolocation? navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude,name:'My location'}),()=>rej(new Error('Location unavailable')),{timeout:10000}) : rej(new Error('Location unavailable'))); }
+$('#locate').onclick=async()=>{ try{ const p=await myLocation(); goTo(p); }catch(e){ toast(e.message);} };
+$('#fromMe').onclick=()=>{ $('#from').value='My location'; };
+
+// ---------- Overpass: on-demand loading for the visible area ----------
+async function overpass(q){ let lastErr;
+  // /api/overpass only exists with server.js. On Pages it 404s (often as HTML); drop it and use public mirrors.
+  const urls=OVERPASS.slice();
+  for(let round=0; round<2; round++) for(const url of urls){ if(round && url.startsWith('/')) continue; if(!OVERPASS.includes(url)) continue; try{ const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:AbortSignal.timeout(url.startsWith('/')?500000:45000)});
+      const ct=r.headers.get('content-type')||'';
+      if(r.status===404||r.status===405||ct.includes('text/html')){ if(url.startsWith('/')){ const i=OVERPASS.indexOf(url); if(i>=0) OVERPASS.splice(i,1); } continue; }
+      if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); if(j.remark&&/runtime error|timed out/i.test(j.remark)) throw new Error(j.remark); return j; }catch(e){ lastErr=e; } }
+  throw new Error('OpenStreetMap servers are busy ('+(lastErr?.message||'')+'). Try again in a minute.'); }
+const CELL=0.1, loadedCells=new Set(); let loading=0;
+function setLoading(d){ loading+=d; $('#refreshArea').disabled=loading>0; $('#refreshArea').textContent=loading>0?(window.UK_CHARGERS?'Checking OSM for newer data…':'Loading chargers…'):'↻ Update this area from OSM'; }
+async function loadArea(force){
+  if(map.getZoom()<AUTO_ZOOM && !force){ updateLists(); return; }
+  const b=map.getBounds();
+  const y0=Math.floor(b.getSouth()/CELL), y1=Math.floor(b.getNorth()/CELL), x0=Math.floor(b.getWest()/CELL), x1=Math.floor(b.getEast()/CELL);
+  if((y1-y0+1)*(x1-x0+1)>120){ if(force) toast('Zoom in a bit more to update this area'); return; }
+  const miss=[]; for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(force||!loadedCells.has(y+':'+x)) miss.push([y,x]);
+  if(!miss.length) return;
+  const ys=miss.map(m=>m[0]), xs=miss.map(m=>m[1]);
+  const bb=[Math.min(...ys)*CELL, Math.min(...xs)*CELL, (Math.max(...ys)+1)*CELL, (Math.max(...xs)+1)*CELL].map(v=>v.toFixed(2)).join(',');
+  setLoading(1);
+  try{ const j=await overpass(`[out:json][timeout:40];nwr["amenity"="charging_station"](${bb});out center tags;`);
+    for(const [y,x] of miss) loadedCells.add(y+':'+x);
+    addOsm(j.elements.map(compactOsm).filter(Boolean)); rebuild(); if(force) toast(`Updated: ${j.elements.length} chargers in this area`);
+  }catch(e){ if(force||!window.UK_CHARGERS) toast(e.message,6000); } finally{ setLoading(-1); } }
+$('#refreshArea').onclick=()=>loadArea(true);
+map.on('moveend', debounce(()=>{ if(!state.route) loadArea(false); }, 700));
+// load chargers along a route: Overpass "around" a polyline, in chunks
+async function loadCorridor(coords, km){
+  const pts=[]; let last=null; for(const [la,lo] of coords){ if(!last||kmBetween(last[0],last[1],la,lo)>1.5){ pts.push([la,lo]); last=[la,lo]; } }
+  const end=coords[coords.length-1]; pts.push(end);
+  const chunks=[]; for(let i=0;i<pts.length-1;i+=80) chunks.push(pts.slice(i,i+81));
+  setLoading(1);
+  try{ for(const [i,c] of chunks.entries()){ if(chunks.length>1) $('#routeGo').textContent=`Loading chargers ${i+1}/${chunks.length}…`;
+      const j=await overpass(`[out:json][timeout:60];nwr["amenity"="charging_station"](around:${Math.round(km*1000)+200},${c.map(p=>p[0].toFixed(5)+','+p[1].toFixed(5)).join(',')});out center tags;`);
+      addOsm(j.elements.map(compactOsm).filter(Boolean)); }
+  } finally{ setLoading(-1); } }
+// ---------- routing ----------
+$('#corr').oninput=e=>{ $('#corrVal').textContent=e.target.value+' km'; };
+$('#corr').onchange=()=>{ const R=state.route; if(!R) return; const w=+$('#corr').value; computeCorridor(); if(w>R.loadedKm) loadCorridor(R.coords,w).then(()=>{ R.loadedKm=w; if(state.route===R) computeCorridor(); }).catch(e=>{ if(!window.UK_CHARGERS) toast(e.message,6000); }); };
+async function resolve(inputSel){ const v=$(inputSel).value.trim(); if(!v) throw new Error('Enter a start and destination');
+  if(v==='My location') return myLocation(); const r=await geocode(v); if(!r.length) throw new Error('Couldn’t find “'+v+'” in the UK'); return r[0]; }
+async function planRoute(){
+  $('#routeGo').disabled=true; $('#routeGo').textContent='Planning…';
+  try{
+    const a=await resolve('#from'); const b=await resolve('#to');
+    const r=await fetch(`${OSRM}${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`); if(!r.ok) throw new Error('Routing service busy ('+r.status+'), try again');
+    const j=await r.json(); if(j.code!=='Ok'||!j.routes?.length) throw new Error('No driving route found');
+    const rt=j.routes[0]; const coords=rt.geometry.coordinates.map(([lo,la])=>[la,lo]);
+    state.route={a,b,coords,distance:rt.distance,duration:rt.duration,hits:[]};
+    routeLayer.clearLayers(); searchLayer.clearLayers();
+    L.polyline(coords,{color:'#fff',weight:9,opacity:.9}).addTo(routeLayer); L.polyline(coords,{color:'#0ea5e9',weight:5}).addTo(routeLayer);
+    L.marker([a.lat,a.lon]).addTo(routeLayer).bindTooltip('Start: '+a.name.split(',')[0]); L.marker([b.lat,b.lon]).addTo(routeLayer).bindTooltip('End: '+b.name.split(',')[0]);
+    map.fitBounds(L.latLngBounds(coords),{padding:[30,30]});
+    const want=Math.max(+$('#corr').value,3), R=state.route; R.loadedKm=0;
+    computeCorridor(); // instant result from data already loaded / snapshot
+    loadCorridor(coords, want).then(()=>{ R.loadedKm=want; if(state.route===R) computeCorridor(); })
+      .catch(e=>{ if(!window.UK_CHARGERS) toast(e.message+' Showing chargers already loaded.',7000); });
+  }catch(e){ toast(e.message,5000); } finally{ $('#routeGo').disabled=false; $('#routeGo').textContent='Show chargers on route'; } }
+function computeCorridor(){
+  const R=state.route, W=+$('#corr').value; const pts=R.coords; const lat0=pts[0][0]*Math.PI/180;
+  const kx=111.32*Math.cos(lat0), ky=110.574; // local km projection (fine at UK scale)
+  // thin the polyline to ~1 point every 200 m
+  const P=[[pts[0][1]*kx,pts[0][0]*ky]]; for(const [la,lo] of pts){ const x=lo*kx,y=la*ky,l=P[P.length-1]; if(Math.hypot(x-l[0],y-l[1])>0.2) P.push([x,y]); }
+  const last=pts[pts.length-1]; P.push([last[1]*kx,last[0]*ky]);
+  const cum=[0]; for(let i=1;i<P.length;i++) cum.push(cum[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]));
+  // spatial grid of segments (cell = corridor width) for speed
+  const cell=Math.max(W,1), grid=new Map(), gk=(x,y)=>Math.floor(x/cell)+':'+Math.floor(y/cell);
+  for(let i=0;i<P.length-1;i++){ const [x1,y1]=P[i],[x2,y2]=P[i+1]; const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/cell)+1;
+    for(let t=0;t<=n;t++){ const k=gk(x1+(x2-x1)*t/n, y1+(y2-y1)*t/n); const arr=grid.get(k)||grid.set(k,[]).get(k); if(arr[arr.length-1]!==i) arr.push(i); } }
+  const hits=[];
+  for(const s of stations){ const x=s.o*kx, y=s.a*ky, cx=Math.floor(x/cell), cy=Math.floor(y/cell); let best=Infinity, along=0; const seen=new Set();
+    for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++) for(const si of grid.get((cx+i)+':'+(cy+j))||[]){ if(seen.has(si)) continue; seen.add(si);
+      const [x1,y1]=P[si],[x2,y2]=P[si+1]; const dx=x2-x1,dy=y2-y1, L2=dx*dx+dy*dy; let t=L2? ((x-x1)*dx+(y-y1)*dy)/L2 : 0; t=Math.max(0,Math.min(1,t));
+      const d=Math.hypot(x-(x1+t*dx), y-(y1+t*dy)); if(d<best){ best=d; along=cum[si]+t*Math.sqrt(L2); } }
+    if(best<=W){ s.dist=best; s.along=along; hits.push(s); } }
+  hits.sort((p,q)=>p.along-q.along); R.hits=hits; R.width=W; rebuild(); }
+function renderRouteList(){ const R=state.route; if(!R||R.width==null) return; const shown=R.hits.filter(passes);
+  const counts={}; for(const s of shown){ const b=bandOf(s); counts[b]=(counts[b]||0)+1; }
+  const h=Math.floor(R.duration/3600), m=Math.round(R.duration%3600/60);
+  $('#routeStat').hidden=false;
+  $('#routeStat').innerHTML=`<b>${(R.distance/1000).toFixed(0)} km</b> · ${h?h+' h ':''}${m} min (no traffic)<br><b>${shown.length}</b> chargers within ${R.width} km of the route
+    <div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`;
+  $('#routeList').innerHTML=shown.slice(0,300).map(s=>itemHtml(s,` · ${s.along.toFixed(0)} km in · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`)).join('') + (shown.length>300?`<div class="small" style="padding:8px 0">Showing first 300 – narrow the filters to see fewer.</div>`:''); }
+$('#routeGo').onclick=planRoute; $('#to').onkeydown=e=>{ if(e.key==='Enter') planRoute(); };
+$('#routeClear').onclick=()=>{ state.route=null; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
+
+// ---------- start ----------
+$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in snapshot: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from OpenStreetMap (${esc(UK_CHARGERS.regions||'UK')}), built ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'On top of that, the latest OpenStreetMap data is fetched live (Overpass) for the area you view (zoom 11+) and along routes, whenever those servers respond.';
+rebuild(); loadLive();
+// URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
+const P=new URLSearchParams(location.search);
+if(P.get('corridor')){ $('#corr').value=P.get('corridor'); $('#corrVal').textContent=P.get('corridor')+' km'; }
+if(P.get('from')&&P.get('to')){ $('#from').value=P.get('from'); $('#to').value=P.get('to'); document.querySelector('[data-tab=route]').click(); planRoute(); }
+else if(P.get('q')){ $('#q').value=P.get('q'); doSearch(); }
+if(P.get('bands')){ const want=new Set(P.get('bands').split(',')); state.bands=want; document.querySelectorAll('#bands .chip').forEach(c=>c.classList.toggle('on',want.has(c.dataset.b))); rebuild(); }
+</script>
+</body>
+</html>
