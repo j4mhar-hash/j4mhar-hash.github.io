@@ -88,8 +88,8 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL), via Overpass. Live status: open OCPI feeds published under the UK Public Charge Point Regulations 2023 (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
-      <p class="small">Power comes from OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Many sites don't have it tagged; they show as "Unknown" unless a DC connector is tagged, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: open OCPI feeds published under the UK Public Charge Point Regulations 2023 (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
+      <p class="small">Power and connectors come from Open Charge Map where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
 </div>
@@ -219,10 +219,13 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   if(s.cl) add('Payment','Contactless');
   if(l){ add('Live', liveBadge(s)); add('Bays', (s.evses||[]).map(e=>`${esc(e.st)}${e.kw?` · ${e.kw} kW`:''}`).join('<br>')); add('Status updated', esc(new Date(s.upd||live.updated).toLocaleString('en-GB'))); }
   if(s.dist!=null && state.route) add('On route', `${s.along.toFixed(0)} km from start · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`);
-  const osmId = s.src==='osm'? s.id : s.osm; const osmLink = osmId? ` · <a target="_blank" href="https://www.openstreetmap.org/${({n:'node',w:'way',r:'relation'})[osmId[0]]}/${osmId.slice(1)}">OSM</a>` : '';
+  const osmId = s.src==='osm'? s.id : s.osm;
+  const osmKind = osmId && ({n:'node',w:'way',r:'relation'})[osmId[0]];
+  const osmLink = osmKind && /^[nwr]\d+$/.test(osmId) ? ` · <a target="_blank" href="https://www.openstreetmap.org/${osmKind}/${osmId.slice(1)}">OSM</a>` : '';
+  const ocmLink = String(s.id||'').startsWith('ocm-') ? ` · <a target="_blank" href="https://openchargemap.org/site/poi/details/${s.id.slice(4)}">OCM</a>` : '';
   return `<div class="popup"><b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
-    <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}</div>
-    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : 'OpenStreetMap'}</div></div>`; }
+    <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}${ocmLink}</div>
+    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : (String(s.id||'').startsWith('ocm-')? 'Open Charge Map' : 'OpenStreetMap')}</div></div>`; }
 
 let visible=[];
 let dataError = null;
@@ -449,7 +452,7 @@ $('#routeClear').onclick=()=>{ state.route=null; routeLayer.clearLayers(); $('#r
 // ---------- start ----------
 if(!window.UK_CHARGERS || !UK_CHARGERS.items || !UK_CHARGERS.items.length) dataError="Couldn't load charger data. Zoom in and tap Retry.";
 fitUk();
-$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites across ${esc(UK_CHARGERS.regions||'the UK')} from OpenStreetMap, saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.';
+$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc((UK_CHARGERS.source||'').includes('Open Charge Map')?'Open Charge Map':(UK_CHARGERS.source||'OpenStreetMap').split('(')[0].trim())} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.';
 rebuild(); updateHint(); loadLive();
 // URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
 const P=new URLSearchParams(location.search);
