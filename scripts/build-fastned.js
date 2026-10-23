@@ -5,9 +5,10 @@
  * Auth (secrets — never logged or written to the repo):
  *   process.env.FASTNED_API_HEADER  — HTTP header name (e.g. x-api-key)
  *   process.env.FASTNED_API_KEY     — HTTP header value
- *   process.env.FASTNED_API_URL     — optional OCPI locations base URL
- *     (e.g. https://example/ocpi/cpo/2.2.1/locations). When unset, falls
- *     back to Fastned's public UK station pages on fastnedcharging.com.
+ *   process.env.FASTNED_API_URL     — optional OCPI locations base URL.
+ *     Defaults to https://uk-public.api.fastned.nl/uk-public/ocpi/cpo/2.2.1/locations
+ *     when FASTNED_API_HEADER and FASTNED_API_KEY are set. Without credentials,
+ *     falls back to Fastned's public UK station pages on fastnedcharging.com.
  *
  * Dedupe: same normalised operator + ≤75 m, or same postcode + ≤100 m.
  * New ids: fastned:<slug-or-ocpi-id>
@@ -25,6 +26,9 @@ const MANUAL_PATH = path.join(ROOT, 'data', 'manual-chargers.js');
 const REPORT_PATH = path.join(ROOT, 'data', 'fastned-merge-report.json');
 const CACHE_DIR = path.join(ROOT, '.cache', 'ocpi');
 const UA = 'UK-EV-Map-build/1.0 (https://j4mhar-hash.github.io; Fastned UK open data / public pages)';
+
+const DEFAULT_API_URL =
+  'https://uk-public.api.fastned.nl/uk-public/ocpi/cpo/2.2.1/locations';
 
 const MATCH_OP_M = 75;
 const MATCH_PC_M = 100;
@@ -283,6 +287,16 @@ function compactOcpi(loc) {
   return o;
 }
 
+function parseLinkNext(linkHeader) {
+  if (!linkHeader) return null;
+  // e.g. <https://…/locations?offset=5&limit=5>; rel="next"
+  for (const part of String(linkHeader).split(',')) {
+    const m = part.match(/<([^>]+)>\s*;\s*rel="?next"?/i);
+    if (m) return m[1].trim();
+  }
+  return null;
+}
+
 async function fetchApiLocations(baseUrl) {
   const headerName = process.env.FASTNED_API_HEADER;
   const headerVal = process.env.FASTNED_API_KEY;
@@ -291,31 +305,43 @@ async function fetchApiLocations(baseUrl) {
   }
   // Never log header name/value
   console.log('Fetching Fastned OCPI locations via API (credentials present, not logged)…');
+  const headers = {
+    Accept: 'application/json',
+    'User-Agent': UA,
+  };
+  headers[headerName] = headerVal;
+
   const all = [];
-  let offset = 0;
-  let pageSize = 100;
+  // Prefer a large page; Fastned reports X-Limit up to 500
+  const pageSize = 500;
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  let url = `${baseUrl}${sep}limit=${pageSize}&offset=0`;
   let guard = 0;
-  while (guard++ < 200) {
-    const sep = baseUrl.includes('?') ? '&' : '?';
-    const url = `${baseUrl}${sep}limit=${pageSize}&offset=${offset}`;
-    const headers = {
-      Accept: 'application/json',
-      'User-Agent': UA,
-    };
-    headers[headerName] = headerVal;
+  while (url && guard++ < 200) {
     const r = await fetch(url, { headers, signal: AbortSignal.timeout(120000) });
     if (!r.ok) {
-      const text = await r.text().catch(() => '');
-      throw new Error(`Fastned API HTTP ${r.status}: ${text.slice(0, 200)}`);
+      const body = await r.text().catch(() => '');
+      // Do not echo auth material that might appear in error bodies
+      throw new Error(`Fastned API HTTP ${r.status}: ${body.slice(0, 200).replace(/[A-Za-z0-9_\-]{20,}/g, '[redacted]')}`);
     }
     const json = await r.json();
+    if (json && json.status_code != null && json.status_code !== 1000) {
+      throw new Error(`Fastned OCPI status_code ${json.status_code}: ${String(json.status_message || '').slice(0, 120)}`);
+    }
     const data = Array.isArray(json) ? json : json.data || json.locations || [];
     all.push(...data);
     const total = r.headers.get('x-total-count');
     console.log(`  … got ${data.length} (running ${all.length}${total ? '/' + total : ''})`);
+    const next = parseLinkNext(r.headers.get('link'));
+    if (next) {
+      url = next;
+      await sleep(200);
+      continue;
+    }
     if (!data.length || data.length < pageSize) break;
     if (total != null && all.length >= +total) break;
-    offset += data.length;
+    // Fallback offset pagination if no Link header
+    url = `${baseUrl}${sep}limit=${pageSize}&offset=${all.length}`;
     await sleep(200);
   }
   return all;
@@ -400,29 +426,48 @@ async function scrapePublicUkPages() {
   return rows;
 }
 
+async function resolveApiUrl() {
+  const fromEnv = process.env.FASTNED_API_URL && String(process.env.FASTNED_API_URL).trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.FASTNED_API_HEADER && process.env.FASTNED_API_KEY) return DEFAULT_API_URL;
+  return '';
+}
+
 async function loadFastnedItems() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   const cacheFile = path.join(CACHE_DIR, 'fastned.json');
+  const apiUrl = await resolveApiUrl();
+  const wantMode = apiUrl ? 'api' : 'web';
+
   if (fs.existsSync(cacheFile)) {
-    const age = Date.now() - fs.statSync(cacheFile).mtimeMs;
-    if (age < 6 * 3600 * 1000) {
-      console.log(`  using cache (${(age / 60000).toFixed(0)} min old)`);
-      return JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    try {
+      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      const age = Date.now() - fs.statSync(cacheFile).mtimeMs;
+      if (cached && cached.mode === wantMode && Array.isArray(cached.items) && age < 6 * 3600 * 1000) {
+        console.log(`  using cache (${(age / 60000).toFixed(0)} min old, mode=${cached.mode})`);
+        return { mode: cached.mode, items: cached.items };
+      }
+    } catch {
+      /* rebuild */
     }
   }
 
-  const apiUrl = process.env.FASTNED_API_URL && String(process.env.FASTNED_API_URL).trim();
   let items;
   let mode;
   if (apiUrl) {
     const raw = await fetchApiLocations(apiUrl);
+    console.log('  raw OCPI locations:', raw.length);
     items = raw.map(compactOcpi).filter(Boolean);
     mode = 'api';
+    console.log('  UK compact items:', items.length);
   } else {
     items = await scrapePublicUkPages();
     mode = 'web';
   }
-  fs.writeFileSync(cacheFile, JSON.stringify({ mode, items, fetchedAt: new Date().toISOString() }));
+  fs.writeFileSync(
+    cacheFile,
+    JSON.stringify({ mode, items, fetchedAt: new Date().toISOString(), apiUrlSet: !!apiUrl })
+  );
   return { mode, items };
 }
 
@@ -446,23 +491,10 @@ async function main() {
   let baseItems = [...byId.values()];
   let grid = buildIndex(baseItems);
 
-  const { mode, items: feedItems } = await loadFastnedItems();
-  // loadFastnedItems may return cached {mode,items} or we normalised above
-  const list = Array.isArray(feedItems) ? feedItems : (feedItems && feedItems.items) || [];
-  // If cache wrapped
-  const feedList = list.length
-    ? list
-    : Array.isArray(arguments[0])
-      ? []
-      : (() => {
-          const cached = JSON.parse(fs.readFileSync(path.join(CACHE_DIR, 'fastned.json'), 'utf8'));
-          return cached.items || [];
-        })();
-
-  // Re-read properly
-  const cached = JSON.parse(fs.readFileSync(path.join(CACHE_DIR, 'fastned.json'), 'utf8'));
-  const modeUsed = cached.mode || mode;
-  const feeds = cached.items || feedList;
+  const loaded = await loadFastnedItems();
+  const modeUsed = loaded.mode;
+  const feeds = Array.isArray(loaded.items) ? loaded.items : [];
+  console.log('Fastned feed mode:', modeUsed, 'items:', feeds.length);
 
   let added = 0,
     enriched = 0,
@@ -504,17 +536,22 @@ async function main() {
   const outItems = baseItems.map(stripInternal);
   outItems.sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
-  const sources = [
-    baseDoc.source || 'Open Charge Map (ocm-export)',
-  ];
-  // Ensure Fastned credit (required by Fastned UK Open Data fair-use policy)
-  if (!/Fastned/i.test(sources.join('; '))) {
-    sources.push(
-      modeUsed === 'api'
-        ? 'Fastned UK Open Data API (adapted)'
-        : 'Fastned public UK station pages (adapted; Fastned UK Open Data API pending endpoint URL)'
-    );
-  }
+  // Fastned credit is required by Fastned UK Open Data fair-use policy.
+  // Rebuild a clean credit line: drop any prior Fastned fragments (including
+  // orphan pieces left by splitting on ';' inside older credits).
+  const fastnedCredit =
+    modeUsed === 'api'
+      ? 'Fastned UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned)'
+      : 'Fastned public UK station pages (adapted; source: Fastned)';
+  const baseParts = String(baseDoc.source || 'Open Charge Map (ocm-export)')
+    .split(/;\s*/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .filter(part => !/Fastned/i.test(part))
+    .filter(part => !/^source:\s*Fastned\)?$/i.test(part))
+    .filter(part => !/Open Data API when endpoint/i.test(part))
+    .filter(part => !/pending endpoint URL\)?$/i.test(part));
+  const sources = [...baseParts, fastnedCredit];
 
   const out = {
     generated: new Date().toISOString(),
@@ -566,8 +603,8 @@ async function main() {
     generated: out.generated,
     note:
       modeUsed === 'web'
-        ? 'API base URL unknown; used public Fastned UK station pages. Set FASTNED_API_URL to use the open-data API with FASTNED_API_HEADER/KEY.'
-        : 'Fetched via Fastned open-data API.',
+        ? 'No Fastned credentials; used public Fastned UK station pages. Set FASTNED_API_HEADER/KEY (and optional FASTNED_API_URL).'
+        : 'Fetched via Fastned UK Open Data OCPI 2.2.1 locations endpoint.',
   };
   fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
 

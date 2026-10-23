@@ -1,0 +1,2 @@
+# Local builder cache (OCPI and Fastned responses). Do not commit.
+.cache/
