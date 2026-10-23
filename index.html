@@ -166,19 +166,22 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 // ---------- map ----------
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
-map.createPane('satRoads');
-map.getPane('satRoads').style.zIndex = 350;
-map.getPane('satRoads').style.pointerEvents = 'none';
+// Imagery stays in the default tile pane (200). The route is under both road
+// tiles and name tiles, so motorway shields (drawn on the road overlay) and
+// place names paint across the blue line. Charger markers stay above that.
 map.createPane('routePane');
-map.getPane('routePane').style.zIndex = 370;
+map.getPane('routePane').style.zIndex = 250;
+map.createPane('satRoads');
+map.getPane('satRoads').style.zIndex = 360;
+map.getPane('satRoads').style.pointerEvents = 'none';
 map.createPane('satLabels');
-map.getPane('satLabels').style.zIndex = 390;
+map.getPane('satLabels').style.zIndex = 380;
 map.getPane('satLabels').style.pointerEvents = 'none';
 const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
-const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, pane:'satRoads',
+const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, detectRetina:true, pane:'satRoads',
   attribution:'Roads and labels © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
 // One label layer at a time. Alternate (light type, made for imagery) covers the route overview.
 // Boundaries and Places takes over for street names. detectRetina requests the next zoom so phone screens stay sharp.
