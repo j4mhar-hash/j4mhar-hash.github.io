@@ -57,7 +57,6 @@ button:disabled{opacity:.5;cursor:default}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
 .popup a{color:var(--accent)}
 .mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
-.leaflet-satLabels-pane{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff)}
 input[type=range]{flex:1}
 @media (max-width:700px){
   #panel{top:auto;bottom:0;left:0;right:0;width:auto;border-radius:16px 16px 0 0;max-height:62%;padding-bottom:env(safe-area-inset-bottom)}
@@ -170,8 +169,10 @@ L.control.zoom({position:'topright'}).addTo(map);
 map.createPane('satRoads');
 map.getPane('satRoads').style.zIndex = 350;
 map.getPane('satRoads').style.pointerEvents = 'none';
+map.createPane('routePane');
+map.getPane('routePane').style.zIndex = 370;
 map.createPane('satLabels');
-map.getPane('satLabels').style.zIndex = 360;
+map.getPane('satLabels').style.zIndex = 390;
 map.getPane('satLabels').style.pointerEvents = 'none';
 const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
@@ -179,10 +180,11 @@ const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/servi
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
 const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, pane:'satRoads',
   attribution:'Roads and labels © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
-// Light place names for the route overview. This reference layer stops at zoom 12.
-const satelliteLabelsFar = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}', {maxZoom:12, maxNativeZoom:12, pane:'satLabels', attribution:''});
-// Street and road names once zoomed in. A light halo in CSS keeps dark text readable on imagery.
-const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {minZoom:13, maxZoom:19, pane:'satLabels', attribution:''});
+// One label layer at a time. Alternate (light type, made for imagery) covers the route overview.
+// Boundaries and Places takes over for street names. detectRetina requests the next zoom so phone screens stay sharp.
+const retina = L.Browser.retina;
+const satelliteLabelsFar = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}', {maxZoom:12, maxNativeZoom:12, detectRetina:true, pane:'satLabels', attribution:''});
+const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {minZoom: retina ? 12 : 13, maxZoom:19, detectRetina:true, pane:'satLabels', attribution:''});
 const satelliteLayers = [satellite, satelliteRoads, satelliteLabelsFar, satelliteLabels];
 let baseName = 'streets';
 function setBasemap(name){
@@ -540,7 +542,7 @@ async function planRoute(){
     const rt=j.routes[0]; const coords=rt.geometry.coordinates.map(([lo,la])=>[la,lo]);
     state.route={a,b,coords,distance:rt.distance,duration:rt.duration,hits:[]};
     routeLayer.clearLayers(); searchLayer.clearLayers();
-    L.polyline(coords,{color:'#fff',weight:9,opacity:.9}).addTo(routeLayer); L.polyline(coords,{color:'#0ea5e9',weight:5}).addTo(routeLayer);
+    L.polyline(coords,{color:'#fff',weight:9,opacity:.9,pane:'routePane'}).addTo(routeLayer); L.polyline(coords,{color:'#0ea5e9',weight:5,pane:'routePane'}).addTo(routeLayer);
     L.marker([a.lat,a.lon]).addTo(routeLayer).bindTooltip('Start: '+a.name.split(',')[0]); L.marker([b.lat,b.lon]).addTo(routeLayer).bindTooltip('End: '+b.name.split(',')[0]);
     fitting = true;
     routeView = 'route';
