@@ -24,7 +24,7 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 | Postcode search | postcodes.io | No |
 | Place search | Nominatim (OSM), `countrycodes=gb`, no autocomplete (per their policy) | No |
 | Routing | OSRM public demo server | No (demo use only) |
-| Map tiles | OpenStreetMap (`tile.openstreetmap.org`, default) and Esri World Imagery satellite (no key) | No (light use only) |
+| Map tiles | OpenStreetMap (`tile.openstreetmap.org`, default). Satellite is Esri World Imagery plus Esri road and place-name overlays (no key) | No (light use only) |
 
 ## Files
 - `index.html`: the entire app (Leaflet and MarkerCluster are loaded from unpkg).

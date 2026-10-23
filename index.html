@@ -57,6 +57,7 @@ button:disabled{opacity:.5;cursor:default}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
 .popup a{color:var(--accent)}
 .mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.leaflet-satLabels-pane{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff)}
 input[type=range]{flex:1}
 @media (max-width:700px){
   #panel{top:auto;bottom:0;left:0;right:0;width:auto;border-radius:16px 16px 0 0;max-height:62%;padding-bottom:env(safe-area-inset-bottom)}
@@ -99,7 +100,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (default, tile.openstreetmap.org, light use only). Satellite: Esri World Imagery — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (default, tile.openstreetmap.org, light use only). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community) with Esri road and place-name overlays (Esri, HERE, Garmin, © OpenStreetMap contributors).</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -166,16 +167,34 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 // ---------- map ----------
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
+map.createPane('satRoads');
+map.getPane('satRoads').style.zIndex = 350;
+map.getPane('satRoads').style.pointerEvents = 'none';
+map.createPane('satLabels');
+map.getPane('satLabels').style.zIndex = 360;
+map.getPane('satLabels').style.pointerEvents = 'none';
 const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
-  attribution:'Tiles © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
+  attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
+const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, pane:'satRoads',
+  attribution:'Roads and labels © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
+// Light place names for the route overview. This reference layer stops at zoom 12.
+const satelliteLabelsFar = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}', {maxZoom:12, maxNativeZoom:12, pane:'satLabels', attribution:''});
+// Street and road names once zoomed in. A light halo in CSS keeps dark text readable on imagery.
+const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {minZoom:13, maxZoom:19, pane:'satLabels', attribution:''});
+const satelliteLayers = [satellite, satelliteRoads, satelliteLabelsFar, satelliteLabels];
 let baseName = 'streets';
 function setBasemap(name){
   const sat = name==='satellite';
   if(sat === (baseName==='satellite')) return;
-  if(sat){ satellite.addTo(map); streets.remove(); }
-  else { streets.addTo(map); satellite.remove(); }
+  if(sat){
+    streets.remove();
+    satelliteLayers.forEach(l => { if(!map.hasLayer(l)) l.addTo(map); });
+  } else {
+    satelliteLayers.forEach(l => { if(map.hasLayer(l)) map.removeLayer(l); });
+    if(!map.hasLayer(streets)) streets.addTo(map);
+  }
   baseName = sat ? 'satellite' : 'streets';
   $('#baseStreets').classList.toggle('on', !sat);
   $('#baseSat').classList.toggle('on', sat);
