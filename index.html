@@ -46,6 +46,10 @@ button:disabled{opacity:.5;cursor:default}
 #hint{position:absolute;z-index:1100;top:12px;right:58px;left:12px;margin-left:auto;max-width:420px;background:#0f172a;color:#fff;padding:8px 12px;border-radius:999px;font-size:13px;text-align:center;box-shadow:0 4px 16px rgba(15,23,42,.25);pointer-events:none}
 #hint.error{background:#991b1b}
 #hint button{pointer-events:auto;margin-left:8px;padding:3px 8px;border-radius:999px;background:#fff;color:#0f172a;font-weight:600}
+#routeView{position:absolute;z-index:1000;top:100px;right:10px;display:flex;flex-direction:column;gap:6px}
+#routeView button, #routeFitRow button{font-weight:600}
+#routeView button{background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.18);padding:10px 12px}
+#routeView button.on, #routeFitRow button.on{background:#0f172a;color:#fff;border-color:#0f172a}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
 .popup a{color:var(--accent)}
 .mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
@@ -57,6 +61,7 @@ input[type=range]{flex:1}
   .leaflet-top.leaflet-left{top:0}
   .toast{bottom:auto;top:58px}
   #hint{left:10px;right:58px;max-width:none}
+  #routeView{top:100px}
 }
 </style>
 </head>
@@ -82,6 +87,7 @@ input[type=range]{flex:1}
       <div class="row"><input id="to" type="text" placeholder="To (place or postcode)"></div>
       <div class="row"><span class="small">Corridor</span><input id="corr" type="range" min="0.5" max="10" step="0.5" value="3"><span id="corrVal" class="small" style="width:44px">3 km</span></div>
       <div class="row"><button id="routeGo" class="primary" style="flex:1">Show chargers on route</button><button id="routeClear">Clear</button></div>
+      <div class="row" id="routeFitRow" hidden><button type="button" id="fitRoute" style="flex:1">Fit route</button><button type="button" id="fitMap" style="flex:1">Whole map</button></div>
       <div class="stat" id="routeStat" hidden></div>
       <div class="list" id="routeList"></div>
     </div>
@@ -95,6 +101,7 @@ input[type=range]{flex:1}
 </div>
 <div class="toast" id="toast"></div>
 <div id="hint">Loading chargers…</div>
+<div id="routeView" hidden><button type="button" id="fitRouteMap">Fit route</button><button type="button" id="fitMapMap">Whole map</button></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -285,12 +292,44 @@ function updateHint(){
   const n=inSight(visible).length;
   if(dataError && n===0 && loading===0){ setHint(dataError, 'error', ()=>{ dataError=null; loadArea(true); }); return; }
   if(loading>0 && n===0){ setHint('Loading chargers…'); return; }
-  if(map.getZoom()<AUTO_ZOOM && !state.route){ setHint('Zoom in to see chargers'); return; }
+  if(map.getZoom()<AUTO_ZOOM && (!state.route || routeView==='map')){ setHint('Zoom in to see chargers'); return; }
   setHint('');
+}
+let routeView = 'route'; // 'route' = corridor chargers, 'map' = every charger, route line kept
+let fitting = false; // programmatic fit must not be treated as the user zooming out
+function syncRouteChrome(){
+  const on = !!state.route;
+  $('#routeFitRow').hidden = !on;
+  // Keep the map buttons up even when the phone sheet is open — the in-sheet pair can sit below the fold.
+  $('#routeView').hidden = !on;
+  const mapOn = on && routeView==='map';
+  $('#fitRoute').classList.toggle('on', on && !mapOn);
+  $('#fitRouteMap').classList.toggle('on', on && !mapOn);
+  $('#fitMap').classList.toggle('on', on && mapOn);
+  $('#fitMapMap').classList.toggle('on', on && mapOn);
+}
+function fitRouteView(){
+  if(!state.route) return;
+  fitting = true;
+  routeView = 'route';
+  map.fitBounds(L.latLngBounds(state.route.coords), Object.assign({animate:false}, mapPad()));
+  state.route.fitZoom = map.getZoom();
+  fitting = false;
+  rebuild();
+  syncRouteChrome();
+}
+function fitWholeMap(){
+  if(!state.route) return;
+  fitting = true;
+  routeView = 'map';
+  fitUk();
+  fitting = false;
+  rebuild();
+  syncRouteChrome();
 }
 function rebuild(){
   cluster.clearLayers();
-  const pool = state.route ? state.route.hits : stations;
+  const pool = (state.route && routeView==='route') ? state.route.hits : stations;
   visible = pool.filter(passes);
   cluster.addLayers(visible.map(makeMarker));
   updateLists();
@@ -301,7 +340,7 @@ const updateLists = debounce(()=>{
   const inView=inSight(visible);
   const counts={}; for(const s of inView){ const b=bandOf(s); counts[b]=(counts[b]||0)+1; }
   $('#viewStat').innerHTML = dataError && !inView.length && !loading ? esc(dataError)
-    : map.getZoom()<AUTO_ZOOM && !state.route ? `Zoom in to see chargers.${inView.length?` <b>${inView.length.toLocaleString()}</b> on the map.`:''}`
+    : map.getZoom()<AUTO_ZOOM && (!state.route || routeView==='map') ? `Zoom in to see chargers.${inView.length?` <b>${inView.length.toLocaleString()}</b> on the map.`:''}`
     : `<b>${inView.length.toLocaleString()}</b> chargers in view<div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`;
   const c=map.getCenter();
   const near = map.getZoom()>=10 ? inView.map(s=>[kmBetween(c.lat,c.lng,s.a,s.o),s]).sort((x,y)=>x[0]-y[0]).slice(0,40) : [];
@@ -310,9 +349,14 @@ const updateLists = debounce(()=>{
   updateHint();
 }, 250);
 map.on('moveend', updateLists);
+map.on('zoomend', () => {
+  // Zooming out from the fitted route reveals the wider map. The camera stays where the user put it.
+  if(fitting || !state.route || routeView==='map' || state.route.fitZoom==null) return;
+  if(map.getZoom() <= state.route.fitZoom - 1){ routeView = 'map'; rebuild(); syncRouteChrome(); }
+});
 function focusStation(id){ const s=byId.get(id)||state.route?.hits.find(x=>x.id===id); if(!s) return;
   map.setView([s.a,s.o], Math.max(map.getZoom(),16)); setTimeout(()=>{ cluster.eachLayer(m=>{ if(m.sid===id){ cluster.zoomToShowLayer(m,()=>m.openPopup()); } }); }, 300);
-  if(innerWidth<=700) $('#panel').classList.add('collapsed'); }
+  if(innerWidth<=700){ $('#panel').classList.add('collapsed'); syncRouteChrome(); } }
 document.addEventListener('click', e=>{ const it=e.target.closest('.item'); if(it) focusStation(it.dataset.id); });
 
 // ---------- filter UI ----------
@@ -324,8 +368,8 @@ $('#conns').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const
 $('#est').onchange=e=>{ state.est=e.target.checked; rebuild(); };
 $('#liveOnly').onchange=e=>{ state.liveOnly=e.target.checked; rebuild(); };
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); });
-$('#toggle').onclick=()=>{ $('#panel').classList.toggle('collapsed'); updateLists(); };
+  document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); syncRouteChrome(); });
+$('#toggle').onclick=()=>{ $('#panel').classList.toggle('collapsed'); syncRouteChrome(); updateLists(); };
 
 // ---------- geocoding (postcodes.io for UK postcodes, Nominatim otherwise; no autocomplete per Nominatim policy) ----------
 const PC = /^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})?$/i;
@@ -415,7 +459,12 @@ async function planRoute(){
     routeLayer.clearLayers(); searchLayer.clearLayers();
     L.polyline(coords,{color:'#fff',weight:9,opacity:.9}).addTo(routeLayer); L.polyline(coords,{color:'#0ea5e9',weight:5}).addTo(routeLayer);
     L.marker([a.lat,a.lon]).addTo(routeLayer).bindTooltip('Start: '+a.name.split(',')[0]); L.marker([b.lat,b.lon]).addTo(routeLayer).bindTooltip('End: '+b.name.split(',')[0]);
+    fitting = true;
+    routeView = 'route';
     map.fitBounds(L.latLngBounds(coords), Object.assign({animate:false}, mapPad()));
+    state.route.fitZoom = map.getZoom();
+    fitting = false;
+    syncRouteChrome();
     const want=Math.max(+$('#corr').value,3), R=state.route; R.loadedKm=0;
     computeCorridor(); // instant result from data already loaded / snapshot
     loadCorridor(coords, want).then(()=>{ R.loadedKm=want; if(state.route===R) computeCorridor(); })
@@ -444,10 +493,13 @@ function renderRouteList(){ const R=state.route; if(!R||R.width==null) return; c
   const h=Math.floor(R.duration/3600), m=Math.round(R.duration%3600/60);
   $('#routeStat').hidden=false;
   $('#routeStat').innerHTML=`<b>${(R.distance/1000).toFixed(0)} km</b> · ${h?h+' h ':''}${m} min (no traffic)<br><b>${shown.length}</b> chargers within ${R.width} km of the route
-    <div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`;
+    <div class="legend" style="margin-top:4px">${BANDS.filter(b=>counts[b.id]).map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label.split(' ')[0]} ${counts[b.id]}</span>`).join('')}</div>`
+    + (routeView==='map' ? '<div class="small">Showing the wider map. Fit route to focus the corridor again.</div>' : '');
   $('#routeList').innerHTML=shown.slice(0,300).map(s=>itemHtml(s,` · ${s.along.toFixed(0)} km in · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`)).join('') + (shown.length>300?`<div class="small" style="padding:8px 0">Showing first 300 – narrow the filters to see fewer.</div>`:''); }
 $('#routeGo').onclick=planRoute; $('#to').onkeydown=e=>{ if(e.key==='Enter') planRoute(); };
-$('#routeClear').onclick=()=>{ state.route=null; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
+$('#fitRoute').onclick=fitRouteView; $('#fitRouteMap').onclick=fitRouteView;
+$('#fitMap').onclick=fitWholeMap; $('#fitMapMap').onclick=fitWholeMap;
+$('#routeClear').onclick=()=>{ state.route=null; routeView='route'; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; syncRouteChrome(); for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
 
 // ---------- start ----------
 if(!window.UK_CHARGERS || !UK_CHARGERS.items || !UK_CHARGERS.items.length) dataError="Couldn't load charger data. Zoom in and tap Retry.";
