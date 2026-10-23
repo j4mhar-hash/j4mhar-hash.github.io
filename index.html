@@ -51,7 +51,9 @@ button:disabled{opacity:.5;cursor:default}
 #routeFitRow{position:sticky;top:0;z-index:3;background:#fff;padding:2px 0 8px}
 #routeView button, #routeFitRow button{font-weight:600;touch-action:manipulation}
 #routeView button{background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.18);padding:10px 12px}
-#routeView button.on, #routeFitRow button.on{background:#0f172a;color:#fff;border-color:#0f172a}
+#routeView button.on, #routeFitRow button.on, #baseRow button.on{background:#0f172a;color:#fff;border-color:#0f172a}
+#baseRow{padding:0 14px 8px;margin:0}
+#baseRow button{font-weight:600;flex:1;touch-action:manipulation}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
 .popup a{color:var(--accent)}
 .mc{border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.35)}
@@ -72,6 +74,7 @@ input[type=range]{flex:1}
 <div id="panel">
   <header><h1>⚡ UK <span>EV</span> Charger Map</h1><button id="locate" title="Use my location">◎</button><button id="toggle" title="Show/hide panel">▾</button></header>
   <div class="search"><input id="q" type="text" placeholder="Search a town, place or postcode" autocomplete="off"><button id="qgo" class="primary">Go</button><div id="qres" class="results" hidden></div></div>
+  <div class="row" id="baseRow"><button type="button" id="baseStreets" class="on" aria-pressed="true">Map</button><button type="button" id="baseSat" aria-pressed="false">Satellite</button></div>
   <div class="tabs"><button data-tab="explore" class="on">Explore</button><button data-tab="route">Route</button><button data-tab="about">Data</button></div>
   <div class="body">
     <div class="row" id="routeFitRow" hidden><button type="button" id="fitRoute" style="flex:1">Fit route</button><button type="button" id="fitMap" style="flex:1">Whole map</button></div>
@@ -96,7 +99,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a> (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a> (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (default, tile.openstreetmap.org, light use only). Satellite: Esri World Imagery — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community.</p>
       <p class="small">Power and connectors come from Open Charge Map and the merged PCPR/OCPI feeds where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -163,8 +166,22 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 // ---------- map ----------
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
+const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
+  attribution:'Tiles © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
+let baseName = 'streets';
+function setBasemap(name){
+  const sat = name==='satellite';
+  if(sat === (baseName==='satellite')) return;
+  if(sat){ satellite.addTo(map); streets.remove(); }
+  else { streets.addTo(map); satellite.remove(); }
+  baseName = sat ? 'satellite' : 'streets';
+  $('#baseStreets').classList.toggle('on', !sat);
+  $('#baseSat').classList.toggle('on', sat);
+  $('#baseStreets').setAttribute('aria-pressed', String(!sat));
+  $('#baseSat').setAttribute('aria-pressed', String(sat));
+}
 const RANK={unknown:0,slow:1,fast:2,rapid:3,ultra:4};
 const cluster = L.markerClusterGroup({chunkedLoading:true, showCoverageOnHover:false, maxClusterRadius:z=>z>=14?35:55, disableClusteringAtZoom:16,
   iconCreateFunction(c){ const kids=c.getAllChildMarkers(); let top='unknown'; for(const m of kids){ const b=m.options.band; if(RANK[b]>RANK[top]) top=b; if(top==='ultra') break; }
@@ -551,6 +568,8 @@ function bindPress(id, fn){
 }
 bindPress('#fitRoute', fitRouteView); bindPress('#fitRouteMap', fitRouteView);
 bindPress('#fitMap', fitWholeMap); bindPress('#fitMapMap', fitWholeMap);
+bindPress('#baseStreets', () => setBasemap('streets'));
+bindPress('#baseSat', () => setBasemap('satellite'));
 window.addEventListener('resize', () => syncRouteChrome());
 $('#routeClear').onclick=()=>{ state.route=null; routeView='route'; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; syncRouteChrome(); for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
 

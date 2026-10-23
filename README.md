@@ -1,7 +1,7 @@
 # UK EV Charger Map (prototype)
 
 A clean, mobile-friendly map of public EV chargers in the UK:
-- **Explore**: the saved UK dataset is drawn straight away (clustered). Zoom in for individual sites. From zoom 11 the map can also refresh that area from OpenStreetMap.
+- **Explore**: the saved UK dataset is drawn straight away (clustered). Zoom in for individual sites. From zoom 11 the map can also refresh that area from OpenStreetMap. **Map / Satellite** at the top of the panel switches the base map; streets stay the default.
 - **Search** a town, place or postcode (UK only). Postcodes go to postcodes.io; anything else goes to Nominatim.
 - **Route**: enter From/To. The app draws the driving route and lists the chargers within an adjustable corridor (0.5–10 km, 3 km by default), sorted by distance from the start. **Fit route** frames that corridor; **Whole map** frames Britain and shows every charger while the route line stays on the map.
 - **Filters**: power band (Slow <7 kW, Fast 7–22 kW, Rapid 23–99 kW, Ultra 100 kW+, Unknown) and connector (Type 2, CCS, CHAdeMO, Type 1, 3-pin, Tesla).
@@ -24,7 +24,7 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 | Postcode search | postcodes.io | No |
 | Place search | Nominatim (OSM), `countrycodes=gb`, no autocomplete (per their policy) | No |
 | Routing | OSRM public demo server | No (demo use only) |
-| Map tiles | tile.openstreetmap.org | No (light use only) |
+| Map tiles | OpenStreetMap (`tile.openstreetmap.org`, default) and Esri World Imagery satellite (no key) | No (light use only) |
 
 ## Files
 - `index.html`: the entire app (Leaflet and MarkerCluster are loaded from unpkg).
