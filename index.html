@@ -185,6 +185,11 @@ map.getPane('satOverlay').style.pointerEvents = 'none';
 map.createPane('satLabels');
 map.getPane('satLabels').style.zIndex = 390;
 map.getPane('satLabels').style.pointerEvents = 'none';
+// Map mode uses the same slot: OSM road art stays in the tile pane, under the
+// route, and the names and shields from those tiles are redrawn here.
+map.createPane('mapLabels');
+map.getPane('mapLabels').style.zIndex = 385;
+map.getPane('mapLabels').style.pointerEvents = 'none';
 const tileCache = new Map();
 function loadTileImage(url){
   let pending = tileCache.get(url);
@@ -216,6 +221,16 @@ function isShieldInk(r, g, b, a){
   return false;
 }
 function isRedRoad(r, g, b){ return r > 150 && r > g + 25 && r > b + 25 && g < 220; }
+// OSM streets bake names into the road tile. These are the dark names, the blue
+// motorway shields and the green A-road shields — not parks, water or road fill.
+function isOsmLabel(r, g, b){
+  const mx = rgbaMax(r, g, b), mn = rgbaMin(r, g, b);
+  if(mx <= 120 && mx - mn <= 42) return true;
+  if(b > 145 && r < 120 && b > r + 45 && g < 200) return true;
+  // A-road shields are a vivid green. Woodland and parks are paler and must stay under the route.
+  if(g > 140 && g > r + 60 && g > b + 50 && r < 100 && b < 140) return true;
+  return false;
+}
 // Dark lettering or white type. Mid-grey boundary lines and red road strokes stay out.
 function isOverlayText(r, g, b, a){
   if(a < 40 || isRedRoad(r, g, b)) return false;
@@ -227,6 +242,7 @@ function paintTile(tile, img, mode){
   tile.width = w; tile.height = h;
   const ctx = tile.getContext('2d', {willReadFrequently:true});
   ctx.drawImage(img, 0, 0);
+  if(mode === 'full') return;
   let src;
   try { src = ctx.getImageData(0, 0, w, h); }
   catch(e){ return; }
@@ -235,7 +251,22 @@ function paintTile(tile, img, mode){
     const i = p * 4, r = s[i], g = s[i + 1], b = s[i + 2], a = s[i + 3];
     if(mode === 'roads' || mode === 'roadLabels'){ if(isShieldInk(r, g, b, a)) mark[p] = 1; }
     else if(mode === 'overlay'){ if(isOverlayText(r, g, b, a)) mark[p] = 1; }
+    else if(mode === 'osm'){ if(isOsmLabel(r, g, b)) mark[p] = 1; }
     else if(a > 40) mark[p] = 1;
+  }
+  if(mode === 'osm'){
+    const core = mark.slice();
+    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
+      if(!core[y * w + x]) continue;
+      for(let dy = -2; dy <= 2; dy++){
+        const yy = y + dy; if(yy < 0 || yy >= h) continue;
+        for(let dx = -2; dx <= 2; dx++){
+          const xx = x + dx; if(xx < 0 || xx >= w) continue;
+          const q = yy * w + xx, i = q * 4;
+          if(rgbaMin(s[i], s[i + 1], s[i + 2]) > 175) mark[q] = 1;
+        }
+      }
+    }
   }
   if(mode === 'roads' || mode === 'roadLabels'){
     const core = mark.slice();
@@ -270,7 +301,7 @@ function paintTile(tile, img, mode){
   const out = ctx.createImageData(w, h), o = out.data;
   for(let p = 0; p < n; p++){
     const i = p * 4;
-    if(halo[p]){ o[i] = 255; o[i + 1] = 255; o[i + 2] = 255; o[i + 3] = 250; }
+    if(halo[p]){ o[i] = 255; o[i + 1] = 255; o[i + 2] = 255; o[i + 3] = 255; }
     if(mark[p]){ o[i] = s[i]; o[i + 1] = s[i + 1]; o[i + 2] = s[i + 2]; o[i + 3] = Math.max(s[i + 3], 230); }
   }
   ctx.putImageData(out, 0, 0);
@@ -284,8 +315,12 @@ const InkTiles = L.TileLayer.extend({
     return tile;
   }
 });
-const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
-  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const streets = new InkTiles(osmUrl, {maxZoom:19, pane:'tilePane', ink:'full',
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
+const streetLabels = new InkTiles(osmUrl, {maxZoom:19, pane:'mapLabels', ink:'osm', attribution:''});
+streets.addTo(map);
+streetLabels.addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
 const transportUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}';
@@ -306,10 +341,12 @@ function setBasemap(name){
   if(sat === (baseName==='satellite')) return;
   if(sat){
     streets.remove();
+    streetLabels.remove();
     satelliteLayers.forEach(l => { if(!map.hasLayer(l)) l.addTo(map); });
   } else {
     satelliteLayers.forEach(l => { if(map.hasLayer(l)) map.removeLayer(l); });
     if(!map.hasLayer(streets)) streets.addTo(map);
+    if(!map.hasLayer(streetLabels)) streetLabels.addTo(map);
   }
   baseName = sat ? 'satellite' : 'streets';
   $('#baseStreets').classList.toggle('on', !sat);
