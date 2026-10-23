@@ -102,7 +102,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (streets without labels, place and road names above the route). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads and place names © Esri, HERE, Garmin, © OpenStreetMap contributors (retina place names above the route).</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (streets without labels, place and road names above the route). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place and road names are a separate OpenFreeMap label layer above the route.</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -188,16 +188,14 @@ const ofmCredit = '© <a href="https://openfreemap.org" target="_blank">OpenFree
 const esriCredit = '© <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 let streetGL = null;
 let labelGL = null;
+let satLabelGL = null;
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
-// Retina phones fetch the next zoom and draw it at half size, so a 256px tile
-// lands on 256 device pixels instead of being stretched. Roads stay under the
-// route. Place names are a separate layer and stop being published at zoom 16,
-// so they cap at native 12 (retina asks for 13) and scale that tile after.
+// Roads stay under the route. Place names are not these tiles: Esri's place
+// layer stops around zoom 13 and the next zooms blow that bitmap up
+// ("Glasshoughton"). Satellite names are their own vector layer, satLabelGL.
 const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, maxNativeZoom:17, detectRetina:true, pane:'satRoads',
   attribution:'Roads '+esriCredit});
-const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, maxNativeZoom:12, detectRetina:true, pane:'mapLabels',
-  attribution:'Labels '+esriCredit});
 const satelliteLayers = [satellite, satelliteRoads];
 // If the vector style cannot be fetched, streets fall back to OSM France so zoom still works.
 const streetsFallback = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {maxZoom:19, subdomains:'abc',
@@ -218,11 +216,11 @@ function setBasemap(name){
     if(map.hasLayer(streetsFallback)) streetsFallback.remove();
     if(labelGL && map.hasLayer(labelGL)) labelGL.remove();
     satelliteLayers.forEach(l => { if(!map.hasLayer(l)) l.addTo(map); });
-    if(!map.hasLayer(satelliteLabels)) satelliteLabels.addTo(map);
-    setOfmCredit(false);
+    if(satLabelGL && !map.hasLayer(satLabelGL)) satLabelGL.addTo(map);
+    if(satLabelGL) setOfmCredit(true);
   } else {
     satelliteLayers.forEach(l => { if(map.hasLayer(l)) map.removeLayer(l); });
-    if(map.hasLayer(satelliteLabels)) map.removeLayer(satelliteLabels);
+    if(satLabelGL && map.hasLayer(satLabelGL)) satLabelGL.remove();
     if(labelGL && !map.hasLayer(labelGL)) labelGL.addTo(map);
     if(streetGL){ if(!map.hasLayer(streetGL)) streetGL.addTo(map); }
     else if(!map.hasLayer(streetsFallback)) streetsFallback.addTo(map);
@@ -245,6 +243,27 @@ function splitOfm(style){
     .concat(labels.layers.filter(l => l.type === 'symbol'));
   return {base, labels};
 }
+// Satellite-only copy. Place names keep a hard halo so they read on photos,
+// and they are allowed to overlap roads. Map's label style is not changed.
+function satLabelStyle(labels){
+  const style = JSON.parse(JSON.stringify(labels));
+  const places = new Set(['label_other','label_village','label_town','label_city','label_city_capital','label_state']);
+  for(const layer of style.layers){
+    if(layer.type !== 'symbol') continue;
+    layer.paint = Object.assign({}, layer.paint);
+    if('text-halo-blur' in layer.paint) layer.paint['text-halo-blur'] = 0;
+    if(!places.has(layer.id)) continue;
+    layer.layout = Object.assign({}, layer.layout, {
+      'text-allow-overlap': true,
+      'text-ignore-placement': true,
+      'icon-allow-overlap': true
+    });
+    if(layer.id === 'label_other'){
+      layer.layout['text-size'] = ['interpolate', ['linear'], ['zoom'], 8, 12, 14, 16, 18, 18];
+    }
+  }
+  return style;
+}
 function useStreetFallback(){
   if(baseName === 'streets' && !map.hasLayer(streetsFallback)) streetsFallback.addTo(map);
 }
@@ -256,10 +275,14 @@ fetch('https://tiles.openfreemap.org/styles/liberty').then(r => {
   const common = {interactive:false, fadeDuration:0};
   streetGL = L.maplibreGL(Object.assign({style:parts.base, pane:'tilePane'}, common));
   labelGL = L.maplibreGL(Object.assign({style:parts.labels, pane:'mapLabels'}, common));
-  // Map keeps the vector names. Satellite uses the retina place-name tiles.
+  // Own copy, own layer. Satellite can show or drop this without touching Map.
+  satLabelGL = L.maplibreGL(Object.assign({style:satLabelStyle(parts.labels), pane:'mapLabels'}, common));
   if(baseName === 'streets'){
     labelGL.addTo(map);
     streetGL.addTo(map);
+    setOfmCredit(true);
+  } else if(!map.hasLayer(satLabelGL)){
+    satLabelGL.addTo(map);
     setOfmCredit(true);
   }
 }).catch(useStreetFallback);
