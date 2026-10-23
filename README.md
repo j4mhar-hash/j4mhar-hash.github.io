@@ -30,6 +30,7 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 - `index.html`: the entire app (Leaflet and MarkerCluster are loaded from unpkg).
 - `server.js`: optional local server, live-status proxy and Overpass cache.
 - `data/uk-chargers.js`: saved public charging sites for the whole UK (Open Charge Map). `index.html` loads it automatically.
+- `data/manual-chargers.js`: a few sites missing from that snapshot (Drax Power Station Visitors). The page merges them at load time, so rebuilding the Open Charge Map file does not remove them.
 - `scripts/build-ocm.js`: preferred builder for that file from the Open Charge Map public export (no API key). Sparse-checkout `data/GB/` and `data/referencedata.json` from [openchargemap/ocm-export](https://github.com/openchargemap/ocm-export), then `node scripts/build-ocm.js [/path/to/ocm-export]`.
 - `scripts/build-data.js`, `scripts/extract_pbf.py`, `scripts/build-snapshot.js`: older OSM Overpass / Geofabrik builders.
 - `scripts/test.js`: headless Playwright test that also takes the screenshots.

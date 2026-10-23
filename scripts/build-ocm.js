@@ -12,6 +12,8 @@
 //   2. node scripts/build-ocm.js [/path/to/ocm-export]
 //
 // Default export path: /workspace/ocm-export
+// This script rewrites data/uk-chargers.js only. Hand-added sites stay in
+// data/manual-chargers.js and are merged when the page loads.
 const fs = require('fs');
 const path = require('path');
 

@@ -108,6 +108,7 @@ input[type=range]{flex:1}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="data/uk-chargers.js" onerror="window.__chargersFailed=1"></script><!-- UK snapshot; app shows an error if this fails -->
+<script src="data/manual-chargers.js"></script><!-- hand-added sites; a missing file must not break the map -->
 <script>
 'use strict';
 // ---------- config ----------
@@ -185,6 +186,24 @@ function liveMatch(s){ const ka=Math.round(s.a*300), ko=Math.round(s.o*200);
 function addOsm(list){ for(const s of list){ s.src='osm'; const l=liveMatch(s); if(l){ l.osm=s.id; if(!l.c?.length) l.c=s.c; if(!l.cap) l.cap=s.cap; continue; } osmById.set(s.id,s); } recompute(); }
 function recompute(){ stations=[...osmById.values()].concat(live?.items||[]); byId.clear(); for(const s of stations) byId.set(s.id,s); }
 if (window.UK_CHARGERS) addOsm(window.UK_CHARGERS.items); // optional offline snapshot from scripts/build-data.js
+// Hand-added sites live in data/manual-chargers.js so the next Open Charge Map rebuild does not wipe them.
+function addManual(list){
+  if(!list||!list.length) return;
+  let added=0;
+  for(const raw of list){
+    if(!raw||raw.a==null||raw.o==null||!raw.id) continue;
+    if(osmById.has(raw.id)) continue;
+    let clash=false;
+    for(const e of osmById.values()){
+      if(Math.abs(e.a-raw.a)<0.01&&Math.abs(e.o-raw.o)<0.02&&kmBetween(e.a,e.o,raw.a,raw.o)<0.04){ clash=true; break; }
+    }
+    if(clash) continue;
+    const s=Object.assign({}, raw); s.src='manual';
+    osmById.set(s.id, s); added++;
+  }
+  if(added) recompute();
+}
+if(window.UK_MANUAL_CHARGERS&&UK_MANUAL_CHARGERS.items) addManual(UK_MANUAL_CHARGERS.items);
 
 function liveUnavailable(note){
   const sec=$('#liveSec'); sec.hidden=false; sec.style.opacity='.6';
@@ -226,6 +245,7 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   add('Connectors', (s.c||[]).map(c=>CONNS[c]||c).join(', ')||'Not tagged');
   add('Operator', esc(s.op)); add('Address', esc(s.ad)); add('Points', esc(s.cap)); add('Fee', esc(s.fee)); add('Access', esc(s.acc)); add('Hours', esc(s.h));
   if(s.cl) add('Payment','Contactless');
+  if(s.dev) add('Device', esc(s.dev));
   if(l){ add('Live', liveBadge(s)); add('Bays', (s.evses||[]).map(e=>`${esc(e.st)}${e.kw?` · ${e.kw} kW`:''}`).join('<br>')); add('Status updated', esc(new Date(s.upd||live.updated).toLocaleString('en-GB'))); }
   if(s.dist!=null && state.route) add('On route', `${s.along.toFixed(0)} km from start · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`);
   const osmId = s.src==='osm'? s.id : s.osm;
@@ -234,7 +254,7 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   const ocmLink = String(s.id||'').startsWith('ocm-') ? ` · <a target="_blank" href="https://openchargemap.org/site/poi/details/${s.id.slice(4)}">OCM</a>` : '';
   return `<div class="popup"><b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
     <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}${ocmLink}</div>
-    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : (String(s.id||'').startsWith('ocm-')? 'Open Charge Map' : 'OpenStreetMap')}</div></div>`; }
+    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : (s.src==='manual'||String(s.id||'').startsWith('manual-'))? 'Added by hand (missing from the Open Charge Map snapshot)' : (String(s.id||'').startsWith('ocm-')? 'Open Charge Map' : 'OpenStreetMap')}</div></div>`; }
 
 let visible=[];
 let dataError = null;
@@ -522,7 +542,7 @@ $('#routeClear').onclick=()=>{ state.route=null; routeView='route'; routeLayer.c
 // ---------- start ----------
 if(!window.UK_CHARGERS || !UK_CHARGERS.items || !UK_CHARGERS.items.length) dataError="Couldn't load charger data. Zoom in and tap Retry.";
 fitUk();
-$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc((UK_CHARGERS.source||'').includes('Open Charge Map')?'Open Charge Map':(UK_CHARGERS.source||'OpenStreetMap').split('(')[0].trim())} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.';
+$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc((UK_CHARGERS.source||'').includes('Open Charge Map')?'Open Charge Map':(UK_CHARGERS.source||'OpenStreetMap').split('(')[0].trim())} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.' + (window.UK_MANUAL_CHARGERS&&UK_MANUAL_CHARGERS.items&&UK_MANUAL_CHARGERS.items.length ? ` <b>${UK_MANUAL_CHARGERS.items.length}</b> further ${UK_MANUAL_CHARGERS.items.length===1?'site is':'sites are'} added by hand where that snapshot has a gap.` : '');
 rebuild(); updateHint(); loadLive();
 // URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
 const P=new URLSearchParams(location.search);
