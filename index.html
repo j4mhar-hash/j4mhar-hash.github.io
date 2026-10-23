@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>UK EV Charger Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <style>
 :root{--slow:#3b82f6;--fast:#10b981;--rapid:#f59e0b;--ultra:#a21caf;--unknown:#94a3b8;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#fff;--accent:#0ea5e9}
 *{box-sizing:border-box}html,body{margin:0;height:100%;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
 #map{position:absolute;inset:0}
+.leaflet-gl-layer{position:absolute;left:0;top:0}
+.leaflet-mapLabels-pane .maplibregl-map,.leaflet-mapLabels-pane canvas{background:none}
 #panel{position:absolute;z-index:1000;top:12px;left:12px;width:360px;max-height:calc(100% - 24px);display:flex;flex-direction:column;background:var(--bg);border-radius:14px;box-shadow:0 6px 24px rgba(15,23,42,.18);overflow:hidden}
 #panel header{padding:12px 14px 8px;display:flex;align-items:center;gap:8px}
 #panel h1{font-size:16px;margin:0;flex:1}
@@ -99,7 +102,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: Esri Light Gray Canvas (streets, no labels) with Esri Boundaries and Places labels above the route, © Esri, HERE, Garmin, © OpenStreetMap contributors. Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place names © Esri, HERE, Garmin, © OpenStreetMap contributors.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (streets without labels, place and road names above the route). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors.</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -109,6 +112,8 @@ input[type=range]{flex:1}
 <div id="routeView" hidden><button type="button" id="fitRouteMap">Fit route</button><button type="button" id="fitMapMap">Whole map</button></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="data/uk-chargers.js" onerror="window.__chargersFailed=1"></script><!-- UK snapshot; app shows an error if this fails -->
 <script src="data/manual-chargers.js"></script><!-- hand-added sites; a missing file must not break the map -->
@@ -164,12 +169,13 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
   if(t['payment:contactless']==='yes') o.cl=1; return o; }
 
 // ---------- map ----------
-const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
+const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4, maxZoom:19});
 L.control.zoom({position:'topright'}).addTo(map);
-// Streets without labels, then the route, then a real labels-only tile layer.
-// CARTO Voyager raster requires an API key and serves a watermark, so it is not used.
-// Esri's Light Gray Reference is empty at zoom 10, which a retina screen would
-// request for an overview, so place names come from Boundaries and Places.
+// Streets without labels, then the route, then labels. CARTO raster needs an API
+// key and Esri's light-gray canvas stops at street zoom ("Map data not yet
+// available"), so Map mode is OpenFreeMap: road layers under the route and the
+// same style's names and shields above it. Vector data is native through zoom
+// 14 and stays drawn, not blank, through 19.
 map.createPane('satRoads');
 map.getPane('satRoads').style.zIndex = 250;
 map.getPane('satRoads').style.pointerEvents = 'none';
@@ -178,28 +184,29 @@ map.getPane('routePane').style.zIndex = 300;
 map.createPane('mapLabels');
 map.getPane('mapLabels').style.zIndex = 360;
 map.getPane('mapLabels').style.pointerEvents = 'none';
+const ofmCredit = '© <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors';
 const esriCredit = '© <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true,
-  attribution:'Streets '+esriCredit});
-const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels',
-  attribution:'Labels '+esriCredit});
-streets.addTo(map);
-labels.addTo(map);
+let streetGL = null;
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
-const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'satRoads',
+const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, maxNativeZoom:18, pane:'satRoads',
   attribution:'Roads '+esriCredit});
 const satelliteLayers = [satellite, satelliteRoads];
+// If the vector style cannot be fetched, streets fall back to OSM France so zoom still works.
+const streetsFallback = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {maxZoom:19, subdomains:'abc',
+  attribution:'© <a href="https://www.openstreetmap.fr" target="_blank">OpenStreetMap France</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'});
 let baseName = 'streets';
 function setBasemap(name){
   const sat = name==='satellite';
   if(sat === (baseName==='satellite')) return;
   if(sat){
-    streets.remove();
+    if(streetGL && map.hasLayer(streetGL)) streetGL.remove();
+    if(map.hasLayer(streetsFallback)) streetsFallback.remove();
     satelliteLayers.forEach(l => { if(!map.hasLayer(l)) l.addTo(map); });
   } else {
     satelliteLayers.forEach(l => { if(map.hasLayer(l)) map.removeLayer(l); });
-    if(!map.hasLayer(streets)) streets.addTo(map);
+    if(streetGL){ if(!map.hasLayer(streetGL)) streetGL.addTo(map); }
+    else if(!map.hasLayer(streetsFallback)) streetsFallback.addTo(map);
   }
   baseName = sat ? 'satellite' : 'streets';
   $('#baseStreets').classList.toggle('on', !sat);
@@ -207,6 +214,32 @@ function setBasemap(name){
   $('#baseStreets').setAttribute('aria-pressed', String(!sat));
   $('#baseSat').setAttribute('aria-pressed', String(sat));
 }
+// One style, two maps: roads and land stay under the route, symbol layers
+// (place names, road names, shields) sit in mapLabels above it. Glyphs are
+// redrawn on zoom, so they stay sharp past the vector tiles' native zoom 14.
+function splitOfm(style){
+  const base = JSON.parse(JSON.stringify(style));
+  const labels = JSON.parse(JSON.stringify(style));
+  base.layers = base.layers.filter(l => l.type !== 'symbol');
+  labels.layers = [{id:'labels-clear', type:'background', paint:{'background-color':'rgba(0,0,0,0)','background-opacity':0}}]
+    .concat(labels.layers.filter(l => l.type === 'symbol'));
+  return {base, labels};
+}
+function useStreetFallback(){
+  if(baseName === 'streets' && !map.hasLayer(streetsFallback)) streetsFallback.addTo(map);
+}
+fetch('https://tiles.openfreemap.org/styles/liberty').then(r => {
+  if(!r.ok) throw new Error(String(r.status));
+  return r.json();
+}).then(style => {
+  const parts = splitOfm(style);
+  const common = {interactive:false, fadeDuration:0};
+  streetGL = L.maplibreGL(Object.assign({style:parts.base, pane:'tilePane'}, common));
+  const labelGL = L.maplibreGL(Object.assign({style:parts.labels, pane:'mapLabels'}, common));
+  map.attributionControl.addAttribution(ofmCredit);
+  labelGL.addTo(map);
+  if(baseName === 'streets') streetGL.addTo(map);
+}).catch(useStreetFallback);
 const RANK={unknown:0,slow:1,fast:2,rapid:3,ultra:4};
 const cluster = L.markerClusterGroup({chunkedLoading:true, showCoverageOnHover:false, maxClusterRadius:z=>z>=14?35:55, disableClusteringAtZoom:16,
   iconCreateFunction(c){ const kids=c.getAllChildMarkers(); let top='unknown'; for(const m of kids){ const b=m.options.band; if(RANK[b]>RANK[top]) top=b; if(top==='ultra') break; }
