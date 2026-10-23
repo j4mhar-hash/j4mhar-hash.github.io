@@ -166,29 +166,98 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 // ---------- map ----------
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
-// Imagery stays in the default tile pane (200). The route is under both road
-// tiles and name tiles, so motorway shields (drawn on the road overlay) and
-// place names paint across the blue line. Charger markers stay above that.
-map.createPane('routePane');
-map.getPane('routePane').style.zIndex = 250;
+// Imagery 200, then road lines, then the route, then road lettering and place
+// names, then charger markers. Esri draws the motorway lines and the M1/A-road
+// text in one tile, so that tile is split: warm road ink stays under the blue
+// line, and the dark shield lettering is painted again above it.
 map.createPane('satRoads');
-map.getPane('satRoads').style.zIndex = 360;
+map.getPane('satRoads').style.zIndex = 230;
 map.getPane('satRoads').style.pointerEvents = 'none';
+map.createPane('routePane');
+map.getPane('routePane').style.zIndex = 300;
+map.createPane('satRoadLabels');
+map.getPane('satRoadLabels').style.zIndex = 360;
+map.getPane('satRoadLabels').style.pointerEvents = 'none';
 map.createPane('satLabels');
 map.getPane('satLabels').style.zIndex = 380;
 map.getPane('satLabels').style.pointerEvents = 'none';
+const transportUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}';
+const transportCache = new Map();
+function loadTransportTile(url){
+  let pending = transportCache.get(url);
+  if(pending) return pending;
+  pending = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => { transportCache.delete(url); reject(new Error('tile')); };
+    img.src = url;
+  });
+  transportCache.set(url, pending);
+  if(transportCache.size > 500) transportCache.delete(transportCache.keys().next().value);
+  return pending;
+}
+function isDarkInk(r, g, b, a, maxInk, maxChroma){
+  if(a < 60) return false;
+  const mx = r > g ? (r > b ? r : b) : (g > b ? g : b);
+  const mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+  return mx <= maxInk && mx - mn <= maxChroma;
+}
+// Road lines stay in the tile. Shield and street lettering is the neutral dark
+// ink, plus the one-pixel grey edge around those strokes.
+function splitTransport(tile, img, labelsOnly){
+  const w = img.naturalWidth, h = img.naturalHeight;
+  tile.width = w; tile.height = h;
+  const ctx = tile.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(img, 0, 0);
+  const image = ctx.getImageData(0, 0, w, h), d = image.data, n = w * h;
+  const core = new Uint8Array(n), label = new Uint8Array(n);
+  for(let p = 0; p < n; p++){
+    const i = p * 4;
+    if(isDarkInk(d[i], d[i + 1], d[i + 2], d[i + 3], 100, 24)) core[p] = 1;
+  }
+  for(let y = 0; y < h; y++){
+    for(let x = 0; x < w; x++){
+      const p = y * w + x;
+      if(core[p]){ label[p] = 1; continue; }
+      let near = false;
+      for(let dy = -1; dy <= 1 && !near; dy++){
+        const yy = y + dy; if(yy < 0 || yy >= h) continue;
+        for(let dx = -1; dx <= 1; dx++){
+          const xx = x + dx;
+          if(xx >= 0 && xx < w && core[yy * w + xx]){ near = true; break; }
+        }
+      }
+      if(!near) continue;
+      const i = p * 4;
+      if(isDarkInk(d[i], d[i + 1], d[i + 2], d[i + 3] > 40 ? 60 : 0, 165, 36)) label[p] = 1;
+    }
+  }
+  for(let p = 0; p < n; p++) if(label[p] !== (labelsOnly ? 1 : 0)) d[p * 4 + 3] = 0;
+  ctx.putImageData(image, 0, 0);
+}
+const TransportTiles = L.TileLayer.extend({
+  createTile(coords, done){
+    const tile = document.createElement('canvas');
+    const labelsOnly = this.options.ink === 'labels';
+    loadTransportTile(this.getTileUrl(coords)).then(img => { splitTransport(tile, img, labelsOnly); done(null, tile); })
+      .catch(err => done(err, tile));
+    return tile;
+  }
+});
 const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
-const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, detectRetina:true, pane:'satRoads',
+const satelliteRoads = new TransportTiles(transportUrl, {maxZoom:19, detectRetina:true, pane:'satRoads', ink:'roads',
   attribution:'Roads and labels © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
+const satelliteRoadLabels = new TransportTiles(transportUrl, {maxZoom:19, detectRetina:true, pane:'satRoadLabels', ink:'labels', attribution:''});
 // One label layer at a time. Alternate (light type, made for imagery) covers the route overview.
 // Boundaries and Places takes over for street names. detectRetina requests the next zoom so phone screens stay sharp.
 const retina = L.Browser.retina;
 const satelliteLabelsFar = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}', {maxZoom:12, maxNativeZoom:12, detectRetina:true, pane:'satLabels', attribution:''});
 const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {minZoom: retina ? 12 : 13, maxZoom:19, detectRetina:true, pane:'satLabels', attribution:''});
-const satelliteLayers = [satellite, satelliteRoads, satelliteLabelsFar, satelliteLabels];
+const satelliteLayers = [satellite, satelliteRoads, satelliteRoadLabels, satelliteLabelsFar, satelliteLabels];
 let baseName = 'streets';
 function setBasemap(name){
   const sat = name==='satellite';
