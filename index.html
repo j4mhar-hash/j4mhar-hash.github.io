@@ -99,7 +99,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (default, tile.openstreetmap.org, light use only). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community) with Esri road and place-name overlays (Esri, HERE, Garmin, © OpenStreetMap contributors).</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: Esri Light Gray Canvas (streets, no labels) with the matching Light Gray Reference labels above the route, © Esri, HERE, Garmin, © OpenStreetMap contributors. Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place names © Esri, HERE, Garmin, © OpenStreetMap contributors.</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -166,175 +166,31 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 // ---------- map ----------
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
-// Imagery, then orange road lines, then the blue route, then every text label.
-// Esri's road tiles mix the orange strokes with the names, and those names are
-// see-through, so a higher z-index still lets the route show through the glyphs.
-// The overview uses a labels overlay (no road fill) drawn with a solid white
-// halo. Zoomed in, shield lettering and place names get the same halo.
+// Streets without labels, then the route, then a real labels-only tile layer.
+// CARTO's Voyager raster now requires an API key and serves a watermark, so
+// Map mode uses Esri's Light Gray Canvas pair instead of copying names off OSM.
+// Satellite keeps imagery and road lines under the route, and place-name tiles above it.
 map.createPane('satRoads');
-map.getPane('satRoads').style.zIndex = 230;
+map.getPane('satRoads').style.zIndex = 250;
 map.getPane('satRoads').style.pointerEvents = 'none';
 map.createPane('routePane');
 map.getPane('routePane').style.zIndex = 300;
-map.createPane('satRoadLabels');
-map.getPane('satRoadLabels').style.zIndex = 360;
-map.getPane('satRoadLabels').style.pointerEvents = 'none';
-map.createPane('satOverlay');
-map.getPane('satOverlay').style.zIndex = 370;
-map.getPane('satOverlay').style.pointerEvents = 'none';
-map.createPane('satLabels');
-map.getPane('satLabels').style.zIndex = 390;
-map.getPane('satLabels').style.pointerEvents = 'none';
-// Map mode uses the same slot: OSM road art stays in the tile pane, under the
-// route, and the names and shields from those tiles are redrawn here.
 map.createPane('mapLabels');
-map.getPane('mapLabels').style.zIndex = 385;
+map.getPane('mapLabels').style.zIndex = 360;
 map.getPane('mapLabels').style.pointerEvents = 'none';
-const tileCache = new Map();
-function loadTileImage(url){
-  let pending = tileCache.get(url);
-  if(pending) return pending;
-  pending = new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => { tileCache.delete(url); reject(new Error('tile')); };
-    img.src = url;
-  });
-  tileCache.set(url, pending);
-  if(tileCache.size > 500) tileCache.delete(tileCache.keys().next().value);
-  return pending;
-}
-function rgbaMax(r, g, b){ return r > g ? (r > b ? r : b) : (g > b ? g : b); }
-function rgbaMin(r, g, b){ return r < g ? (r < b ? r : b) : (g < b ? g : b); }
-function isDarkLabel(r, g, b, a){
-  if(a < 50) return false;
-  const mx = rgbaMax(r, g, b), mn = rgbaMin(r, g, b);
-  return mx <= 105 && mx - mn <= 28;
-}
-// Shield lettering and fills. Orange and green road strokes are not shields.
-function isShieldInk(r, g, b, a){
-  if(isDarkLabel(r, g, b, a)) return true;
-  if(a < 50) return false;
-  if(b > r + 30 && b > 90 && g > 60) return true;
-  if(r > 140 && g < 95 && b < 110 && r > g + 50) return true;
-  return false;
-}
-function isRedRoad(r, g, b){ return r > 150 && r > g + 25 && r > b + 25 && g < 220; }
-// OSM streets bake names into the road tile. These are the dark names, the blue
-// motorway shields and the green A-road shields — not parks, water or road fill.
-function isOsmLabel(r, g, b){
-  const mx = rgbaMax(r, g, b), mn = rgbaMin(r, g, b);
-  if(mx <= 120 && mx - mn <= 42) return true;
-  if(b > 145 && r < 120 && b > r + 45 && g < 200) return true;
-  // A-road shields are a vivid green. Woodland and parks are paler and must stay under the route.
-  if(g > 140 && g > r + 60 && g > b + 50 && r < 100 && b < 140) return true;
-  return false;
-}
-// Dark lettering or white type. Mid-grey boundary lines and red road strokes stay out.
-function isOverlayText(r, g, b, a){
-  if(a < 40 || isRedRoad(r, g, b)) return false;
-  const mx = rgbaMax(r, g, b), mn = rgbaMin(r, g, b);
-  return (mx <= 115 && mx - mn <= 32) || mn >= 190;
-}
-function paintTile(tile, img, mode){
-  const w = img.naturalWidth, h = img.naturalHeight;
-  tile.width = w; tile.height = h;
-  const ctx = tile.getContext('2d', {willReadFrequently:true});
-  ctx.drawImage(img, 0, 0);
-  if(mode === 'full') return;
-  let src;
-  try { src = ctx.getImageData(0, 0, w, h); }
-  catch(e){ return; }
-  const s = src.data, n = w * h, mark = new Uint8Array(n);
-  for(let p = 0; p < n; p++){
-    const i = p * 4, r = s[i], g = s[i + 1], b = s[i + 2], a = s[i + 3];
-    if(mode === 'roads' || mode === 'roadLabels'){ if(isShieldInk(r, g, b, a)) mark[p] = 1; }
-    else if(mode === 'overlay'){ if(isOverlayText(r, g, b, a)) mark[p] = 1; }
-    else if(mode === 'osm'){ if(isOsmLabel(r, g, b)) mark[p] = 1; }
-    else if(a > 40) mark[p] = 1;
-  }
-  if(mode === 'osm'){
-    const core = mark.slice();
-    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
-      if(!core[y * w + x]) continue;
-      for(let dy = -2; dy <= 2; dy++){
-        const yy = y + dy; if(yy < 0 || yy >= h) continue;
-        for(let dx = -2; dx <= 2; dx++){
-          const xx = x + dx; if(xx < 0 || xx >= w) continue;
-          const q = yy * w + xx, i = q * 4;
-          if(rgbaMin(s[i], s[i + 1], s[i + 2]) > 175) mark[q] = 1;
-        }
-      }
-    }
-  }
-  if(mode === 'roads' || mode === 'roadLabels'){
-    const core = mark.slice();
-    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
-      if(!core[y * w + x]) continue;
-      for(let dy = -2; dy <= 2; dy++){
-        const yy = y + dy; if(yy < 0 || yy >= h) continue;
-        for(let dx = -2; dx <= 2; dx++){
-          const xx = x + dx; if(xx < 0 || xx >= w) continue;
-          const q = yy * w + xx, a = s[q * 4 + 3];
-          if(a > 30) mark[q] = 1;
-        }
-      }
-    }
-  }
-  if(mode === 'roads'){
-    for(let p = 0; p < n; p++) if(mark[p]) s[p * 4 + 3] = 0;
-    ctx.putImageData(src, 0, 0);
-    return;
-  }
-  const halo = new Uint8Array(n), rad = 3;
-  for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
-    if(!mark[y * w + x]) continue;
-    for(let dy = -rad; dy <= rad; dy++){
-      const yy = y + dy; if(yy < 0 || yy >= h) continue;
-      for(let dx = -rad; dx <= rad; dx++){
-        const xx = x + dx; if(xx < 0 || xx >= w) continue;
-        halo[yy * w + xx] = 1;
-      }
-    }
-  }
-  const out = ctx.createImageData(w, h), o = out.data;
-  for(let p = 0; p < n; p++){
-    const i = p * 4;
-    if(halo[p]){ o[i] = 255; o[i + 1] = 255; o[i + 2] = 255; o[i + 3] = 255; }
-    if(mark[p]){ o[i] = s[i]; o[i + 1] = s[i + 1]; o[i + 2] = s[i + 2]; o[i + 3] = Math.max(s[i + 3], 230); }
-  }
-  ctx.putImageData(out, 0, 0);
-}
-const InkTiles = L.TileLayer.extend({
-  createTile(coords, done){
-    const tile = document.createElement('canvas');
-    const mode = this.options.ink;
-    loadTileImage(this.getTileUrl(coords)).then(img => { paintTile(tile, img, mode); done(null, tile); })
-      .catch(err => done(err, tile));
-    return tile;
-  }
-});
-const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const streets = new InkTiles(osmUrl, {maxZoom:19, pane:'tilePane', ink:'full',
-  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
-const streetLabels = new InkTiles(osmUrl, {maxZoom:19, pane:'mapLabels', ink:'osm', attribution:''});
+const esriCredit = '© <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true,
+  attribution:'Streets '+esriCredit});
+const streetLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels', attribution:''});
 streets.addTo(map);
 streetLabels.addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
-const transportUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}';
-const satelliteRoads = new InkTiles(transportUrl, {minZoom:10, maxZoom:19, detectRetina:true, pane:'satRoads', ink:'roads',
-  attribution:'Roads © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
-const satelliteRoadLabels = new InkTiles(transportUrl, {minZoom:10, maxZoom:19, detectRetina:true, pane:'satRoadLabels', ink:'roadLabels', attribution:''});
-// Labels-only reference (place names and road refs, no orange fill). Native data through zoom 9.
-const satelliteOverlay = new InkTiles('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {maxZoom:9, pane:'satOverlay', ink:'overlay',
-  attribution:'Labels © Esri, Garmin, USGS, NPS'});
-// One place-name layer at a time, and only once the overview overlay has dropped off.
-const retina = L.Browser.retina;
-const satelliteLabelsFar = new InkTiles('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}', {minZoom:10, maxZoom:12, maxNativeZoom:12, detectRetina:true, pane:'satLabels', ink:'places', attribution:''});
-const satelliteLabels = new InkTiles('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {minZoom: retina ? 12 : 13, maxZoom:19, detectRetina:true, pane:'satLabels', ink:'places', attribution:''});
-const satelliteLayers = [satellite, satelliteRoads, satelliteRoadLabels, satelliteOverlay, satelliteLabelsFar, satelliteLabels];
+const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'satRoads',
+  attribution:'Roads '+esriCredit});
+const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels',
+  attribution:'Labels '+esriCredit});
+const satelliteLayers = [satellite, satelliteRoads, satelliteLabels];
 let baseName = 'streets';
 function setBasemap(name){
   const sat = name==='satellite';
