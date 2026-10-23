@@ -8,7 +8,7 @@ A clean, mobile-friendly map of public EV chargers in the UK:
 - **Live status**: shown when you run `node server.js`, using the operators' open OCPI feeds.
 
 ## Run it
-- **Simplest:** open `index.html` in a browser, or use the GitHub Pages site. Chargers come from `data/uk-chargers.js` (Open Charge Map merged with open PCPR/OCPI feeds), so the map does not need `server.js` or a live Overpass response. Live bay status still needs `node server.js`.
+- **Simplest:** open `index.html` in a browser, or use the GitHub Pages site. Chargers come from `data/uk-chargers.js` (Open Charge Map merged with open PCPR/OCPI feeds and Fastned UK locations), so the map does not need `server.js` or a live Overpass response. Live bay status still needs `node server.js`.
 - **Recommended:** `node server.js`, then open http://localhost:8080 (Node 18+, no npm install needed). This adds:
   - `/api/live`: live EVSE status from open OCPI feeds (char.gy today), refreshed every 10 minutes.
   - `/api/overpass`: a caching proxy for OpenStreetMap Overpass (24 h disk cache, retries across mirrors, proper User-Agent).
@@ -18,7 +18,7 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 ## Data sources
 | What | Source | Key needed? |
 |---|---|---|
-| Charger locations, power and connectors (built-in snapshot) | [Open Charge Map](https://openchargemap.org) public export (`ocm-export` GB POIs; CC BY 4.0 and other licences), merged with open PCPR/OCPI location feeds: [char.gy](https://char.gy/open-ocpi/locations), [Clenergy/CEV](https://api.clenergy.online/development/pcpr/locations), [MFG](https://opendata.motorfuelgroup.net/locations), [Monta](https://public-api.monta.com/api/v1/open-data/locations) (GB only), plus `data/manual-chargers.js` | No |
+| Charger locations, power and connectors (built-in snapshot) | [Open Charge Map](https://openchargemap.org) public export (`ocm-export` GB POIs; CC BY 4.0 and other licences), merged with open PCPR/OCPI location feeds: [char.gy](https://char.gy/open-ocpi/locations), [Clenergy/CEV](https://api.clenergy.online/development/pcpr/locations), [MFG](https://opendata.motorfuelgroup.net/locations), [Monta](https://public-api.monta.com/api/v1/open-data/locations) (GB only), [Fastned](https://www.fastnedcharging.com/en-gb/uk-open-data) UK locations (adapted; source: Fastned), plus `data/manual-chargers.js` | No key in the repo. A Fastned open-data rebuild can read the endpoint and header from the environment; public station pages are used when that URL is unset. |
 | Live area / route refresh | OpenStreetMap `amenity=charging_station` via Overpass API (ODbL), from zoom 11 | No |
 | Live status | Open OCPI feeds required by the Public Charge Point Regulations 2023 (char.gy verified) | No (needs `server.js` because the feeds have no CORS headers) |
 | Postcode search | postcodes.io | No |
@@ -32,7 +32,9 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 - `data/uk-chargers.js`: saved public charging sites for the whole UK. `index.html` loads it automatically.
 - `data/manual-chargers.js`: hand-added public sites missing from OCM/OCPI (Drax Hub Visitors). The merge script folds these into the snapshot; the page also merges them at load time so an Open Charge Map-only rebuild does not drop them.
 - `data/ocpi-merge-report.json`: counts from the last PCPR/OCPI merge.
-- `scripts/build-ocpi-merge.js`: preferred refresh. Starts from the current snapshot (rebuild the Open Charge Map base with `build-ocm.js` first if you want a fresh export), merges the free PCPR/OCPI feeds and `data/manual-chargers.js`, and writes `data/uk-chargers.js`. No API keys. Run: `node scripts/build-ocpi-merge.js`.
+- `data/fastned-merge-report.json`: counts from the last Fastned merge.
+- `scripts/build-ocpi-merge.js`: merges the free PCPR/OCPI feeds (char.gy, Clenergy, MFG, Monta GB) and `data/manual-chargers.js` into `data/uk-chargers.js`. No API keys. Run: `node scripts/build-ocpi-merge.js`.
+- `scripts/build-fastned.js`: merges Fastned UK sites into that snapshot (`fastned:` ids). Uses `FASTNED_API_URL` plus a header name and value from the environment when the open-data endpoint is known; otherwise reads Fastned’s public UK station pages. It does not write those values into the repo. Run: `node scripts/build-fastned.js`.
 - `scripts/build-ocm.js`: builds an OCM-only `data/uk-chargers.js` from the Open Charge Map public export (no API key). Sparse-checkout `data/GB/` and `data/referencedata.json` from [openchargemap/ocm-export](https://github.com/openchargemap/ocm-export), then `node scripts/build-ocm.js [/path/to/ocm-export]`.
 - `scripts/build-data.js`, `scripts/extract_pbf.py`, `scripts/build-snapshot.js`: older OSM Overpass / Geofabrik builders.
 - `scripts/test.js`: headless Playwright test that also takes the screenshots.

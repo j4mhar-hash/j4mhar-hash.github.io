@@ -1,0 +1,223 @@
+{
+  "before": 31778,
+  "after": 31794,
+  "netNew": 16,
+  "fileBytes": 5363517,
+  "mode": "web",
+  "fastnedRaw": 42,
+  "added": 16,
+  "enriched": 4,
+  "skipped": 0,
+  "sampleAdds": [
+    {
+      "id": "fastned:bordesley-circus-ibis",
+      "n": "Bordesley Circus (Ibis)",
+      "op": "Fastned",
+      "ad": "Bordesley Park Road 1, Birmingham",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 52.47206,
+      "o": -1.87333
+    },
+    {
+      "id": "fastned:cromwell-farm",
+      "n": "Cromwell Farm",
+      "op": "Fastned",
+      "ad": "Cromwell Farm Cl, Newark",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 53.15434,
+      "o": -0.80625
+    },
+    {
+      "id": "fastned:cutler-heights-bradford",
+      "n": "Cutler Heights, Bradford",
+      "op": "Fastned",
+      "ad": "Cutler Heights Lane, Bradford",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 53.77676,
+      "o": -1.72478
+    },
+    {
+      "id": "fastned:dalgety-bay",
+      "n": "Dalgety Bay",
+      "op": "Fastned",
+      "ad": "Ridge Way, Dalgety Bay",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 56.04176,
+      "o": -3.36
+    },
+    {
+      "id": "fastned:durham-road",
+      "n": "Durham Road",
+      "op": "Fastned",
+      "ad": "N Moor Rd, Sunderland",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 54.88235,
+      "o": -1.42379
+    },
+    {
+      "id": "fastned:forrest-park",
+      "n": "Forrest Park",
+      "op": "Fastned",
+      "ad": "J59, A167, Darlington",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 54.58624,
+      "o": -1.56493
+    },
+    {
+      "id": "fastned:freebridge-kings-lynn",
+      "n": "Freebridge King's Lynn",
+      "op": "Fastned",
+      "ad": "Clenchwarton Road, King's Lynn",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 52.74389,
+      "o": 0.38399
+    },
+    {
+      "id": "fastned:greenock-holiday-inn",
+      "n": "Greenock (Holiday Inn)",
+      "op": "Fastned",
+      "ad": "Cartsburn W, Greenock",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 55.94395,
+      "o": -4.74224
+    },
+    {
+      "id": "fastned:hatton-cross",
+      "n": "Hatton Cross",
+      "op": "Fastned",
+      "ad": "Hatton Cross Car Park, Hounslow",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 51.46641,
+      "o": -0.42389
+    },
+    {
+      "id": "fastned:hemel-hempstead",
+      "n": "Hemel Hempstead",
+      "op": "Fastned",
+      "ad": "Jarman Way , Hemel Hempstead",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 51.74862,
+      "o": -0.45473
+    },
+    {
+      "id": "fastned:houghton-le-spring",
+      "n": "Houghton-le-Spring",
+      "op": "Fastned",
+      "ad": "Newbottle St, Houghton le Spring",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 54.84701,
+      "o": -1.4736
+    },
+    {
+      "id": "fastned:junction-24-retail-park",
+      "n": "Junction 24 Retail Park",
+      "op": "Fastned",
+      "ad": "Helen St, Glasgow",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 55.85307,
+      "o": -4.31905
+    },
+    {
+      "id": "fastned:kingston-park",
+      "n": "Kingston Park",
+      "op": "Fastned",
+      "ad": "Brunton Lane, Newcastle",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 55.01507,
+      "o": -1.66465
+    },
+    {
+      "id": "fastned:liverpool-brunswick",
+      "n": "Liverpool - Brunswick",
+      "op": "Fastned",
+      "ad": "Tower Street, Liverpool",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 53.38321,
+      "o": -2.97748
+    },
+    {
+      "id": "fastned:newcastle-airport",
+      "n": "Newcastle Airport",
+      "op": "Fastned",
+      "ad": "Short Stay 1, Newcastle upon Tyne",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 55.02794,
+      "o": -1.7044
+    },
+    {
+      "id": "fastned:newcastle-askew-road",
+      "n": "Newcastle Askew Road",
+      "op": "Fastned",
+      "ad": "Tyne View House, Newcastle,",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "a": 54.95796,
+      "o": -1.61661
+    }
+  ],
+  "generated": "2026-10-23T10:18:45.066Z",
+  "note": "API mode needs FASTNED_API_URL (James/header+key alone; api.fastned.nl rejected key). Used public UK station pages. Secrets not written to repo."
+}
