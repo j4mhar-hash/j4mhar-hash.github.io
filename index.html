@@ -46,8 +46,10 @@ button:disabled{opacity:.5;cursor:default}
 #hint{position:absolute;z-index:1100;top:12px;right:58px;left:12px;margin-left:auto;max-width:420px;background:#0f172a;color:#fff;padding:8px 12px;border-radius:999px;font-size:13px;text-align:center;box-shadow:0 4px 16px rgba(15,23,42,.25);pointer-events:none}
 #hint.error{background:#991b1b}
 #hint button{pointer-events:auto;margin-left:8px;padding:3px 8px;border-radius:999px;background:#fff;color:#0f172a;font-weight:600}
-#routeView{position:absolute;z-index:1000;top:100px;right:10px;display:flex;flex-direction:column;gap:6px}
-#routeView button, #routeFitRow button{font-weight:600}
+#routeView{position:absolute;z-index:2500;top:100px;right:10px;display:flex;flex-direction:column;gap:6px;transform:translateZ(0);touch-action:manipulation}
+#routeView[hidden], #routeFitRow[hidden]{display:none !important}
+#routeFitRow{position:sticky;top:0;z-index:3;background:#fff;padding:2px 0 8px}
+#routeView button, #routeFitRow button{font-weight:600;touch-action:manipulation}
 #routeView button{background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.18);padding:10px 12px}
 #routeView button.on, #routeFitRow button.on{background:#0f172a;color:#fff;border-color:#0f172a}
 .popup b{font-size:14px}.popup table{border-collapse:collapse;margin-top:4px}.popup td{padding:1px 6px 1px 0;vertical-align:top}.popup td:first-child{color:var(--muted)}
@@ -72,6 +74,7 @@ input[type=range]{flex:1}
   <div class="search"><input id="q" type="text" placeholder="Search a town, place or postcode" autocomplete="off"><button id="qgo" class="primary">Go</button><div id="qres" class="results" hidden></div></div>
   <div class="tabs"><button data-tab="explore" class="on">Explore</button><button data-tab="route">Route</button><button data-tab="about">Data</button></div>
   <div class="body">
+    <div class="row" id="routeFitRow" hidden><button type="button" id="fitRoute" style="flex:1">Fit route</button><button type="button" id="fitMap" style="flex:1">Whole map</button></div>
     <div class="sec"><h3>Charger power</h3><div class="chips" id="bands"></div>
       <label class="small" style="display:block;margin-top:6px"><input type="checkbox" id="est" checked> Treat untagged DC sites (CCS/CHAdeMO) as rapid (estimated)</label></div>
     <div class="sec"><h3>Connector</h3><div class="chips" id="conns"></div><div class="small" style="margin-top:4px">None selected = any connector (incl. sites with no connector info)</div></div>
@@ -87,7 +90,6 @@ input[type=range]{flex:1}
       <div class="row"><input id="to" type="text" placeholder="To (place or postcode)"></div>
       <div class="row"><span class="small">Corridor</span><input id="corr" type="range" min="0.5" max="10" step="0.5" value="3"><span id="corrVal" class="small" style="width:44px">3 km</span></div>
       <div class="row"><button id="routeGo" class="primary" style="flex:1">Show chargers on route</button><button id="routeClear">Clear</button></div>
-      <div class="row" id="routeFitRow" hidden><button type="button" id="fitRoute" style="flex:1">Fit route</button><button type="button" id="fitMap" style="flex:1">Whole map</button></div>
       <div class="stat" id="routeStat" hidden></div>
       <div class="list" id="routeList"></div>
     </div>
@@ -247,7 +249,7 @@ function fitUk(){
   map.setMaxBounds(null);
   const pad=mapPad();
   if(!(innerWidth<=700 && !$('#panel').classList.contains('collapsed'))){
-    map.fitBounds(UK, Object.assign({animate:false}, pad));
+    map.fitBounds(UK, Object.assign({animate:false, reset:true}, pad));
     map.setMaxBounds(UK.pad(0.6));
     return;
   }
@@ -259,7 +261,7 @@ function fitUk(){
     const nw=map.project(HOME.getNorthWest(), z), se=map.project(HOME.getSouthEast(), z);
     if(Math.abs(se.y-nw.y)<=availH && Math.abs(se.x-nw.x)<=availW) best=z;
   }
-  map.setView(HOME.getCenter(), best, {animate:false});
+  map.setView(HOME.getCenter(), best, {animate:false, reset:true});
   const nw=map.latLngToContainerPoint(HOME.getNorthWest()), se=map.latLngToContainerPoint(HOME.getSouthEast());
   map.panBy([(nw.x+se.x)/2-size.x/2, (nw.y+se.y)/2-(top+bottom)/2], {animate:false});
   const limit=L.latLngBounds(UK.getSouthWest(), UK.getNorthEast());
@@ -300,8 +302,11 @@ let fitting = false; // programmatic fit must not be treated as the user zooming
 function syncRouteChrome(){
   const on = !!state.route;
   $('#routeFitRow').hidden = !on;
-  // Keep the map buttons up even when the phone sheet is open — the in-sheet pair can sit below the fold.
-  $('#routeView').hidden = !on;
+  const collapsed = $('#panel').classList.contains('collapsed');
+  const phone = innerWidth<=700;
+  // Phone sheet open: the sticky row at the top of the sheet is the control.
+  // The corner buttons are for when that row is hidden (sheet collapsed) or on a desktop map.
+  $('#routeView').hidden = !on || (phone && !collapsed);
   const mapOn = on && routeView==='map';
   $('#fitRoute').classList.toggle('on', on && !mapOn);
   $('#fitRouteMap').classList.toggle('on', on && !mapOn);
@@ -312,20 +317,25 @@ function fitRouteView(){
   if(!state.route) return;
   fitting = true;
   routeView = 'route';
-  map.fitBounds(L.latLngBounds(state.route.coords), Object.assign({animate:false}, mapPad()));
+  map.invalidateSize({animate:false, pan:false});
+  map.setMaxBounds(null);
+  map.fitBounds(L.latLngBounds(state.route.coords), Object.assign({animate:false, reset:true}, mapPad()));
   state.route.fitZoom = map.getZoom();
+  map.setMaxBounds(UK.pad(0.8));
   fitting = false;
-  rebuild();
   syncRouteChrome();
+  rebuild();
 }
 function fitWholeMap(){
   if(!state.route) return;
   fitting = true;
   routeView = 'map';
+  // Size can be stale after the phone sheet or browser chrome moves. Frame first, draw after, so the camera is not stuck on the corridor.
+  map.invalidateSize({animate:false, pan:false});
   fitUk();
   fitting = false;
-  rebuild();
   syncRouteChrome();
+  requestAnimationFrame(() => { if(state.route && routeView==='map') rebuild(); });
 }
 function rebuild(){
   cluster.clearLayers();
@@ -497,8 +507,16 @@ function renderRouteList(){ const R=state.route; if(!R||R.width==null) return; c
     + (routeView==='map' ? '<div class="small">Showing the wider map. Fit route to focus the corridor again.</div>' : '');
   $('#routeList').innerHTML=shown.slice(0,300).map(s=>itemHtml(s,` · ${s.along.toFixed(0)} km in · ${s.dist<0.1?'on route':s.dist.toFixed(1)+' km off'}`)).join('') + (shown.length>300?`<div class="small" style="padding:8px 0">Showing first 300 – narrow the filters to see fewer.</div>`:''); }
 $('#routeGo').onclick=planRoute; $('#to').onkeydown=e=>{ if(e.key==='Enter') planRoute(); };
-$('#fitRoute').onclick=fitRouteView; $('#fitRouteMap').onclick=fitRouteView;
-$('#fitMap').onclick=fitWholeMap; $('#fitMapMap').onclick=fitWholeMap;
+function bindPress(id, fn){
+  const el=$(id); if(!el) return;
+  let last=0;
+  const go=e=>{ const now=Date.now(); if(now-last<400) return; last=now; e.preventDefault(); e.stopPropagation(); fn(); };
+  el.addEventListener('click', go);
+  el.addEventListener('touchend', go);
+}
+bindPress('#fitRoute', fitRouteView); bindPress('#fitRouteMap', fitRouteView);
+bindPress('#fitMap', fitWholeMap); bindPress('#fitMapMap', fitWholeMap);
+window.addEventListener('resize', () => syncRouteChrome());
 $('#routeClear').onclick=()=>{ state.route=null; routeView='route'; routeLayer.clearLayers(); $('#routeStat').hidden=true; $('#routeList').innerHTML=''; syncRouteChrome(); for(const s of stations){ delete s.dist; delete s.along; } rebuild(); };
 
 // ---------- start ----------
