@@ -99,7 +99,7 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: Esri Light Gray Canvas (streets, no labels) with the matching Light Gray Reference labels above the route, © Esri, HERE, Garmin, © OpenStreetMap contributors. Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place names © Esri, HERE, Garmin, © OpenStreetMap contributors.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned) and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: Esri Light Gray Canvas (streets, no labels) with Esri Boundaries and Places labels above the route, © Esri, HERE, Garmin, © OpenStreetMap contributors. Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place names © Esri, HERE, Garmin, © OpenStreetMap contributors.</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -167,9 +167,9 @@ function compactOsm(e){ const t=e.tags||{}; const lat=e.lat??e.center?.lat, lon=
 const map = L.map('map', {preferCanvas:true, zoomControl:false, minZoom:4});
 L.control.zoom({position:'topright'}).addTo(map);
 // Streets without labels, then the route, then a real labels-only tile layer.
-// CARTO's Voyager raster now requires an API key and serves a watermark, so
-// Map mode uses Esri's Light Gray Canvas pair instead of copying names off OSM.
-// Satellite keeps imagery and road lines under the route, and place-name tiles above it.
+// CARTO Voyager raster requires an API key and serves a watermark, so it is not used.
+// Esri's Light Gray Reference is empty at zoom 10, which a retina screen would
+// request for an overview, so place names come from Boundaries and Places.
 map.createPane('satRoads');
 map.getPane('satRoads').style.zIndex = 250;
 map.getPane('satRoads').style.pointerEvents = 'none';
@@ -181,28 +181,25 @@ map.getPane('mapLabels').style.pointerEvents = 'none';
 const esriCredit = '© <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true,
   attribution:'Streets '+esriCredit});
-const streetLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels', attribution:''});
+const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels',
+  attribution:'Labels '+esriCredit});
 streets.addTo(map);
-streetLabels.addTo(map);
+labels.addTo(map);
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19,
   attribution:'Imagery © <a href="https://www.esri.com/">Esri</a> — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community'});
 const satelliteRoads = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'satRoads',
   attribution:'Roads '+esriCredit});
-const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:20, detectRetina:true, pane:'mapLabels',
-  attribution:'Labels '+esriCredit});
-const satelliteLayers = [satellite, satelliteRoads, satelliteLabels];
+const satelliteLayers = [satellite, satelliteRoads];
 let baseName = 'streets';
 function setBasemap(name){
   const sat = name==='satellite';
   if(sat === (baseName==='satellite')) return;
   if(sat){
     streets.remove();
-    streetLabels.remove();
     satelliteLayers.forEach(l => { if(!map.hasLayer(l)) l.addTo(map); });
   } else {
     satelliteLayers.forEach(l => { if(map.hasLayer(l)) map.removeLayer(l); });
     if(!map.hasLayer(streets)) streets.addTo(map);
-    if(!map.hasLayer(streetLabels)) streetLabels.addTo(map);
   }
   baseName = sat ? 'satellite' : 'streets';
   $('#baseStreets').classList.toggle('on', !sat);
