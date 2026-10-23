@@ -96,8 +96,8 @@ input[type=range]{flex:1}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: open OCPI feeds published under the UK Public Charge Point Regulations 2023 (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
-      <p class="small">Power and connectors come from Open Charge Map where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a> (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: © OpenStreetMap contributors (tile.openstreetmap.org, light use only).</p>
+      <p class="small">Power and connectors come from Open Charge Map and the merged PCPR/OCPI feeds where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
 </div>
@@ -186,7 +186,8 @@ function liveMatch(s){ const ka=Math.round(s.a*300), ko=Math.round(s.o*200);
 function addOsm(list){ for(const s of list){ s.src='osm'; const l=liveMatch(s); if(l){ l.osm=s.id; if(!l.c?.length) l.c=s.c; if(!l.cap) l.cap=s.cap; continue; } osmById.set(s.id,s); } recompute(); }
 function recompute(){ stations=[...osmById.values()].concat(live?.items||[]); byId.clear(); for(const s of stations) byId.set(s.id,s); }
 if (window.UK_CHARGERS) addOsm(window.UK_CHARGERS.items); // optional offline snapshot from scripts/build-data.js
-// Hand-added sites live in data/manual-chargers.js so the next Open Charge Map rebuild does not wipe them.
+// Hand-added sites live in data/manual-chargers.js. The OCPI merge folds them into the snapshot;
+// this still adds any that a later Open Charge Map-only rebuild leaves out.
 function addManual(list){
   if(!list||!list.length) return;
   let added=0;
@@ -203,7 +204,10 @@ function addManual(list){
   }
   if(added) recompute();
 }
-if(window.UK_MANUAL_CHARGERS&&UK_MANUAL_CHARGERS.items) addManual(UK_MANUAL_CHARGERS.items);
+const manualItems = []
+  .concat((window.UK_MANUAL_CHARGERS&&UK_MANUAL_CHARGERS.items)||[])
+  .concat((window.MANUAL_CHARGERS&&MANUAL_CHARGERS.items)||[]);
+if(manualItems.length) addManual(manualItems);
 
 function liveUnavailable(note){
   const sec=$('#liveSec'); sec.hidden=false; sec.style.opacity='.6';
@@ -254,7 +258,18 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   const ocmLink = String(s.id||'').startsWith('ocm-') ? ` · <a target="_blank" href="https://openchargemap.org/site/poi/details/${s.id.slice(4)}">OCM</a>` : '';
   return `<div class="popup"><b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
     <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}${ocmLink}</div>
-    <div class="small">Source: ${s.src==='live'? 'operator open data (OCPI)' : (s.src==='manual'||String(s.id||'').startsWith('manual-'))? 'Added by hand (missing from the Open Charge Map snapshot)' : (String(s.id||'').startsWith('ocm-')? 'Open Charge Map' : 'OpenStreetMap')}</div></div>`; }
+    <div class="small">Source: ${sourceOf(s)}</div></div>`; }
+function sourceOf(s){
+  const id = String(s.id||'');
+  if(s.src==='live') return 'operator open data (OCPI)';
+  if(s.src==='manual' || id.startsWith('manual-')) return 'Added by hand (missing from Open Charge Map and the OCPI feeds)';
+  if(id.startsWith('ocm-')) return 'Open Charge Map';
+  if(id.startsWith('cgy:')) return 'char.gy open OCPI (UK Public Charge Point Regulations)';
+  if(id.startsWith('cev:')) return 'Clenergy (CEV) PCPR locations';
+  if(id.startsWith('mfg:')) return 'Motor Fuel Group (MFG) open OCPI';
+  if(id.startsWith('monta:')) return 'Monta open data (UK Public Charge Point Regulations)';
+  return 'OpenStreetMap';
+}
 
 let visible=[];
 let dataError = null;
@@ -542,7 +557,11 @@ $('#routeClear').onclick=()=>{ state.route=null; routeView='route'; routeLayer.c
 // ---------- start ----------
 if(!window.UK_CHARGERS || !UK_CHARGERS.items || !UK_CHARGERS.items.length) dataError="Couldn't load charger data. Zoom in and tap Retry.";
 fitUk();
-$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc((UK_CHARGERS.source||'').includes('Open Charge Map')?'Open Charge Map':(UK_CHARGERS.source||'OpenStreetMap').split('(')[0].trim())} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.' + (window.UK_MANUAL_CHARGERS&&UK_MANUAL_CHARGERS.items&&UK_MANUAL_CHARGERS.items.length ? ` <b>${UK_MANUAL_CHARGERS.items.length}</b> further ${UK_MANUAL_CHARGERS.items.length===1?'site is':'sites are'} added by hand where that snapshot has a gap.` : '');
+const _src = (window.UK_CHARGERS&&UK_CHARGERS.source)||'';
+const _srcLabel = /OCPI|PCPR|char\.gy|Monta|MFG|Clenergy/i.test(_src) ? 'Open Charge Map + PCPR/OCPI feeds' : (/Open Charge Map/i.test(_src) ? 'Open Charge Map' : (_src||'OpenStreetMap').split('(')[0].trim());
+const snapIds = new Set(((window.UK_CHARGERS&&UK_CHARGERS.items)||[]).map(s=>s.id));
+const extraManual = manualItems.filter(s=>s&&s.id&&!snapIds.has(s.id)).length;
+$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc(_srcLabel)} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.' + (extraManual ? ` <b>${extraManual}</b> further ${extraManual===1?'site is':'sites are'} added by hand where that snapshot has a gap.` : '');
 rebuild(); updateHint(); loadLive();
 // URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
 const P=new URLSearchParams(location.search);

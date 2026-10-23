@@ -1,0 +1,187 @@
+{
+  "before": 25664,
+  "after": 31778,
+  "netNew": 6114,
+  "fileBytes": 5361118,
+  "stats": {
+    "cgy": {
+      "label": "char.gy",
+      "raw": 5994,
+      "added": 2423,
+      "enriched": 748,
+      "skipped": 0,
+      "nonUk": 1
+    },
+    "cev": {
+      "label": "Clenergy (CEV)",
+      "raw": 1414,
+      "added": 1077,
+      "enriched": 188,
+      "skipped": 0,
+      "nonUk": 0
+    },
+    "mfg": {
+      "label": "MFG EV Power",
+      "raw": 598,
+      "added": 300,
+      "enriched": 131,
+      "skipped": 0,
+      "nonUk": 0
+    },
+    "monta": {
+      "label": "Monta open data",
+      "raw": 18635,
+      "added": 2313,
+      "enriched": 66,
+      "skipped": 15973,
+      "nonUk": 0
+    }
+  },
+  "sampleAdds": [
+    {
+      "id": "cgy:ed7ad4ef-54e0-4fc3-ab7a-2cc22effacde",
+      "n": "362 Upland Road",
+      "op": "char.gy",
+      "ad": "Upland Road, Dulwich Hill, SE22 0DL",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.44716,
+      "o": -0.07119
+    },
+    {
+      "id": "cgy:3d0c7034-27f0-47d5-a4fd-b91a9cfbc054",
+      "n": "51 Perryfield Way",
+      "op": "char.gy",
+      "ad": "Perryfield Way, Ham Petersham & Rich Rivrside, TW10 7SL",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.44024,
+      "o": -0.31952
+    },
+    {
+      "id": "cgy:8ffa60d2-f1a7-435e-bc0a-5a66abdb7a83",
+      "n": "Opposite 78 Cowley road",
+      "op": "char.gy",
+      "ad": "Cowley road, Redbridge, E11 2HW",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.58201,
+      "o": 0.02787
+    },
+    {
+      "id": "cgy:6647e3f4-78db-48ac-a34e-233c4fa01f9e",
+      "n": "320 Rope Street",
+      "op": "char.gy",
+      "ad": "Rope Street, Surrey Docks, SE16 7TY",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.49446,
+      "o": -0.03351
+    },
+    {
+      "id": "cgy:f395eac3-2884-4761-a6c0-bc93cecf3d42",
+      "n": "Onega Gate, opposite Plover Way",
+      "op": "char.gy",
+      "ad": "Onega Gate, Surrey Docks, SE16 7PF",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.49589,
+      "o": -0.03912
+    },
+    {
+      "id": "cgy:246c6344-2d9e-4896-8b10-8482f1703e64",
+      "n": "Oaks Road, adjacent to 1 Kenmore Road",
+      "op": "char.gy",
+      "ad": "Oaks Road, Kenmore Road, Kenley, CR8 5NW",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.32551,
+      "o": -0.10675
+    },
+    {
+      "id": "cgy:56ca2f93-4036-449e-bf45-db8434dc7ceb",
+      "n": "183 Aylesbury Road",
+      "op": "char.gy",
+      "ad": "Aylesbury Road, Wendover, HP22 6LX",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.77154,
+      "o": -0.74811
+    },
+    {
+      "id": "cgy:1549a0c9-519f-4984-be30-af7f7f9b9724",
+      "n": "6 Nocton Hall Drive",
+      "op": "char.gy",
+      "ad": " Nocton Hall Drive , Wendover, HP22 5GS",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.76952,
+      "o": -0.72407
+    },
+    {
+      "id": "cgy:ca5b8e48-244c-4ca7-acc6-ec07a191defe",
+      "n": "40 Brancker Road",
+      "op": "char.gy",
+      "ad": "Brancker Road, Harrow, HA3 9AL",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.59375,
+      "o": -0.30419
+    },
+    {
+      "id": "cgy:360ccdb3-412a-4303-9044-af5be0536381",
+      "n": "10 - 25 Brick Farm Close",
+      "op": "char.gy",
+      "ad": "Brick Farm Close, Kew, TW9 4EF",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.4758,
+      "o": -0.28001
+    },
+    {
+      "id": "cgy:16e710a2-b4fd-4bd4-8322-efca836c2d22",
+      "n": "Maude Road, adjacent to 18 Wilson Road",
+      "op": "char.gy",
+      "ad": "Maude Road, St Giles, SE5 8NY",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "a": 51.47187,
+      "o": -0.08514
+    },
+    {
+      "id": "cgy:addd7b62-a792-4a52-99c6-8686f246c8c5",
+      "n": "The Orangery - South",
+      "op": "char.gy",
+      "ad": "Alexander House Hotel, Duchally Road, Auchterarder, PH3 1PW",
+      "k": 6.9,
+      "c": [
+        "T2"
+      ],
+      "a": 56.27159,
+      "o": -3.68458
+    }
+  ],
+  "generated": "2026-10-23T07:46:21.007Z"
+}
