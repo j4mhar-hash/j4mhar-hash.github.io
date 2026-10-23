@@ -1,0 +1,245 @@
+{
+  "before": 31794,
+  "after": 31840,
+  "netNew": 46,
+  "fileBytes": 5405777,
+  "mode": "file",
+  "ospreyRaw": 409,
+  "added": 46,
+  "matched": 363,
+  "enriched": 27,
+  "skipped": 0,
+  "nonUk": 0,
+  "sampleAdds": [
+    {
+      "id": "osprey:GB-OSP-faafa4cb1bb04eb19816fae33ea094ee",
+      "n": "Priors of West Lynn, King's Lynn",
+      "op": "Osprey Charging",
+      "ad": "Clenchwarton Road, King's Lynn, PE34 3LL",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 10,
+      "a": 52.74783,
+      "o": 0.38406
+    },
+    {
+      "id": "osprey:GB-OSP-dcd99e53c56e42f99d80506a4a4ac578",
+      "n": "Highbridge Retail Park, Waltham Abbey",
+      "op": "Osprey Charging",
+      "ad": "Highbridge Street, Waltham Abbey, EN9 1BY",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 32,
+      "a": 51.68564,
+      "o": -0.00964
+    },
+    {
+      "id": "osprey:GB-OSP-aa155f370c254d37877b6d45647d2993",
+      "n": "Gallagher Retail Park, Port Glasgow",
+      "op": "Osprey Charging",
+      "ad": "Port Glasgow, Glasgow, PA14 5DX",
+      "k": 300,
+      "c": [
+        "CCS"
+      ],
+      "cap": 8,
+      "a": 55.93635,
+      "o": -4.69671
+    },
+    {
+      "id": "osprey:GB-OSP-64276809dc6343518b9e1f64d2f88ce1",
+      "n": "Portland Retail Park, Mansfield",
+      "op": "Osprey Charging",
+      "ad": "Midland Way, Mansfield, NG18 1HA",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 16,
+      "a": 53.13967,
+      "o": -1.20094
+    },
+    {
+      "id": "osprey:GB-OSP-049d5a138c454dc1b2a86ea90bc6dc64",
+      "n": "Canolfan Gwili Centre & Café, Swansea",
+      "op": "Osprey Charging",
+      "ad": "M4 hub, 43 Bryngwili Rd, Swansea, SA4 0XB",
+      "k": 300,
+      "c": [
+        "CCS"
+      ],
+      "cap": 8,
+      "a": 51.71133,
+      "o": -4.05778
+    },
+    {
+      "id": "osprey:GB-OSP-16a3f612c8ff435a8d4727115b2dc96f",
+      "n": "Tesco Express, Speedwell",
+      "op": "Osprey Charging",
+      "ad": "283 Speedwell Road, Gloucestershire, BS5 7SY",
+      "k": 250,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "a": 51.4677,
+      "o": -2.53068
+    },
+    {
+      "id": "osprey:GB-OSP-bf2960a61d86454fa9be9077522ae7a7",
+      "n": "Snowhill Retail Park, Wakefield",
+      "op": "Osprey Charging",
+      "ad": "Snowhill Retail Park, Wakefield, WF1 2DF",
+      "k": 300,
+      "c": [
+        "CCS"
+      ],
+      "cap": 8,
+      "a": 53.69684,
+      "o": -1.50727
+    },
+    {
+      "id": "osprey:GB-OSP-4c81741de1cf467fa512ef9caae6b55c",
+      "n": "Station Garden, Didcot",
+      "op": "Osprey Charging",
+      "ad": "2 Gentian Mews, Didcot, OX11 6GR",
+      "k": 120,
+      "c": [
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 51.60466,
+      "o": -1.2699
+    },
+    {
+      "id": "osprey:GB-OSP-8fe5785fdc0f4600b1e35c1a4c512b43",
+      "n": "Manor Farm, Rainhill",
+      "op": "Osprey Charging",
+      "ad": "Mill Lane, Prescot, L35 6NE",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 32,
+      "a": 53.40544,
+      "o": -2.75311
+    },
+    {
+      "id": "osprey:GB-OSP-ce7b22fc0e9c4177b99b03b0d5b11d83",
+      "n": "Festival Heights Retail Park, Stoke-on-Trent",
+      "op": "Osprey Charging",
+      "ad": "Greyhound Way, Hanley, Stoke-on-Trent, ST1 5NZ",
+      "k": 60,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 8,
+      "a": 53.03262,
+      "o": -2.19059
+    },
+    {
+      "id": "osprey:GB-OSP-e8990b3a4d964be19e3ca77bf472689a",
+      "n": "Glamorgan Vale Retail Park, Pontyclun",
+      "op": "Osprey Charging",
+      "ad": "Talbot Green, Pontyclun, CF72 8RP",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 16,
+      "a": 51.53295,
+      "o": -3.37719
+    },
+    {
+      "id": "osprey:GB-OSP-9f2a2334527e4e3d8cb28eeece08422e",
+      "n": "Woodside Leisure Park, Watford",
+      "op": "Osprey Charging",
+      "ad": "Kingsway North Orbital Rd, Watford, WD25 7JZ",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 32,
+      "a": 51.69194,
+      "o": -0.39573
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-259949",
+      "n": "Alexandra Retail Park",
+      "op": "Osprey Charging",
+      "k": 300,
+      "cap": 4,
+      "distM": 94
+    },
+    {
+      "id": "ocm-260049",
+      "n": "Plume of Feathers",
+      "op": "Osprey Charging",
+      "k": 75.2,
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-300052",
+      "n": "The Camper Down Elm Pub & Restaurant",
+      "op": "Osprey Charging",
+      "k": 150,
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-299835",
+      "n": "Land's End",
+      "op": "Osprey Charging",
+      "k": 60,
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "ocm-303145",
+      "n": "Lidl-Bellshill",
+      "op": "Lidl",
+      "k": 300,
+      "cap": 2,
+      "distM": 49
+    },
+    {
+      "id": "ocm-260022",
+      "n": "The Fields At Aylesford",
+      "op": "Osprey Charging",
+      "k": 200,
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-259920",
+      "n": "Allison Street Retail Park",
+      "op": "Osprey Charging",
+      "k": 80,
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-267645",
+      "n": "Wombwell Lane",
+      "op": "Osprey Charging",
+      "k": 75.2,
+      "cap": 6,
+      "distM": 0
+    }
+  ],
+  "generated": "2026-10-23T10:42:11.559Z",
+  "note": "Osprey Charging UK open data, OCPI 2.2.1. Credentials are not stored."
+}
