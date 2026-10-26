@@ -1,0 +1,263 @@
+{
+  "before": 31840,
+  "after": 32265,
+  "netNew": 425,
+  "fileBytes": 5499537,
+  "mode": "file",
+  "podpointRaw": 1806,
+  "added": 425,
+  "matched": 1381,
+  "enriched": 199,
+  "skipped": 0,
+  "nonUk": 0,
+  "sampleAdds": [
+    {
+      "id": "podpoint:5d81078c-a63a-512f-9371-2138c2ccfd8b",
+      "n": "Pod Point NWSSP - Picketston Storage & Distribution Warehouse",
+      "op": "Pod Point",
+      "ad": "Building 873, Aerospace Business Park St Atha, Picketston, CF62 4QR",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 51.42031,
+      "o": -3.43924
+    },
+    {
+      "id": "podpoint:d38865a6-636c-5026-9815-ce91d338dc39",
+      "n": "Pod Point Tanylan Holidays Ltd",
+      "op": "Pod Point",
+      "ad": "TANYLAN FARM, KIDWELLY, CARMARTHENSHIRE, SA17 5HJ",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 51.74298,
+      "o": -4.35898
+    },
+    {
+      "id": "podpoint:8e9fb903-90d1-5e09-9f3c-33a462dac8bb",
+      "n": "Pod Point Skene Investments Limited - Aberdeen - AB25 1NU",
+      "op": "Pod Point",
+      "ad": "82 Rosemount Viaduct, Aberdeen, AB25 1NU",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 57.14858,
+      "o": -2.10902
+    },
+    {
+      "id": "podpoint:eecb6e2c-3806-5b73-ad62-06627265abe7",
+      "n": "Pod Point Bride Village Car Park",
+      "op": "Pod Point",
+      "ad": "Bride, Isle of Man, IM7 4AT",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 54.38215,
+      "o": -4.38866
+    },
+    {
+      "id": "podpoint:ac90c609-ea35-54e5-8729-8ede116aa342",
+      "n": "Pod Point Crown Yealm Ltd",
+      "op": "Pod Point",
+      "ad": "Pathfields Business Park South Molton, Devon, EX36 3LH",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 51.02663,
+      "o": -3.8314
+    },
+    {
+      "id": "podpoint:906cb2dc-2912-5841-bee7-0f8af282095d",
+      "n": "Pod Point St David's Dewi Sant",
+      "op": "Pod Point",
+      "ad": "St David's Dewi Sant Basement & Multi Storey, Cardiff, CF10 2EF",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 51.47984,
+      "o": -3.17441
+    },
+    {
+      "id": "podpoint:75caf8fe-4ff3-56ac-b5a5-06e5c3f90bb8",
+      "n": "Pod Point Fishersgate Marina",
+      "op": "Pod Point",
+      "ad": "Waterside Road, Brighton, BN41 1AZ",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 50.83069,
+      "o": -0.21796
+    },
+    {
+      "id": "podpoint:a7401904-a504-56f1-be1d-673af437d39b",
+      "n": "Pod Point Trelyon Manor",
+      "op": "Pod Point",
+      "ad": "Trelyon Ave, St Ives, TR26 2RX",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 50.20394,
+      "o": -5.47309
+    },
+    {
+      "id": "podpoint:8bc6ad67-1a2b-52c2-ba22-1ed0257658be",
+      "n": "Pod Point HomeServe - Nottingham",
+      "op": "Pod Point",
+      "ad": "Suite 2-4, Aspect House Aspect Business Park, Nottingham, NG6 8WR",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 53.00596,
+      "o": -1.21173
+    },
+    {
+      "id": "podpoint:482ba3be-3ca0-545a-8ca9-078ea22b44be",
+      "n": "Pod Point Woodcote Grove, Epsom",
+      "op": "Pod Point",
+      "ad": "Cambury Construction Woodcote Grove, Epsom, KT18 5BW",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 30,
+      "a": 51.3253,
+      "o": -0.2666
+    },
+    {
+      "id": "podpoint:b1f0d311-4f82-5bb3-a481-85ab49ce532d",
+      "n": "Pod Point City way Developments",
+      "op": "Pod Point",
+      "ad": "Hoo St Werburgh, Kent, ME3 8QB",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 51.4275,
+      "o": 0.54646
+    },
+    {
+      "id": "podpoint:0d643307-bcd6-5a85-9b5f-dcbaf0cf96d2",
+      "n": "Pod Point Conwy County Borough Council - Cwrt Y Coleg",
+      "op": "Pod Point",
+      "ad": "Cwrt Y Coleg Rhos on Sea, Colwyn Bay, LL28 4HR",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "a": 53.30292,
+      "o": -3.73654
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-287290",
+      "n": "Tesco Extra - Rotherham",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-286653",
+      "n": "Tesco Superstore - Maesteg",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-287331",
+      "n": "Tesco Superstore - Droylsden",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-188026",
+      "n": "G W Padley Holdings Ltd",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-255076",
+      "n": "Tesco Extra - Redditch",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-287510",
+      "n": "Tesco Extra - Musselburgh",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-255630",
+      "n": "Tesco Extra - Newton Aycliffe",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-255685",
+      "n": "Tesco Extra - Sunderland",
+      "op": "POD Point (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    }
+  ],
+  "generated": "2026-10-26T17:18:38.784Z",
+  "note": "Pod Point UK locations via Eco-Movement PCPR OCPI 2.2.1. The token and the raw snapshot are not stored in the repo. Bay status is left to the live server; the static snapshot keeps connectors and power."
+}
