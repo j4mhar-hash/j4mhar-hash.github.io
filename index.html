@@ -49,6 +49,7 @@ button:disabled{opacity:.5;cursor:default}
 .kw{font-weight:700;font-size:12px;padding:2px 6px;border-radius:6px;color:#fff;white-space:nowrap}
 .stat{margin:8px 0;padding:8px 10px;background:#f1f5f9;border-radius:9px}
 .live{font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px}
+.staff{display:inline-block;background:#64748b;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;margin-right:4px}
 .live.ok{background:#dcfce7;color:#166534}.live.bad{background:#fee2e2;color:#991b1b}.live.busy{background:#fef3c7;color:#92400e}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 #toggle{display:none}
@@ -90,7 +91,8 @@ input[type=range]{flex:1}
     <div class="row" id="routeFitRow" hidden><button type="button" id="fitRoute" style="flex:1">Fit route</button><button type="button" id="fitMap" style="flex:1">Whole map</button></div>
     <div class="sec"><h3>Charger power</h3><div class="chips" id="bands"></div>
       <label class="small" style="display:block;margin-top:6px"><input type="checkbox" id="est" checked> Treat untagged DC sites (CCS/CHAdeMO) as rapid (estimated)</label></div>
-    <div class="sec"><h3>Connector</h3><div class="chips" id="conns"></div><div class="small" style="margin-top:4px">None selected = any connector (incl. sites with no connector info)</div></div>
+    <div class="sec"><h3>Connector</h3><div class="chips" id="conns"></div><div class="small" style="margin-top:4px">None selected = any connector (incl. sites with no connector info)</div>
+      <label class="small" style="display:block;margin-top:6px"><input type="checkbox" id="showPrivate"> Include private / staff chargers</label></div>
     <div class="sec" id="liveSec" hidden><h3>Live status</h3><label class="small"><input type="checkbox" id="liveOnly"> Only show chargers with live status</label> <span class="small" id="liveInfo"></span></div>
 
     <div data-pane="explore">
@@ -141,7 +143,7 @@ const BANDS = [
   {id:'unknown', label:'Unknown', color:'var(--unknown)', hex:'#94a3b8'}];
 const BAND = Object.fromEntries(BANDS.map(b=>[b.id,b]));
 const CONNS = {T2:'Type 2', CCS:'CCS', CHA:'CHAdeMO', T1:'Type 1', '3PIN':'3-pin', TSLA:'Tesla'};
-const state = {bands:new Set(['slow','fast','rapid','ultra','unknown']), conns:new Set(), est:true, liveOnly:false, route:null, tab:'explore'};
+const state = {bands:new Set(['slow','fast','rapid','ultra','unknown']), conns:new Set(), est:true, liveOnly:false, showPrivate:false, route:null, tab:'explore'};
 
 // ---------- helpers ----------
 const $ = s => document.querySelector(s);
@@ -362,20 +364,23 @@ function liveSummary(s){ if(s.src!=='live') return null; const ev=s.evses||[]; c
 function liveBadge(s){ const l=liveSummary(s); if(!l) return ''; const cls=l.ok? 'ok' : l.busy? 'busy':'bad'; return `<span class="live ${cls}">LIVE · ${esc(l.label)}</span>`; }
 
 // ---------- filtering & markers ----------
+function isPrivate(s){ return s && s.access==='private'; }
 function passes(s){
+  if(isPrivate(s) && !state.showPrivate) return false;
   if(!state.bands.has(bandOf(s))) return false;
   if(state.conns.size && !(s.c||[]).some(c=>state.conns.has(c==='CCS1'?'CCS':c))) return false;
   if(state.liveOnly && s.src!=='live') return false;
   return true; }
-function makeMarker(s){ const b=bandOf(s); const l=liveSummary(s);
-  const m=L.circleMarker([s.a,s.o],{radius:s.src==='live'?8:7, color: l? (l.ok?'#16a34a':l.busy?'#d97706':'#dc2626') : '#fff', weight:l?3:2, fillColor:BAND[b].hex, fillOpacity:.95, band:b});
+function makeMarker(s){ const b=bandOf(s); const l=liveSummary(s); const priv=isPrivate(s);
+  const m=L.circleMarker([s.a,s.o],{radius:(s.src==='live'||priv)?8:7, color: l? (l.ok?'#16a34a':l.busy?'#d97706':'#dc2626') : (priv?'#64748b':'#fff'), weight:(l||priv)?3:2, fillColor:BAND[b].hex, fillOpacity:.95, band:b});
   m.bindPopup(()=>popupHtml(s), {maxWidth:300}); m.sid=s.id; return m; }
 function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   const rows=[]; const add=(k,v)=>{ if(v!=null&&v!=='') rows.push(`<tr><td>${k}</td><td>${v}</td></tr>`); };
-  add('Power', s.k? `${s.k} kW max` : isEst(s)? 'Not tagged – DC connector, likely rapid (estimated)' : 'Not tagged');
+  add('Power', s.k? `${s.k} kW max${s.approx?' (approx.)':''}` : isEst(s)? 'Not tagged – DC connector, likely rapid (estimated)' : 'Not tagged');
   add('Type', `<span class="dot" style="background:${BAND[b].hex}"></span> ${BAND[b].label}`);
   add('Connectors', (s.c||[]).map(c=>CONNS[c]||c).join(', ')||'Not tagged');
-  add('Operator', esc(s.op)); add('Address', esc(s.ad)); add('Points', esc(s.cap)); add('Fee', esc(s.fee)); add('Access', esc(s.acc)); add('Hours', esc(s.h));
+  add('Operator', esc(s.op)); add('Address', esc(s.ad)); add('Points', esc(s.cap)); add('Fee', esc(s.fee)); add('Access', esc(s.acc || (isPrivate(s)?'private':''))); add('Hours', esc(s.h));
+  if(s.note) add('Note', esc(s.note));
   if(s.cl) add('Payment','Contactless');
   if(s.dev) add('Device', esc(s.dev));
   if(l){ add('Live', liveBadge(s)); add('Bays', (s.evses||[]).map(e=>`${esc(e.st)}${e.kw?` · ${e.kw} kW`:''}`).join('<br>')); add('Status updated', esc(new Date(s.upd||live.updated).toLocaleString('en-GB'))); }
@@ -384,7 +389,7 @@ function popupHtml(s){ const b=bandOf(s); const l=liveSummary(s);
   const osmKind = osmId && ({n:'node',w:'way',r:'relation'})[osmId[0]];
   const osmLink = osmKind && /^[nwr]\d+$/.test(osmId) ? ` · <a target="_blank" href="https://www.openstreetmap.org/${osmKind}/${osmId.slice(1)}">OSM</a>` : '';
   const ocmLink = String(s.id||'').startsWith('ocm-') ? ` · <a target="_blank" href="https://openchargemap.org/site/poi/details/${s.id.slice(4)}">OCM</a>` : '';
-  return `<div class="popup"><b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
+  return `<div class="popup">${isPrivate(s)?'<span class="staff">Staff only</span> ':''}<b>${esc(s.n||'EV charger')}</b><table>${rows.join('')}</table>
     <div style="margin-top:6px"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.a},${s.o}">Directions</a>${osmLink}${ocmLink}</div>
     <div class="small">Source: ${sourceOf(s)}</div></div>`; }
 function sourceOf(s){
@@ -513,7 +518,7 @@ function rebuild(){
   updateLists();
 }
 function kwBadge(s){ const b=bandOf(s); return `<span class="kw" style="background:${BAND[b].hex}">${s.k? Math.round(s.k)+' kW' : isEst(s)? 'DC?' : '?'}</span>`; }
-function itemHtml(s, extra){ return `<div class="item" data-id="${esc(s.id)}">${kwBadge(s)}<div><b>${esc(s.n||'EV charger')}</b><span class="small">${esc([s.op, s.ad].filter(Boolean).join(' · '))}${extra||''}</span> ${liveBadge(s)}</div></div>`; }
+function itemHtml(s, extra){ return `<div class="item" data-id="${esc(s.id)}">${kwBadge(s)}<div><b>${esc(s.n||'EV charger')}</b> ${isPrivate(s)?'<span class="staff">Staff only</span>':''}<span class="small">${esc([s.op, s.ad].filter(Boolean).join(' · '))}${extra||''}</span> ${liveBadge(s)}</div></div>`; }
 const updateLists = debounce(()=>{
   const inView=inSight(visible);
   const counts={}; for(const s of inView){ const b=bandOf(s); counts[b]=(counts[b]||0)+1; }
@@ -540,10 +545,11 @@ document.addEventListener('click', e=>{ const it=e.target.closest('.item'); if(i
 // ---------- filter UI ----------
 $('#bands').innerHTML = BANDS.map(b=>`<span class="chip on" data-b="${b.id}"><span class="dot" style="background:${b.hex}"></span>${b.label}</span>`).join('');
 $('#conns').innerHTML = Object.entries(CONNS).map(([k,v])=>`<span class="chip" data-c="${k}">${v}</span>`).join('');
-$('#legend').innerHTML = BANDS.map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label}</span>`).join('') + '<span><span class="dot" style="border:3px solid #16a34a"></span> Live: working</span><span><span class="dot" style="border:3px solid #dc2626"></span> Live: fault</span>';
+$('#legend').innerHTML = BANDS.map(b=>`<span><span class="dot" style="background:${b.hex}"></span> ${b.label}</span>`).join('') + '<span><span class="dot" style="border:3px solid #64748b"></span> Staff only</span><span><span class="dot" style="border:3px solid #16a34a"></span> Live: working</span><span><span class="dot" style="border:3px solid #dc2626"></span> Live: fault</span>';
 $('#bands').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const b=c.dataset.b; state.bands.has(b)?state.bands.delete(b):state.bands.add(b); c.classList.toggle('on'); rebuild(); };
 $('#conns').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const k=c.dataset.c; state.conns.has(k)?state.conns.delete(k):state.conns.add(k); c.classList.toggle('on'); rebuild(); };
 $('#est').onchange=e=>{ state.est=e.target.checked; rebuild(); };
+$('#showPrivate').onchange=e=>{ state.showPrivate=e.target.checked; rebuild(); };
 $('#liveOnly').onchange=e=>{ state.liveOnly=e.target.checked; rebuild(); };
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); syncRouteChrome(); });
