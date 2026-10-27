@@ -1,0 +1,280 @@
+{
+  "before": 39080,
+  "after": 39354,
+  "netNew": 274,
+  "mode": "file",
+  "raw": 322,
+  "added": 274,
+  "matched": 48,
+  "enriched": 38,
+  "skipped": 0,
+  "nonUk": 0,
+  "perNetwork": {
+    "drax-group": {
+      "raw": 1,
+      "added": 1,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    },
+    "aldi": {
+      "raw": 266,
+      "added": 239,
+      "matched": 27,
+      "enriched": 20,
+      "skipped": 0
+    },
+    "travis-perkins": {
+      "raw": 15,
+      "added": 15,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    },
+    "volvo": {
+      "raw": 3,
+      "added": 3,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    },
+    "southampton": {
+      "raw": 1,
+      "added": 1,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    },
+    "edgbaston": {
+      "raw": 2,
+      "added": 2,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    },
+    "drax-ista": {
+      "raw": 32,
+      "added": 11,
+      "matched": 21,
+      "enriched": 18,
+      "skipped": 0
+    },
+    "gfx-gb-drax": {
+      "raw": 2,
+      "added": 2,
+      "matched": 0,
+      "enriched": 0,
+      "skipped": 0
+    }
+  },
+  "sampleAdds": [
+    {
+      "network": "drax-group",
+      "id": "gfx:9dcd4fe6-0990-4b04-9cd4-6c1cca187e7e",
+      "n": "Drax Cruachan Visitors Centre - Etrel",
+      "op": "Drax (Drax Group)",
+      "ad": "Dalmally Visitors, Argyll, PA33 1AN",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:8fc899e4-981e-408d-8ffa-ce7615b04fa1",
+      "n": "Aldi - Poole - Fleets Lane",
+      "op": "Aldi",
+      "ad": "Fleets Lane, Poole, BH15 3BZ",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:9685b85f-5ad7-4bae-bee8-06f195310cac",
+      "n": "Aldi - Leamington Spa",
+      "op": "Aldi",
+      "ad": "Shires Retail Park, Leamington Spa, CV34 6RH",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:7eebcdb8-4504-47b5-8331-f81f3654e29e",
+      "n": "Aldi - Speke",
+      "op": "Aldi",
+      "ad": "Speke Hall Road, Liverpool, L24 9HA",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 8
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:c213fdb1-fd57-4533-9185-ba4762386773",
+      "n": "Aldi - Goole",
+      "op": "Aldi",
+      "ad": "Lady Sybil Road, Goole, DN14 8FA",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:16083f87-4d7e-4cec-97f4-b17b124c105e",
+      "n": "Aldi - Peterborough",
+      "op": "Aldi",
+      "ad": "Peterborough One Retail Park, Peterborough, PE1 4YZ",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:e5a21a29-e05c-427e-8492-90f0fc04993f",
+      "n": "Aldi - Norton",
+      "op": "Aldi",
+      "ad": "Darlington Lane, Stockton-on-Tees, TS20 1BW",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    },
+    {
+      "network": "aldi",
+      "id": "gfx:d24d9967-6350-454b-8026-44d084486e39",
+      "n": "Aldi - Kirk Sandall",
+      "op": "Aldi",
+      "ad": "Doncaster Road, Kirk Sandall, DN3 1HE",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "network": "aldi",
+      "id": "ocm-199983",
+      "n": "Galileo Cl",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 6,
+      "how": "postcode"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-250754",
+      "n": "DRAX00140",
+      "op": "Drax Energy Solutions Limited",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 24,
+      "how": "postcode"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-481406",
+      "n": "Aldi",
+      "op": "Shell EV Charging Solutions France",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 55,
+      "how": "operator"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-187554",
+      "n": "Best Buy Southampton B",
+      "op": "POD Point (UK)",
+      "k": 7.4,
+      "c": [
+        "3PIN",
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 93,
+      "how": "postcode"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-312885",
+      "n": "Aldi Car Park",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 11,
+      "c": [
+        "CCS",
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 7,
+      "how": "operator"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-200183",
+      "n": "Wills Way",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 5,
+      "how": "postcode"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-132472",
+      "n": "Aldi, Wetherby",
+      "op": "Charge Your Car",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 19,
+      "how": "operator"
+    },
+    {
+      "network": "aldi",
+      "id": "ocm-172587",
+      "n": "KFC Long Eaton",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 78,
+      "how": "postcode"
+    }
+  ],
+  "generated": "2026-10-27T12:31:27.015Z",
+  "note": "GFX networks via Eco-Movement PCPR OCPI 2.2.1. Operator shown is the site owner; Drax-hosted owners are labelled Drax (owner). Same operator within 75 m (including OCM Aldi names and the manual Drax site) or same postcode within 100 m. Tokens and the raw snapshot are not stored in the repo."
+}
