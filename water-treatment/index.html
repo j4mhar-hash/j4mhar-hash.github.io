@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Water Treatment Calculator Suite</title>
+<meta name="description" content="Water chemistry and process calculators: ion balance, ion exchange, reverse osmosis, scaling indices, cooling towers, boilers, wastewater, chlorine and a demineralisation plant mimic. Autosaves on this phone.">
+<meta name="theme-color" content="#0c6b6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Water Treatment">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+<script>
+(function () {
+  try {
+    var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.style.colorScheme = dark ? "dark" : "light";
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", dark ? "#0e1418" : "#0c6b6b");
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script src="app.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/water-treatment/sw.js", { scope: "/water-treatment/" }).catch(function () {});
+}
+</script>
+</body>
+</html>

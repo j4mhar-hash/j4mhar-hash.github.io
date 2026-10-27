@@ -1,0 +1,14 @@
+{
+  "name": "water-treatment",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/main.tsx --bundle --format=iife --outfile=app.js --jsx=automatic --minify --target=es2018"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11"
+  }
+}
