@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0%" stop-color="#157888"/>
+      <stop offset="42%" stop-color="#0c4a68"/>
+      <stop offset="100%" stop-color="#071422"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="56%" r="46%">
+      <stop offset="0%" stop-color="#3ec6d4" stop-opacity="0.45"/>
+      <stop offset="58%" stop-color="#14586e" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#14586e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="drop" x1="30%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#f4fbfd"/>
+      <stop offset="68%" stop-color="#c5e8f0"/>
+      <stop offset="100%" stop-color="#79c3d2"/>
+    </linearGradient>
+    <linearGradient id="vessel" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1b7490"/>
+      <stop offset="42%" stop-color="#0c4258"/>
+      <stop offset="100%" stop-color="#072433"/>
+    </linearGradient>
+    <radialGradient id="bead" cx="35%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#fff8e6"/>
+      <stop offset="40%" stop-color="#f3cb5c"/>
+      <stop offset="100%" stop-color="#c17a24"/>
+    </radialGradient>
+    <clipPath id="dropClip">
+      <path d="M256 68C168 168 132 232 132 304c0 86 54 152 124 152s124-66 124-152c0-72-36-136-124-236z"/>
+    </clipPath>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="9" flood-color="#020910" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="#071422"/>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+  <g filter="url(#shadow)">
+    <path fill="url(#drop)" d="M256 68C168 168 132 232 132 304c0 86 54 152 124 152s124-66 124-152c0-72-36-136-124-236z"/>
+  </g>
+  <g clip-path="url(#dropClip)">
+    <path d="M118 332c46-28 78 26 124-2s78-26 124 2 52 20 70 14" fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="11" stroke-linecap="round"/>
+    <path d="M118 358c46-22 78 20 124-2s78-20 124 2 52 16 70 10" fill="none" stroke="#0c4a60" stroke-opacity="0.28" stroke-width="8" stroke-linecap="round"/>
+    <rect x="216" y="276" width="80" height="156" rx="40" fill="url(#vessel)"/>
+    <rect x="230" y="292" width="9" height="124" rx="4.5" fill="#ffffff" opacity="0.3"/>
+    <rect x="198" y="266" width="116" height="18" rx="7" fill="#0b394c"/>
+    <rect x="198" y="422" width="116" height="16" rx="7" fill="#0b394c"/>
+    <circle cx="256" cy="318" r="17" fill="url(#bead)"/>
+    <circle cx="249" cy="311" r="5.5" fill="#ffffff" opacity="0.85"/>
+    <circle cx="256" cy="356" r="17" fill="url(#bead)"/>
+    <circle cx="249" cy="349" r="5.5" fill="#ffffff" opacity="0.85"/>
+    <circle cx="256" cy="394" r="17" fill="url(#bead)"/>
+    <circle cx="249" cy="387" r="5.5" fill="#ffffff" opacity="0.85"/>
+    <ellipse cx="188" cy="214" rx="36" ry="58" fill="#ffffff" opacity="0.5" transform="rotate(-28 188 214)"/>
+    <ellipse cx="206" cy="146" rx="12" ry="22" fill="#ffffff" opacity="0.75" transform="rotate(-18 206 146)"/>
+  </g>
+</svg>

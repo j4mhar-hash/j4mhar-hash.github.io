@@ -1,16 +1,17 @@
 /* Service worker for /water-treatment/ only. Do not claim any other path on this origin. */
-const CACHE = "wts-v1";
+const CACHE = "wts-v2";
 const SHELL = [
   "./",
   "./index.html",
   "./app.js",
   "./app.css",
   "./manifest.webmanifest",
-  "./icons/favicon-32.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png",
+  "./icons/favicon.svg?v=2",
+  "./icons/favicon-32.png?v=2",
+  "./icons/apple-touch-icon.png?v=2",
+  "./icons/icon-192.png?v=2",
+  "./icons/icon-512.png?v=2",
+  "./icons/icon-maskable-512.png?v=2",
 ];
 
 self.addEventListener("install", (event) => {
