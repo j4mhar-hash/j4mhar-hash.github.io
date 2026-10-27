@@ -24,13 +24,14 @@
 #panel header{padding:12px 14px 8px;display:flex;align-items:center;gap:8px}
 #panel h1{font-size:16px;margin:0;flex:1}
 #panel h1 span{color:var(--accent)}
-.search{display:flex;gap:6px;padding:0 14px 10px;position:relative}
-input[type=text]{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
-input[type=text]:focus{outline:2px solid var(--accent);border-color:transparent}
+.search{display:flex;align-items:center;gap:6px;padding:0 14px 10px;position:relative;min-width:0;max-width:100%;width:100%;margin:0}
+input[type=text],input[type=search]{flex:1 1 auto;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:16px;-webkit-appearance:none;appearance:none}
+input[type=text]:focus,input[type=search]:focus{outline:2px solid var(--accent);border-color:transparent}
+#qgo{flex:0 0 auto}
 button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 button:disabled{opacity:.5;cursor:default}
-.results{position:absolute;top:42px;left:14px;right:14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:240px;overflow:auto}
+.results{position:absolute;top:calc(100% - 10px);left:14px;right:14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:240px;overflow:auto}
 .results div{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line)}.results div:hover{background:#f1f5f9}
 .tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
 .tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:8px 10px;color:var(--muted);font-weight:600}
@@ -84,7 +85,7 @@ input[type=range]{flex:1}
 <div id="map"></div>
 <div id="panel">
   <header><h1>⚡ UK <span>EV</span> Charger Map</h1><button id="locate" title="Use my location">◎</button><button id="toggle" title="Show/hide panel">▾</button></header>
-  <div class="search"><input id="q" type="text" placeholder="Search a town, place or postcode" autocomplete="off"><button id="qgo" class="primary">Go</button><div id="qres" class="results" hidden></div></div>
+  <form class="search" id="searchForm" role="search" action="#" autocomplete="off"><input id="q" type="search" enterkeyhint="go" placeholder="Search a town, place or postcode" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="qgo" class="primary" type="submit">Go</button><div id="qres" class="results" hidden></div></form>
   <div class="row" id="baseRow"><button type="button" id="baseStreets" class="on" aria-pressed="true">Map</button><button type="button" id="baseSat" aria-pressed="false">Satellite</button></div>
   <div class="tabs"><button data-tab="explore" class="on">Explore</button><button data-tab="route">Route</button><button data-tab="about">Data</button></div>
   <div class="body">
@@ -578,7 +579,25 @@ async function doSearch(){
 function goTo(r){ searchLayer.clearLayers(); L.marker([r.lat,r.lon]).addTo(searchLayer).bindTooltip(r.name.split(',')[0]);
   if(r.bbox){ const [s,n,w,e]=r.bbox.map(Number); const b=L.latLngBounds([s,w],[n,e]); if(kmBetween(s,w,n,e)<40) { map.fitBounds(b, Object.assign({maxZoom:14, animate:false}, mapPad())); if(map.getZoom()<12) showAt(r.lat,r.lon,12); return; } }
   showAt(r.lat,r.lon,13); }
-$('#qgo').onclick=doSearch; map.on('click',()=>$('#qres').hidden=true); $('#q').onkeydown=e=>{ if(e.key==='Enter') doSearch(); };
+$('#searchForm').onsubmit=e=>{ e.preventDefault(); doSearch(); };
+map.on('click',()=>$('#qres').hidden=true);
+// iOS keeps the layout viewport full height when the keyboard opens and shrinks
+// visualViewport instead. Lift the bottom sheet by that inset so Go stays on screen.
+function keepPanelInView(){
+  const panel=$('#panel'); if(!panel) return;
+  if(innerWidth>700 || !window.visualViewport){ panel.style.bottom=''; panel.style.maxHeight=''; return; }
+  const vv=window.visualViewport;
+  const keyboard=Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  panel.style.bottom=keyboard ? keyboard+'px' : '';
+  panel.style.maxHeight=keyboard ? Math.max(160, Math.round(vv.height*0.62))+'px' : '';
+}
+if(window.visualViewport){
+  visualViewport.addEventListener('resize', keepPanelInView);
+  visualViewport.addEventListener('scroll', keepPanelInView);
+}
+window.addEventListener('resize', keepPanelInView);
+$('#q').addEventListener('focus', ()=>{ keepPanelInView(); setTimeout(keepPanelInView, 50); setTimeout(keepPanelInView, 300); });
+$('#q').addEventListener('blur', ()=>setTimeout(keepPanelInView, 50));
 function myLocation(){ return new Promise((res,rej)=>navigator.geolocation? navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude,name:'My location'}),()=>rej(new Error('Location unavailable')),{timeout:10000}) : rej(new Error('Location unavailable'))); }
 $('#locate').onclick=async()=>{ try{ const p=await myLocation(); goTo(p); }catch(e){ toast(e.message);} };
 $('#fromMe').onclick=()=>{ $('#from').value='My location'; };
