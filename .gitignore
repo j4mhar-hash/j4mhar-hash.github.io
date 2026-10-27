@@ -1,2 +1,2 @@
-# Local builder cache (OCPI, Fastned, Osprey, and Pod Point responses). Do not commit.
+# Local builder cache (OCPI, Fastned, Osprey, Pod Point, and ubitricity responses). Do not commit.
 .cache/
