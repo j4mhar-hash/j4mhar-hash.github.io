@@ -78,7 +78,12 @@ input[type=range]{flex:1}
   .toast{bottom:auto;top:58px}
   #hint{left:10px;right:58px;max-width:none}
   #routeView{top:100px}
+  /* While typing, the field is taken out of the sheet and fixed to the visual viewport. */
+  #panel.searching{z-index:4000;overflow:visible}
+  #searchForm.pinned{position:fixed;z-index:4000;right:auto;bottom:auto;max-width:none;background:var(--bg);box-shadow:0 4px 16px rgba(15,23,42,.16);padding-top:8px;padding-bottom:8px}
+  #searchSpacer{flex:0 0 auto}
 }
+html.search-focused,html.search-focused body{overflow:hidden}
 </style>
 </head>
 <body>
@@ -581,23 +586,62 @@ function goTo(r){ searchLayer.clearLayers(); L.marker([r.lat,r.lon]).addTo(searc
   showAt(r.lat,r.lon,13); }
 $('#searchForm').onsubmit=e=>{ e.preventDefault(); doSearch(); };
 map.on('click',()=>$('#qres').hidden=true);
-// iOS keeps the layout viewport full height when the keyboard opens and shrinks
-// visualViewport instead. Lift the bottom sheet by that inset so Go stays on screen.
-function keepPanelInView(){
-  const panel=$('#panel'); if(!panel) return;
-  if(innerWidth>700 || !window.visualViewport){ panel.style.bottom=''; panel.style.maxHeight=''; return; }
-  const vv=window.visualViewport;
-  const keyboard=Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-  panel.style.bottom=keyboard ? keyboard+'px' : '';
-  panel.style.maxHeight=keyboard ? Math.max(160, Math.round(vv.height*0.62))+'px' : '';
+// The keyboard accessory bar (arrows / Done) overlaps the bottom of visualViewport, so
+// lifting the sheet by innerHeight - (height + offsetTop) still parks the field under it.
+// While focused, pin the search row to the top of the visual viewport instead.
+let searchPinTimers=[];
+function clearSearchPinTimers(){ searchPinTimers.forEach(clearTimeout); searchPinTimers=[]; }
+function searchSafeTop(){
+  if(searchSafeTop.v!=null) return searchSafeTop.v;
+  const p=document.createElement('div');
+  p.style.cssText='position:absolute;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top)';
+  document.body.appendChild(p);
+  searchSafeTop.v=parseFloat(getComputedStyle(p).paddingTop)||0;
+  p.remove();
+  return searchSafeTop.v;
+}
+function restoreSearchBar(){
+  clearSearchPinTimers();
+  const form=$('#searchForm'), panel=$('#panel');
+  if(form){ form.classList.remove('pinned'); form.style.top=''; form.style.left=''; form.style.width=''; }
+  const spacer=document.getElementById('searchSpacer'); if(spacer) spacer.remove();
+  if(panel){ panel.classList.remove('searching'); panel.style.bottom=''; panel.style.maxHeight=''; }
+  document.documentElement.classList.remove('search-focused');
+}
+function pinSearchBar(){
+  const form=$('#searchForm'), panel=$('#panel');
+  if(!form) return;
+  const focused=document.activeElement===$('#q');
+  if(innerWidth>700 || !window.visualViewport){ restoreSearchBar(); return; }
+  if(!focused) return;
+  const vv=window.visualViewport, gap=10;
+  const top=Math.round(Math.max(vv.offsetTop + gap, searchSafeTop() + gap));
+  if(!form.classList.contains('pinned')){
+    const spacer=document.createElement('div');
+    spacer.id='searchSpacer';
+    spacer.style.height=form.offsetHeight+'px';
+    form.after(spacer);
+    form.classList.add('pinned');
+    if(panel) panel.classList.add('searching');
+    document.documentElement.classList.add('search-focused');
+  }
+  form.style.top=top+'px';
+  form.style.left=Math.max(0, Math.round(vv.offsetLeft))+'px';
+  form.style.width=Math.round(vv.width)+'px';
+  if(window.scrollX||window.scrollY) window.scrollTo(0,0);
+}
+function scheduleSearchPin(){
+  clearSearchPinTimers();
+  pinSearchBar();
+  if(document.activeElement===$('#q') && innerWidth<=700) searchPinTimers.push(setTimeout(pinSearchBar, 120), setTimeout(pinSearchBar, 280));
 }
 if(window.visualViewport){
-  visualViewport.addEventListener('resize', keepPanelInView);
-  visualViewport.addEventListener('scroll', keepPanelInView);
+  visualViewport.addEventListener('resize', pinSearchBar);
+  visualViewport.addEventListener('scroll', pinSearchBar);
 }
-window.addEventListener('resize', keepPanelInView);
-$('#q').addEventListener('focus', ()=>{ keepPanelInView(); setTimeout(keepPanelInView, 50); setTimeout(keepPanelInView, 300); });
-$('#q').addEventListener('blur', ()=>setTimeout(keepPanelInView, 50));
+window.addEventListener('resize', pinSearchBar);
+$('#q').addEventListener('focus', scheduleSearchPin);
+$('#q').addEventListener('blur', ()=>{ clearSearchPinTimers(); setTimeout(()=>{ if(document.activeElement!==$('#q')) restoreSearchBar(); }, 0); });
 function myLocation(){ return new Promise((res,rej)=>navigator.geolocation? navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude,name:'My location'}),()=>rej(new Error('Location unavailable')),{timeout:10000}) : rej(new Error('Location unavailable'))); }
 $('#locate').onclick=async()=>{ try{ const p=await myLocation(); goTo(p); }catch(e){ toast(e.message);} };
 $('#fromMe').onclick=()=>{ $('#from').value='My location'; };
