@@ -561,7 +561,6 @@ export default function App() {
   const pmTh = useGrokTheme();
   // persistence status + save/load tools
   const [stOk] = useState<boolean>(storageWorks);
-  const [hadSaved] = useState<boolean>(() => lsGet(STORE) !== null);
   const [savedAt, setSavedAt] = useState<string>("");
   const [ioMsg, setIoMsg] = useState<string>("");
   const [ioScope, setIoScope] = useState<string>("all");
@@ -1762,42 +1761,12 @@ export default function App() {
     >
       <Segmented options={tabs} value={tab} onChange={(x: string) => setTab(x)} />
       {stOk ? (
-        <Text>{`✔ ${savedAt ? `Autosaved at ${savedAt}` : "Browser storage available"} (all tabs)${hadSaved ? "; your earlier values were restored" : ""}. Keep a file or settings code too, in case this browser clears storage.`}</Text>
+        savedAt ? <Text>{`Autosaved at ${savedAt}`}</Text> : null
       ) : (
-        <Callout tone="warning" lead="Browser storage unavailable in this viewer.">
-          Your entries are kept only while this page is open. Before closing, use “Save to file” or “Copy settings code” below, then load it next time.
+        <Callout tone="warning" lead="Browser storage unavailable.">
+          Entries stay only while this page is open. Use Backup & transfer at the bottom of the page before you leave.
         </Callout>
       )}
-      <Section heading="Save & load settings" caption="Saves every tab (water analysis, all calculators and the plant mimic) to a file or a text code you can keep, and loads it back." collapsible defaultOpen={!stOk}>
-        <Grid columns={4} plain>
-          <Select label="What to save" options={[{ value: "all", label: "Whole app (all tabs)" }, { value: "pm", label: "Plant Mimic only" }]} value={ioScope} onChange={(x: string) => setIoScope(x)} />
-          <Button label="Save to file" onClick={saveFile} />
-          <Button label="Copy settings code" onClick={copyCode} />
-        </Grid>
-        <Text>Load from file (a .json saved with “Save to file”; loads whatever tabs it contains):</Text>
-        <input type="file" accept=".json,application/json,text/plain" onChange={loadFile} style={{ color: pmTh.text.primary, fontFamily: pmTh.font.family }} />
-        {codeOut ? (
-          <Fragment>
-            <Text>Your settings code (select all and copy if the clipboard is blocked):</Text>
-            <textarea readOnly value={codeOut} onFocus={(e: ChangeEvent<HTMLTextAreaElement> | React.FocusEvent<HTMLTextAreaElement>) => e.currentTarget.select()} style={{ ...taStyle, background: pmTh.bg.subtle, color: pmTh.text.primary, border: `1px solid ${pmTh.border.default}` }} />
-          </Fragment>
-        ) : null}
-        <Text>Paste settings code (or the contents of a saved file):</Text>
-        <textarea value={codeIn} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCodeIn(e.target.value)} placeholder="WTS1:…" style={{ ...taStyle, background: pmTh.bg.elevated, color: pmTh.text.primary, border: `1px solid ${pmTh.border.default}` }} />
-        <Grid columns={4} plain>
-          <Button label="Paste settings code" onClick={() => { ioApply(parseSettings(codeIn), "settings code"); setCodeIn(""); }} />
-        </Grid>
-        {stOk ? (
-          <Grid columns={4} plain>
-            <Input label="Profile name (e.g. Site A demin)" value={profName} onChange={(x: string) => setProfName(x)} />
-            <Button label="Save profile" onClick={saveProfile} />
-            <Select label="Saved profiles" options={[{ value: "", label: Object.keys(profiles).length ? "Choose…" : "None yet" }, ...Object.keys(profiles).map((k: string) => ({ value: k, label: k }))]} value={profSel} onChange={(x: string) => setProfSel(x)} />
-            <Button label="Load profile" onClick={() => { if (profiles[profSel]) ioApply(cleanVals(profiles[profSel]), `profile "${profSel}"`); }} />
-            <Button label="Delete profile" onClick={deleteProfile} />
-          </Grid>
-        ) : null}
-        {ioMsg ? <Text>{ioMsg}</Text> : null}
-      </Section>
 
       {/* ================= WATER ANALYSIS ================= */}
       {tab === "an" && (
@@ -2890,7 +2859,7 @@ export default function App() {
             actions={resetBtn("pm_")}
           >
             <Callout tone="warning" lead="Typical defaults: replace with your plant data.">
-              Every number on this tab starts as a typical value, not your plant's. Enter your own vessel sizes, resin data, regeneration settings, throughputs, prices and demand. They autosave in this browser when the viewer allows it (see the status line at the top); always keep a copy with “Save to file” or “Copy settings code” in Save & load settings.
+              Every number on this tab starts as a typical value, not your plant's. Enter your own vessel sizes, resin data, regeneration settings, throughputs, prices and demand. They autosave in this browser. For a copy you can keep, open Backup & transfer at the bottom of the page.
             </Callout>
             {pmMimic()}
             <Grid columns={4} plain>
@@ -2995,6 +2964,37 @@ export default function App() {
       <Callout tone="info" lead="Engineering estimates.">
         Results use standard textbook formulas, published equilibrium constants and typical guide values. Check designs against manufacturer data, such as resin and membrane suppliers' design software, a full speciation model for brines, and the relevant standards before use.
       </Callout>
+
+      <Section heading="Backup & transfer" caption="Save every tab to a file, a WTS1: settings code, or a named profile, and load it back on another phone." collapsible defaultOpen={false}>
+        <Grid columns={4} plain>
+          <Select label="What to save" options={[{ value: "all", label: "Whole app (all tabs)" }, { value: "pm", label: "Plant Mimic only" }]} value={ioScope} onChange={(x: string) => setIoScope(x)} />
+          <Button label="Save to file" onClick={saveFile} />
+          <Button label="Copy settings code" onClick={copyCode} />
+        </Grid>
+        <Text>Load from file (a .json saved with “Save to file”; loads whatever tabs it contains):</Text>
+        <input type="file" accept=".json,application/json,text/plain" onChange={loadFile} style={{ color: pmTh.text.primary, fontFamily: pmTh.font.family }} />
+        {codeOut ? (
+          <Fragment>
+            <Text>Your settings code (select all and copy if the clipboard is blocked):</Text>
+            <textarea readOnly value={codeOut} onFocus={(e: ChangeEvent<HTMLTextAreaElement> | React.FocusEvent<HTMLTextAreaElement>) => e.currentTarget.select()} style={{ ...taStyle, background: pmTh.bg.subtle, color: pmTh.text.primary, border: `1px solid ${pmTh.border.default}` }} />
+          </Fragment>
+        ) : null}
+        <Text>Paste settings code (or the contents of a saved file):</Text>
+        <textarea value={codeIn} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCodeIn(e.target.value)} placeholder="WTS1:…" style={{ ...taStyle, background: pmTh.bg.elevated, color: pmTh.text.primary, border: `1px solid ${pmTh.border.default}` }} />
+        <Grid columns={4} plain>
+          <Button label="Paste settings code" onClick={() => { ioApply(parseSettings(codeIn), "settings code"); setCodeIn(""); }} />
+        </Grid>
+        {stOk ? (
+          <Grid columns={4} plain>
+            <Input label="Profile name (e.g. Site A demin)" value={profName} onChange={(x: string) => setProfName(x)} />
+            <Button label="Save profile" onClick={saveProfile} />
+            <Select label="Saved profiles" options={[{ value: "", label: Object.keys(profiles).length ? "Choose…" : "None yet" }, ...Object.keys(profiles).map((k: string) => ({ value: k, label: k }))]} value={profSel} onChange={(x: string) => setProfSel(x)} />
+            <Button label="Load profile" onClick={() => { if (profiles[profSel]) ioApply(cleanVals(profiles[profSel]), `profile "${profSel}"`); }} />
+            <Button label="Delete profile" onClick={deleteProfile} />
+          </Grid>
+        ) : null}
+        {ioMsg ? <Text>{ioMsg}</Text> : null}
+      </Section>
     </Page>
   );
 }
