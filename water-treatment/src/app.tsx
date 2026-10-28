@@ -2,6 +2,10 @@ import {
   Page, Section, Text, Table, Grid, Input, Select, Segmented, Callout, Equation, Frac, Pow, Button, LineChart, Fragment, useState, useEffect, useGrokTheme,
   type ChangeEvent,
 } from "./canvas";
+import {
+  sacPredict, wbaPredict, sbaPredict, mbPredict, degasPredict, effCheck, runDemin,
+  type DeminUnit, type FlowMode, type PredictWater,
+} from "./pm-predict";
 
 type Vals = Record<string, string>;
 type Tone = "success" | "warning" | "danger";
@@ -93,6 +97,16 @@ const PM_DEF: Vals = PM_UNITS.reduce((o: Vals, u: PmUnit) => {
   pm_c_hcl: "180", pm_c_hcls: "33", pm_c_h2so4: "150", pm_c_h2so4s: "96", pm_c_naoh: "400", pm_c_naohs: "47",
   pm_c_kwh: "0.20", pm_c_water: "1.50", pm_c_eff: "1.20",
   pm_rc_sac: "4", pm_rl_sac: "10", pm_rc_wba: "8", pm_rl_wba: "8", pm_rc_sba: "10", pm_rl_sba: "6", pm_rc_mb: "12", pm_rl_mb: "6",
+  pm_basis: "measured", pm_flow_sac: "counter", pm_flow_wba: "co", pm_flow_sba: "counter", pm_flow_mb: "counter",
+  pm_sba_type: "1", pm_regen_t: "35",
+  pm_mthr_sac: "", pm_mthr_wba: "", pm_mthr_sba: "", pm_mthr_mb: "",
+  pm_sc_tds: "100", pm_sc_hard: "100", pm_sc_alk: "100", pm_sc_sio2: "100", pm_sc_t: "",
+  pm_sc_dose_sac: "", pm_sc_dose_wba: "", pm_sc_dose_sba: "", pm_sc_dose_mb: "", pm_sc_dose_mb2: "",
+  pm_sc_regen_sac: "", pm_sc_flow_sac: "", pm_sc_flow_wba: "", pm_sc_flow_sba: "", pm_sc_flow_mb: "",
+  pm_sc_sba_type: "", pm_sc_regen_t: "",
+  pm_sc_q: "", pm_sc_dem: "", pm_sc_n_sac: "", pm_sc_n_wba: "", pm_sc_n_sba: "", pm_sc_n_mb: "",
+  pm_sc_end_sac: "", pm_sc_end_sba: "", pm_sc_end_mb: "",
+  pm_sc_c_hcl: "", pm_sc_c_h2so4: "", pm_sc_c_naoh: "", pm_sc_c_water: "", pm_sc_c_eff: "", pm_sc_c_kwh: "",
 } as Vals);
 const PMW_DEF: Vals = Object.keys(ANA_A).reduce((o: Vals, k: string) => { o["pm_w_" + k.slice(2)] = ANA_A[k]; return o; }, {} as Vals);
 
@@ -976,11 +990,54 @@ export default function App() {
   const pmCo2Out = v.pm_dg_fan === "off" ? pmCo2In : Math.min(pmCo2In, n("pm_dg_co2") * (pmDgOver ? Math.pow(pmQ / pmDgCap, 2) : 1));
   const pmSi = pmAn.ion.sio2 || 0;
   const pmPhIn = -Math.log10((Math.max(pmFma, 1e-6) / 1000) * (isFinite(pmCh.g1) ? pmCh.g1 : 1));
+  const pmUsePred = v.pm_basis === "predicted";
+  const pmMode = (k: string, dflt: FlowMode): FlowMode => (v[k] === "co" || v[k] === "counter" ? v[k] as FlowMode : dflt);
+  const pmRegenT = n("pm_regen_t");
+  const pmWater: PredictWater = {
+    t: pmAn.t, tds: pmCh.tds, cat: pmCh.cat, ani: pmCh.ani, fma: pmFma, sio2: pmSi, co2In: pmCo2In,
+    naFrac: pmCh.cat > 0 ? pmMeq("na") / pmCh.cat : 0,
+    alkFrac: pmCh.ani > 0 ? (pmAn.malk / 50.04) / pmCh.ani : 0,
+    caFrac: pmCh.cat > 0 ? pmMeq("ca") / pmCh.cat : 0,
+    so4Frac: pmFma > 0 ? pmMeq("so4") / pmFma : 0,
+  };
+  const pmCo2Pred = degasPredict(pmCo2In, pmQ, pmDgCap, n("pm_dg_co2"), v.pm_dg_fan !== "off");
+  const pmSbaType: "1" | "2" = v.pm_sba_type === "2" ? "2" : "1";
+  type PmVp = { cap: number; naLeak: number; siLeak: number; h2so4: string | null };
+  const pmVp: Record<string, PmVp> = {};
+  PM_UNITS.forEach((u: PmUnit) => {
+    const dose = pmF(u.id, "dose");
+    const regen = u.type === "wba" || u.type === "sba" ? "naoh" : (v[`pm_${u.id}_regen`] || "hcl");
+    const endpt = pmF(u.id, "endpt");
+    if (u.type === "sac") {
+      const r = sacPredict(pmWater, dose, regen === "h2so4" ? "h2so4" : "hcl", pmMode("pm_flow_sac", "counter"), endpt, pmF(u.id, "conc"));
+      pmVp[u.id] = { cap: r.cap, naLeak: r.naLeak, siLeak: NaN, h2so4: r.h2so4 };
+    } else if (u.type === "wba") {
+      const r = wbaPredict(pmWater, dose, pmMode("pm_flow_wba", "co"));
+      pmVp[u.id] = { cap: r.cap, naLeak: NaN, siLeak: NaN, h2so4: null };
+    } else if (u.type === "sba") {
+      const r = sbaPredict(pmWater, dose, pmMode("pm_flow_sba", "counter"), pmSbaType, pmRegenT, pmCo2Pred, endpt);
+      pmVp[u.id] = { cap: r.cap, naLeak: NaN, siLeak: r.siLeak, h2so4: null };
+    } else {
+      const r = mbPredict(dose, pmF(u.id, "dose2"), pmMode("pm_flow_mb", "counter"), endpt);
+      pmVp[u.id] = { cap: r.cap, naLeak: NaN, siLeak: NaN, h2so4: null };
+    }
+  });
+  const pmMeanSvc = (type: PmType, pick: (id: string) => number): number => {
+    const svc = PM_UNITS.filter((u: PmUnit) => u.type === type && pmS(u.id) === "svc");
+    const use = svc.length ? svc : PM_UNITS.filter((u: PmUnit) => u.type === type);
+    const xs = use.map((u: PmUnit) => pick(u.id)).filter((x: number) => isFinite(x));
+    return xs.length ? xs.reduce((s: number, x: number) => s + x, 0) / xs.length : NaN;
+  };
+  const pmNaPred = pmMeanSvc("sac", (id: string) => pmVp[id].naLeak);
+  const pmSiPred = pmMeanSvc("sba", (id: string) => pmVp[id].siLeak);
+  const pmNaUsed = pmUsePred ? pmNaPred : n("pm_naleak");
+  const pmSiUsed = pmUsePred ? pmSiPred : n("pm_sileak");
+  const pmCo2Model = pmUsePred ? pmCo2Pred : pmCo2Out;
   const pmLoad: Record<PmType, number> = {
     sac: pmCh.cat,
     wba: pmFma,
-    sba: pmCo2Out / 44.01 + pmSi / 60.08 + pmMeq("po4"),
-    mb: n("pm_naleak") / 22.99 + n("pm_sileak") / 60080,
+    sba: pmCo2Model / 44.01 + pmSi / 60.08 + pmMeq("po4"),
+    mb: pmNaUsed / 22.99 + pmSiUsed / 60080,
   };
   const pmChemOf = (k: string): { ew: number; perKg: number; short: string } =>
     k === "naoh" ? { ew: 40.0, perKg: n("pm_c_naoh") / 1000 / (n("pm_c_naohs") / 100), short: "NaOH" }
@@ -992,7 +1049,8 @@ export default function App() {
   const pmRes: PmRes[] = PM_UNITS.map((u: PmUnit): PmRes => {
     const td = PM_TYPE[u.type];
     const status = pmS(u.id);
-    const dia = pmF(u.id, "dia"), vol = pmF(u.id, "vol"), cap = pmF(u.id, "cap");
+    const dia = pmF(u.id, "dia"), vol = pmF(u.id, "vol");
+    const cap = pmUsePred && pmVp[u.id] && isFinite(pmVp[u.id].cap) ? pmVp[u.id].cap : pmF(u.id, "cap");
     const area = (Math.PI * dia * dia) / 4;
     const ns = pmNSvc(u.type);
     const flow = status === "svc" && ns > 0 ? pmStageQ(u.type) / ns : 0;
@@ -1124,10 +1182,10 @@ export default function App() {
     const typ = PM_TYPE[s.t].rinseTyp;
     if (s.rinseMean > 1.25 * typ) pmAdd("warning", `${PM_SNAME[s.t]} backwash + rinse ${fmt(s.rinseMean, 1)} BV is high (typical about ${typ} BV). Check the rinse endpoint or recycle rinse water.`, ((s.regYr * s.volMean * (s.rinseMean - typ)) / 1000) * pmWaterP);
   });
-  const pmCo2Extra = Math.max(pmCo2Out - 5, 0) / 44.01;
+  const pmCo2Extra = Math.max(pmCo2Model - 5, 0) / 44.01;
   const pmCo2Cost = pmSba.meanEq > 0 ? ((pmPrimYr * pmCo2Extra) / pmSba.meanEq) * pmUnitCost(pmSba) : 0;
   if (v.pm_dg_fan === "off") pmAdd("danger", `Degasser fan off: all ${fmt(pmCo2In, 0)} mg/L CO₂ goes to the SBA units.`, pmCo2Cost);
-  else if (pmCo2Out > 5) pmAdd("warning", `Degasser outlet CO₂ ${fmt(pmCo2Out, 1)} mg/L is above about 5 mg/L${pmDgOver ? ` (hydraulically overloaded at ${fmt((pmQ / pmDgCap) * 100, 0)}% of capacity)` : ""}: extra SBA load.`, pmCo2Cost);
+  else if (pmCo2Model > 5) pmAdd("warning", `Degasser outlet CO₂ ${fmt(pmCo2Model, 1)} mg/L is above about 5 mg/L${pmDgOver ? ` (hydraulically overloaded at ${fmt((pmQ / pmDgCap) * 100, 0)}% of capacity)` : ""}: extra SBA load.`, pmCo2Cost);
   const pmPhM = n("pm_dg_ph");
   if (isFinite(pmPhM) && pmPhM > pmPhIn + 0.5) pmAdd("warning", `Degasser inlet pH ${fmt(pmPhM, 2)} is above the ${fmt(pmPhIn, 2)} expected from the FMA: a SAC unit may be leaking or exhausted.`);
   const pmWT = pmWba.meanEq / pmLoad.wba, pmST = pmSba.meanEq / pmLoad.sba;
@@ -1142,11 +1200,11 @@ export default function App() {
     const wbaReq = pmWba.meanEq * 1.2 * pmWba.regYr;
     if (sbaEx < wbaReq) pmAdd("warning", `Thoroughfare caustic: SBA excess NaOH is about ${fmt(sbaEx / 1000, 0)} keq/yr against about ${fmt(wbaReq / 1000, 0)} keq/yr needed by the WBA (120% of its capacity), so the WBA may be under-regenerated.`);
   }
-  const pmMbNew = 0.5 / 22.99 + n("pm_sileak") / 60080;
-  const pmMbSave = n("pm_naleak") > 0.5 ? (pmMb.chemYr + pmMb.wasteYr * pmWaterP) * (1 - pmMbNew / pmLoad.mb) : 0;
+  const pmMbNew = 0.5 / 22.99 + pmSiUsed / 60080;
+  const pmMbSave = pmNaUsed > 0.5 ? (pmMb.chemYr + pmMb.wasteYr * pmWaterP) * (1 - pmMbNew / pmLoad.mb) : 0;
   if (isFinite(pmMb.minRunH) && pmMb.minRunH < 168) pmAdd("warning", `Mixed beds run only ${fmt(pmMb.minRunH, 0)} h (${fmt(pmMb.minRunH / 24, 1)} days) per cycle: upstream leakage is high.`);
-  if (pmMbSave > 0) pmAdd("warning", `SAC sodium leakage ${fmt(n("pm_naleak"), 2)} mg/L loads the mixed beds. Bringing it to 0.5 mg/L (for example counter-flow regeneration, acid quality and level, or SAC endpoint) cuts MB regenerations by ${fmt((1 - pmMbNew / pmLoad.mb) * 100, 0)}%.`, pmMbSave);
-  if (n("pm_sileak") > 200) pmAdd("warning", `SBA silica leakage ${fmt(n("pm_sileak"), 0)} µg/L is high for mixed-bed feed; the ${fmt(n("pm_mb_si"), 0)} µg/L product target is at risk.`);
+  if (pmMbSave > 0) pmAdd("warning", `SAC sodium leakage ${fmt(pmNaUsed, 2)} mg/L loads the mixed beds. Bringing it to 0.5 mg/L (for example counter-flow regeneration, acid quality and level, or SAC endpoint) cuts MB regenerations by ${fmt((1 - pmMbNew / pmLoad.mb) * 100, 0)}%.`, pmMbSave);
+  if (pmSiUsed > 200) pmAdd("warning", `SBA silica leakage ${fmt(pmSiUsed, 0)} µg/L is high for mixed-bed feed; the ${fmt(n("pm_mb_si"), 0)} µg/L product target is at risk.`);
   const pmPeffSave = n("pm_p_eff") < 75 ? pmPkwh * (1 - n("pm_p_eff") / 75) * n("pm_c_kwh") : 0;
   if (pmPeffSave > 0) pmAdd("warning", `Transfer pump efficiency ${fmt(n("pm_p_eff"), 0)}%: a pump at about 75% would cut pumping energy by ${fmt((1 - n("pm_p_eff") / 75) * 100, 0)}%.`, pmPeffSave);
   if (pmPd > 0 && (n("pm_p_q") > 1.3 * pmPq || pmPload < 60)) pmAdd("warning", `Transfer pumps look oversized: ${fmt(pmPq, 0)} m³/h per duty pump against ${fmt(n("pm_p_q"), 0)} m³/h rated, motor ${fmt(pmPload, 0)}% loaded. A VSD or impeller trim typically saves 10–20% (15% used here).`, 0.15 * pmPkwh * n("pm_c_kwh"));
@@ -1495,7 +1553,7 @@ export default function App() {
             {pmPipe(240, 285, 240, 292, "dgs")}
             <rect x={205} y={292} width={70} height={46} rx={6} fill={pmTh.fill.accentSubtle} stroke={selS("dg")} strokeWidth={selW("dg")} />
             {pmTxt(240, 310, "Sump", "sump", 10, "", 600)}
-            {pmTxt(240, 327, `CO₂ ${fmt(pmCo2Out, 1)} mg/L`, "co2", 8, pmCo2Out > 5 ? pmTh.text.warning : pmTh.text.secondary)}
+            {pmTxt(240, 327, `CO₂ ${fmt(pmCo2Model, 1)} mg/L`, "co2", 8, pmCo2Model > 5 ? pmTh.text.warning : pmTh.text.secondary)}
           </g>
           {pmPipe(275, 315, 299, 315, "tr", true)}
 
@@ -1575,6 +1633,246 @@ export default function App() {
     );
   };
 
+  const scOn = (key: string): boolean => {
+    const x = (v["pm_sc_" + key] ?? "").trim();
+    if (!x) return false;
+    if (key === "tds" || key === "hard" || key === "alk" || key === "sio2") return Math.abs(pf(x) - 100) > 0.001;
+    return true;
+  };
+  const scNum = (key: string): number => { const x = parseFloat(v["pm_sc_" + key] ?? ""); return isFinite(x) ? x : NaN; };
+  const scFlow = (key: string, dflt: FlowMode): FlowMode => {
+    const x = v["pm_sc_" + key];
+    return x === "co" || x === "counter" ? x : dflt;
+  };
+  const pmPo4 = pmMeq("po4");
+  const pmVesselsOf = (type: PmType): PmUnit[] => {
+    const svc = PM_UNITS.filter((u: PmUnit) => u.type === type && pmS(u.id) === "svc");
+    return svc.length ? svc : PM_UNITS.filter((u: PmUnit) => u.type === type);
+  };
+  const pmAvg = (xs: number[]): number => { const f = xs.filter((x: number) => isFinite(x)); return f.length ? f.reduce((s: number, x: number) => s + x, 0) / f.length : NaN; };
+  const pmYourThr = (type: PmType): number => {
+    const measured = n(`pm_mthr_${type}`);
+    if (isFinite(measured) && measured > 0) return measured;
+    const load = type === "sba" ? pmCo2Out / 44.01 + pmSi / 60.08 + pmPo4 : type === "mb" ? n("pm_naleak") / 22.99 + n("pm_sileak") / 60080 : pmLoad[type];
+    return pmAvg(pmVesselsOf(type).map((u: PmUnit) => (pmF(u.id, "vol") * pmF(u.id, "cap")) / load));
+  };
+  const pmPredThr = (type: PmType): number => {
+    const load = type === "sba" ? pmCo2Pred / 44.01 + pmSi / 60.08 + pmPo4 : type === "mb" ? pmNaPred / 22.99 + pmSiPred / 60080 : pmLoad[type];
+    return pmAvg(pmVesselsOf(type).map((u: PmUnit) => (pmF(u.id, "vol") * pmVp[u.id].cap) / load));
+  };
+  const pmEffHints = (type: PmType): string[] => {
+    const h: string[] = [];
+    const bvh = pmAvg(pmVesselsOf(type).map((u: PmUnit) => { const r = pmRes.find((x: PmRes) => x.id === u.id); return r ? r.bvh : NaN; }));
+    if (bvh > 0 && bvh < 5) h.push("low velocity (channelling)");
+    if (bvh > (type === "mb" ? 50 : 40)) h.push("high velocity (early leakage)");
+    if (type === "sac" && pmMeanSvc("sac", (id: string) => pmF(id, "endpt")) + 1e-9 < pmNaPred) h.push("Na endpoint set below the predicted slip");
+    if (type === "sba" && pmMeanSvc("sba", (id: string) => pmF(id, "endpt")) + 1e-9 < pmSiPred) h.push("silica endpoint set below the predicted leakage");
+    const acid = PM_UNITS.find((u: PmUnit) => u.type === "sac" && pmVp[u.id] && pmVp[u.id].h2so4);
+    if (type === "sac" && acid && pmVp[acid.id].h2so4) h.push("calcium sulphate precipitation in the SAC");
+    if (type === "wba" && pmAn.t > 35) h.push("WBA capacity falls when the bed is warm");
+    return h;
+  };
+  const pmCurve = (kind: "sac" | "sba"): { dose: number; thr: number; cost: number }[] => {
+    const doses = kind === "sac" ? [40, 60, 80, 100, 120, 150] : [40, 50, 70, 80, 100, 120, 150];
+    const units = PM_UNITS.filter((u: PmUnit) => u.type === kind && pmS(u.id) !== "oos");
+    const vol = units.length ? pmAvg(units.map((u: PmUnit) => pmF(u.id, "vol"))) : (kind === "sac" ? 4000 : 1000);
+    const id0 = kind === "sac" ? "sac1" : "sba1";
+    const load = kind === "sac" ? pmLoad.sac : pmCo2Pred / 44.01 + pmSi / 60.08 + pmPo4;
+    const regen = kind === "sac" && v.pm_sac1_regen === "h2so4" ? "h2so4" : "hcl";
+    const price = kind === "sba" ? pmChemOf("naoh").perKg : pmChemOf(regen).perKg;
+    return doses.map((dose: number) => {
+      const cap = kind === "sac"
+        ? sacPredict(pmWater, dose, regen, pmMode("pm_flow_sac", "counter"), pmF(id0, "endpt"), pmF(id0, "conc")).cap
+        : sbaPredict(pmWater, dose, pmMode("pm_flow_sba", "counter"), pmSbaType, pmRegenT, pmCo2Pred, pmF(id0, "endpt")).cap;
+      const thr = (vol * cap) / load;
+      return { dose, thr, cost: (dose * vol / 1000) * price / thr };
+    });
+  };
+  const pmSacCurve = pmCurve("sac");
+  const pmSbaCurve = pmCurve("sba");
+  const pmBest = (pts: { cost: number }[]): number => pts.reduce((bi: number, p: { cost: number }, i: number) => (isFinite(p.cost) && p.cost < pts[bi].cost ? i : bi), 0);
+  const waterSc = scOn("tds") || scOn("hard") || scOn("alk") || scOn("sio2") || scOn("t");
+  const scActive = waterSc || ["dose_sac", "dose_wba", "dose_sba", "dose_mb", "dose_mb2", "regen_sac", "flow_sac", "flow_wba", "flow_sba", "flow_mb", "sba_type", "regen_t", "q", "dem", "n_sac", "n_wba", "n_sba", "n_mb", "end_sac", "end_sba", "end_mb", "c_hcl", "c_h2so4", "c_naoh", "c_water", "c_eff", "c_kwh"].some(scOn);
+  const pmScUnits = (): DeminUnit[] => {
+    const tdsF = (scOn("tds") ? scNum("tds") : 100) / 100;
+    const hardF = (scOn("hard") ? scNum("hard") : 100) / 100;
+    const alkF = (scOn("alk") ? scNum("alk") : 100) / 100;
+    const siF = (scOn("sio2") ? scNum("sio2") : 100) / 100;
+    let water = pmWater;
+    let co2 = pmCo2Model;
+    let po4 = pmPo4;
+    const q = scOn("q") ? scNum("q") : pmQ;
+    if (waterSc) {
+      const ion: Record<string, number> = {};
+      AN_IONS.forEach((d: IonDef) => {
+        let x = (pmAn.ion[d.k] || 0) * tdsF;
+        if (d.k === "ca" || d.k === "mg" || d.k === "sr" || d.k === "ba") x *= hardF;
+        if (d.k === "sio2") x *= siF;
+        ion[d.k] = x;
+      });
+      const tSc = scNum("t");
+      const anSc: An = { ...pmAn, ion, malk: pmAn.malk * tdsF * alkF, palk: pmAn.palk * tdsF * alkF, t: isFinite(tSc) ? tSc : pmAn.t, ec: pmAn.ec * tdsF, tdsM: pmAn.tdsM * tdsF };
+      const chSc = chem(anSc);
+      const fma = (ion.cl || 0) / (ionDef("cl").mw / ionDef("cl").z) + (ion.so4 || 0) / (ionDef("so4").mw / ionDef("so4").z) + (ion.no3 || 0) / (ionDef("no3").mw / ionDef("no3").z) + (ion.f || 0) / (ionDef("f").mw / ionDef("f").z);
+      po4 = (ion.po4 || 0) / (ionDef("po4").mw / ionDef("po4").z);
+      water = {
+        t: anSc.t, tds: chSc.tds, cat: chSc.cat, ani: chSc.ani, fma, sio2: ion.sio2 || 0, co2In: chSc.ct * 44010,
+        naFrac: chSc.cat > 0 ? (ion.na || 0) / (ionDef("na").mw / ionDef("na").z) / chSc.cat : 0,
+        alkFrac: chSc.ani > 0 ? (anSc.malk / 50.04) / chSc.ani : 0,
+        caFrac: chSc.cat > 0 ? (ion.ca || 0) / (ionDef("ca").mw / ionDef("ca").z) / chSc.cat : 0,
+        so4Frac: fma > 0 ? (ion.so4 || 0) / (ionDef("so4").mw / ionDef("so4").z) / fma : 0,
+      };
+      co2 = degasPredict(water.co2In, q, n("pm_dg_cap"), n("pm_dg_co2"), v.pm_dg_fan !== "off");
+    } else if (scOn("q")) {
+      co2 = degasPredict(pmCo2In, q, n("pm_dg_cap"), n("pm_dg_co2"), v.pm_dg_fan !== "off");
+    }
+    const sbaType: "1" | "2" = scOn("sba_type") ? (v.pm_sc_sba_type === "2" ? "2" : "1") : pmSbaType;
+    const regenT = scOn("regen_t") ? scNum("regen_t") : pmRegenT;
+    const doseFor = (type: PmType, key: string, own: number): number => (scOn(key) ? scNum(key) : own);
+      const changed = (type: PmType): boolean => waterSc || (type === "sac" && (scOn("dose_sac") || scOn("regen_sac") || scOn("flow_sac") || scOn("end_sac"))) || (type === "wba" && (scOn("dose_wba") || scOn("flow_wba"))) || (type === "sba" && (scOn("dose_sba") || scOn("flow_sba") || scOn("end_sba") || scOn("sba_type") || scOn("regen_t") || scOn("q"))) || (type === "mb" && (scOn("dose_mb") || scOn("dose_mb2") || scOn("flow_mb") || scOn("end_mb")));
+    const units: DeminUnit[] = PM_UNITS.map((u: PmUnit) => {
+      const live = pmRes.find((r: PmRes) => r.id === u.id) as PmRes;
+      let dose = doseFor(u.type, u.type === "sac" ? "dose_sac" : u.type === "wba" ? "dose_wba" : u.type === "sba" ? "dose_sba" : "dose_mb", live.dose);
+      let dose2 = u.type === "mb" ? doseFor("mb", "dose_mb2", pmF(u.id, "dose2")) : 0;
+      let regen = live.regen;
+      if (u.type === "sac" && scOn("regen_sac")) regen = v.pm_sc_regen_sac === "h2so4" ? "h2so4" : "hcl";
+      const endpt = u.type === "sac" && scOn("end_sac") ? scNum("end_sac") : u.type === "sba" && scOn("end_sba") ? scNum("end_sba") : u.type === "mb" && scOn("end_mb") ? scNum("end_mb") : pmF(u.id, "endpt");
+      let cap = live.cap;
+      let naLeak = NaN, siLeak = NaN;
+      if (changed(u.type)) {
+        if (u.type === "sac") {
+          const r = sacPredict(water, dose, regen === "h2so4" ? "h2so4" : "hcl", scFlow("flow_sac", pmMode("pm_flow_sac", "counter")), endpt, pmF(u.id, "conc"));
+          cap = r.cap; naLeak = r.naLeak;
+        } else if (u.type === "wba") cap = wbaPredict(water, dose, scFlow("flow_wba", pmMode("pm_flow_wba", "co"))).cap;
+        else if (u.type === "sba") {
+          const r = sbaPredict(water, dose, scFlow("flow_sba", pmMode("pm_flow_sba", "counter")), sbaType, regenT, co2, endpt);
+          cap = r.cap; siLeak = r.siLeak;
+        } else cap = mbPredict(dose, dose2, scFlow("flow_mb", pmMode("pm_flow_mb", "counter")), endpt).cap;
+      }
+      return { id: u.id, type: u.type, status: live.status, dia: pmF(u.id, "dia"), vol: live.vol, cap, dose, dose2, regen, conc: pmF(u.id, "conc"), rinse: pmF(u.id, "rinse"), naLeak, siLeak };
+    });
+    (["sac", "wba", "sba", "mb"] as PmType[]).forEach((type: PmType) => {
+      if (!scOn(`n_${type}`)) return;
+      const nKeep = Math.round(scNum(`n_${type}`));
+      let i = 0;
+      units.forEach((u: DeminUnit) => {
+        if (u.type !== type || u.status === "oos") return;
+        u.status = i < nKeep ? "svc" : "stby";
+        i += 1;
+      });
+    });
+    const svcMean = (type: PmType, pick: (u: DeminUnit) => number): number => {
+      const svc = units.filter((u: DeminUnit) => u.type === type && u.status === "svc");
+      const use = svc.length ? svc : units.filter((u: DeminUnit) => u.type === type);
+      return pmAvg(use.map(pick));
+    };
+    const na = changed("sac") ? svcMean("sac", (u: DeminUnit) => u.naLeak) : pmNaUsed;
+    const si = changed("sba") ? svcMean("sba", (u: DeminUnit) => u.siLeak) : pmSiUsed;
+    const load = {
+      sac: water.cat,
+      wba: water.fma,
+      sba: co2 / 44.01 + water.sio2 / 60.08 + po4,
+      mb: na / 22.99 + si / 60080,
+    };
+    if (!waterSc && !changed("sba")) load.sba = pmLoad.sba;
+    if (!changed("sac") && !changed("sba") && !waterSc) load.mb = pmLoad.mb;
+    if (!waterSc) { load.sac = pmLoad.sac; load.wba = pmLoad.wba; }
+    return { units, load, q, na, si };
+  };
+  const svcThr = (type: PmType): number => pmAvg(pmRes.filter((r: PmRes) => r.type === type && r.status === "svc").map((r: PmRes) => r.thr));
+  const svcRun = (type: PmType): number => pmAvg(pmRes.filter((r: PmRes) => r.type === type && r.status === "svc").map((r: PmRes) => r.runH));
+  const curChemT = Object.keys(pmKgYr).reduce((s: number, k: string) => s + (pmStr(k) > 0 ? pmKgYr[k] / 1000 / pmStr(k) : 0), 0);
+  const pmScenario = (): { thr: Record<PmType, number>; runH: Record<PmType, number>; regYr: Record<PmType, number>; chemT: number; waste: number; cost: number; na: number; si: number; bottleneck: string } => {
+    const cur = {
+      thr: { sac: svcThr("sac"), wba: svcThr("wba"), sba: svcThr("sba"), mb: svcThr("mb") } as Record<PmType, number>,
+      runH: { sac: svcRun("sac"), wba: svcRun("wba"), sba: svcRun("sba"), mb: svcRun("mb") } as Record<PmType, number>,
+      regYr: { sac: pmSac.regYr, wba: pmWba.regYr, sba: pmSba.regYr, mb: pmMb.regYr } as Record<PmType, number>,
+      chemT: Object.keys(pmKgYr).reduce((s: number, k: string) => s + (pmStr(k) > 0 ? pmKgYr[k] / 1000 / pmStr(k) : 0), 0),
+      waste: pmWasteYr, cost: pmTotYr, na: pmNaUsed, si: pmSiUsed,
+      bottleneck: pmBn.name,
+    };
+    if (!scActive) return cur;
+    const built = pmScUnits();
+    const out = runDemin({
+      units: built.units, load: built.load, q: built.q, dem: scOn("dem") ? scNum("dem") : pmDem,
+      hrs: n("pm_hrs"), days: n("pm_days"), pair: v.pm_pair === "yes", tf: v.pm_tf === "yes",
+      hclPrice: scOn("c_hcl") ? scNum("c_hcl") : n("pm_c_hcl"), hclStr: n("pm_c_hcls"),
+      h2so4Price: scOn("c_h2so4") ? scNum("c_h2so4") : n("pm_c_h2so4"), h2so4Str: n("pm_c_h2so4s"),
+      naohPrice: scOn("c_naoh") ? scNum("c_naoh") : n("pm_c_naoh"), naohStr: n("pm_c_naohs"),
+      kwhPrice: scOn("c_kwh") ? scNum("c_kwh") : n("pm_c_kwh"),
+      waterPrice: scOn("c_water") ? scNum("c_water") : n("pm_c_water"),
+      effPrice: scOn("c_eff") ? scNum("c_eff") : n("pm_c_eff"),
+      resin: { sac: n("pm_rc_sac"), wba: n("pm_rc_wba"), sba: n("pm_rc_sba"), mb: n("pm_rc_mb") },
+      resinLife: { sac: n("pm_rl_sac"), wba: n("pm_rl_wba"), sba: n("pm_rl_sba"), mb: n("pm_rl_mb") },
+      rtSac: n("pm_rt_sac"), rtAn: n("pm_rt_an"), rtMb: n("pm_rt_mb"),
+      pumpN: n("pm_p_n"), pumpDuty: n("pm_p_duty"), pumpQ: n("pm_p_q"), pumpH: n("pm_p_h"), pumpKw: n("pm_p_kw"),
+      pumpEff: n("pm_p_eff"), pumpMeff: n("pm_p_meff"), pumpHrs: n("pm_p_hrs"),
+      fanKw: n("pm_dg_kw"), fanOn: v.pm_dg_fan !== "off", naLeak: built.na, siLeak: built.si,
+    });
+    return { thr: out.thr, runH: out.runH, regYr: out.regYr, chemT: out.chemT, waste: out.waste, cost: out.cost, na: built.na, si: built.si, bottleneck: out.bottleneck };
+  };
+  const pmScNow = pmScenario();
+  const resetScenario = (): void => {
+    const o: Vals = {};
+    Object.keys(DEF).forEach((k: string) => { if (k.startsWith("pm_sc_")) o[k] = DEF[k]; });
+    setMany(o);
+  };
+  const applyScenario = (): void => {
+    const o: Vals = { pm_basis: "predicted" };
+    const putDose = (type: PmType, key: string, field: string): void => {
+      if (!scOn(key)) return;
+      PM_UNITS.filter((u: PmUnit) => u.type === type).forEach((u: PmUnit) => { o[`pm_${u.id}_${field}`] = v["pm_sc_" + key]; });
+    };
+    putDose("sac", "dose_sac", "dose"); putDose("wba", "dose_wba", "dose"); putDose("sba", "dose_sba", "dose"); putDose("mb", "dose_mb", "dose"); putDose("mb", "dose_mb2", "dose2");
+    if (scOn("regen_sac")) PM_UNITS.filter((u: PmUnit) => u.type === "sac").forEach((u: PmUnit) => { o[`pm_${u.id}_regen`] = v.pm_sc_regen_sac; });
+    if (scOn("q")) o.pm_q = v.pm_sc_q;
+    if (scOn("dem")) o.pm_dem = v.pm_sc_dem;
+    (["sac", "wba", "sba", "mb"] as PmType[]).forEach((type: PmType) => { if (scOn(`flow_${type}`)) o[`pm_flow_${type}`] = v[`pm_sc_flow_${type}`]; });
+    if (scOn("sba_type")) o.pm_sba_type = v.pm_sc_sba_type;
+    if (scOn("regen_t")) o.pm_regen_t = v.pm_sc_regen_t;
+    ([["sac", "end_sac"], ["sba", "end_sba"], ["mb", "end_mb"]] as [PmType, string][]).forEach((pr: [PmType, string]) => {
+      if (!scOn(pr[1])) return;
+      PM_UNITS.filter((u: PmUnit) => u.type === pr[0]).forEach((u: PmUnit) => { o[`pm_${u.id}_endpt`] = v["pm_sc_" + pr[1]]; });
+    });
+    (["c_hcl", "c_h2so4", "c_naoh", "c_water", "c_eff", "c_kwh"] as string[]).forEach((key: string) => { if (scOn(key)) o["pm_" + key] = v["pm_sc_" + key]; });
+    (["sac", "wba", "sba", "mb"] as PmType[]).forEach((type: PmType) => {
+      if (!scOn(`n_${type}`)) return;
+      const nKeep = Math.round(scNum(`n_${type}`));
+      let i = 0;
+      PM_UNITS.forEach((u: PmUnit) => {
+        if (u.type !== type || v[`pm_${u.id}_status`] === "oos") return;
+        o[`pm_${u.id}_status`] = i < nKeep ? "svc" : "stby";
+        i += 1;
+      });
+    });
+    if (waterSc) {
+      const tdsF = (scOn("tds") ? scNum("tds") : 100) / 100;
+      const hardF = (scOn("hard") ? scNum("hard") : 100) / 100;
+      const alkF = (scOn("alk") ? scNum("alk") : 100) / 100;
+      const siF = (scOn("sio2") ? scNum("sio2") : 100) / 100;
+      const pfx = v.pm_src === "local" ? "pm_w_" : "a_";
+      const scaleKey = (suffix: string, f: number): void => {
+        const cur = parseFloat(v[pfx + suffix] ?? "");
+        if (isFinite(cur)) o[pfx + suffix] = sig(cur * f);
+      };
+      AN_IONS.forEach((d: IonDef) => {
+        let f = tdsF;
+        if (d.k === "ca" || d.k === "mg" || d.k === "sr" || d.k === "ba") f *= hardF;
+        if (d.k === "sio2") f *= siF;
+        scaleKey(d.k, f);
+      });
+      scaleKey("malk", tdsF * alkF); scaleKey("palk", tdsF * alkF);
+      if (scOn("t")) o[pfx + "t"] = v.pm_sc_t;
+    }
+    Object.keys(DEF).forEach((k: string) => { if (k.startsWith("pm_sc_")) o[k] = DEF[k]; });
+    setMany(o);
+  };
+  const pmDelta = (now: number, next: number, d: number): string => {
+    if (!isFinite(now) || !isFinite(next)) return "–";
+    const x = next - now;
+    return `${x > 0 ? "+" : ""}${fmt(x, d)}`;
+  };
+
   const sharedNote = (c: Ch) => (
     <Text>{`Using the shared water analysis: pH ${fmt(c.an.ph, 2)}, ${fmt(c.an.t, 1)} °C, TDS ${fmt(c.tds, 0)} mg/L, Ca hardness ${fmt(c.caC, 0)} and M-alkalinity ${fmt(c.an.malk, 0)} mg/L as CaCO₃, silica ${fmt(c.an.ion.sio2 || 0, 1)} mg/L.`}</Text>
   );
@@ -1613,6 +1911,7 @@ export default function App() {
         ["Bed depth (resin volume ÷ area)", fmt(r.depth, 2), "m", range(r.depth, 0.75, 3, "Typical 0.75–3", "Shallow: early leakage", "Deep: check ΔP")],
         ["Ionic load on this stage", fmt(pmLoad[u.type], 3), "eq/m³ (meq/L)", null],
         ["Capacity per cycle", fmt(r.eqEx, 0), "eq", null],
+        ["Predicted operating capacity", fmt(pmVp[id] ? pmVp[id].cap : NaN, 2), "eq/L resin", pmVp[id] && pmF(id, "cap") > 0 ? effCheck((pmF(id, "cap") / pmVp[id].cap) * 100, pmVp[id].h2so4 ? [pmVp[id].h2so4] : []) : null],
         ["Throughput per cycle", fmt(r.thr, 0), "m³", null],
         ["Run length at current flow", fmt(r.runH, 1), "h", null],
         ["Throughput since regeneration", fmt(r.thru, 0), "m³", null],
@@ -1666,6 +1965,7 @@ export default function App() {
         {table([
           ["CO₂ into degasser (all alkalinity converted by SAC)", fmt(pmCo2In, 1), "mg/L", null],
           ["CO₂ out (design, raised if overloaded)", fmt(pmCo2Out, 1), "mg/L", pmCo2Out > 5 ? { text: "Above about 5 mg/L", tone: "warning" } : { text: "OK", tone: "success" }],
+          ["Predicted residual CO₂", fmt(pmCo2Pred, 1), "mg/L", pmCo2Pred > 5 ? { text: "Above about 5 mg/L", tone: "warning" } : { text: "Indicative", tone: "success" }],
           ["CO₂ removal", fmt((1 - pmCo2Out / pmCo2In) * 100, 1), "%", null],
           ["Hydraulic loading", fmt((pmQ / pmDgCap) * 100, 0), "% of capacity", range(pmQ / pmDgCap, 0, 1, "Within capacity", "", "Overloaded", "warning", "danger")],
           ["Expected inlet pH (FMA as mineral acid)", fmt(pmPhIn, 2), "", null],
@@ -2865,6 +3165,152 @@ export default function App() {
             <Grid columns={4} plain>
               <Select label="Selected unit" options={pmUnitOpts} value={pmSel} onChange={(x: string) => setPmSel(x)} />
             </Grid>
+          </Section>
+
+          <Section heading="Predictive performance" caption="Indicative resin-manual curves from the feed analysis and the regen settings. Your typed capacities stay in charge until you choose predicted values.">
+            <Grid columns={4} plain>
+              {sel("pm_basis", "Drive this plant with", [{ value: "measured", label: "Use my measured values" }, { value: "predicted", label: "Use predicted values" }])}
+              {sel("pm_flow_sac", "SAC regen flow", [{ value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {sel("pm_flow_wba", "WBA regen flow", [{ value: "co", label: "Co-flow" }, { value: "counter", label: "Counter-flow" }])}
+              {sel("pm_flow_sba", "SBA regen flow", [{ value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {sel("pm_flow_mb", "Mixed bed regen flow", [{ value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {sel("pm_sba_type", "SBA type", [{ value: "1", label: "Type I" }, { value: "2", label: "Type II" }])}
+              {inp("pm_regen_t", "Caustic temperature (°C)")}
+            </Grid>
+            <Grid columns={4} plain>
+              {inp("pm_mthr_sac", "Measured SAC m³/cycle (optional)")}
+              {inp("pm_mthr_wba", "Measured WBA m³/cycle (optional)")}
+              {inp("pm_mthr_sba", "Measured SBA m³/cycle (optional)")}
+              {inp("pm_mthr_mb", "Measured MB m³/cycle (optional)")}
+            </Grid>
+            {pmUsePred ? (
+              <Callout tone="warning" lead="Predicted values are driving the mimic, costs and weaknesses.">
+                Switch back to measured values to use the capacities and leakages you typed. Existing saved numbers are not overwritten.
+              </Callout>
+            ) : (
+              <Text>The rest of this tab still uses your measured capacities and leakages. The table is the theoretical comparison.</Text>
+            )}
+            {PM_UNITS.filter((u: PmUnit) => u.type === "sac" && pmVp[u.id] && pmVp[u.id].h2so4).map((u: PmUnit) => (
+              <Callout key={u.id} tone="warning" lead={`${u.label}: sulphuric acid.`}>{pmVp[u.id].h2so4}</Callout>
+            ))}
+            <Table
+              columns={["Stage", "Predicted eq/L", "Your eq/L", "Predicted m³/cycle", "Your m³/cycle", "% of theoretical", "Check"]}
+              align={["start", "end", "end", "end", "end", "end", "start"]}
+              rows={(["sac", "wba", "sba", "mb"] as PmType[]).map((type: PmType) => {
+                const yours = pmYourThr(type);
+                const pred = pmPredThr(type);
+                const pct = (yours / pred) * 100;
+                const chk = effCheck(pct, pmEffHints(type));
+                return [PM_SNAME[type], fmt(pmMeanSvc(type, (id: string) => pmVp[id].cap), 2), fmt(pmMeanSvc(type, (id: string) => pmF(id, "cap")), 2), fmt(pred, 0), fmt(yours, 0), fmt(pct, 0), chk];
+              })}
+            />
+            <Table
+              columns={["Leakage or residual", "Predicted", "What the plant is using", "Unit"]}
+              align={["start", "end", "end", "start"]}
+              rows={[
+                ["SAC sodium", fmt(pmNaPred, 2), fmt(pmNaUsed, 2), "mg/L Na"],
+                ["Degasser CO₂", fmt(pmCo2Pred, 1), fmt(pmCo2Model, 1), "mg/L"],
+                ["SBA silica", fmt(pmSiPred, 0), fmt(pmSiUsed, 0), "µg/L SiO₂"],
+                ["Mixed bed run", fmt(pmPredThr("mb") / (pmDem / Math.max(pmNSvc("mb"), 1)), 0), fmt(pmMb.minRunH, 0), "h"],
+              ]}
+            />
+          </Section>
+
+          <Section heading="Throughput against regen level" caption="One vessel of the in-service size. Left axis m³/cycle, right axis chemical £/m³ of that throughput. The marker is the lowest chemical cost on the curve." collapsible defaultOpen={false}>
+            <Text>{`SAC, ${v.pm_sac1_regen === "h2so4" ? "H₂SO₄" : "HCl"}, ${pmMode("pm_flow_sac", "counter") === "counter" ? "counter-flow" : "co-flow"}.`}</Text>
+            <LineChart
+              points={pmSacCurve.map((p: { dose: number; thr: number }) => ({ label: String(p.dose), value: p.thr }))}
+              secondary={{ label: "Chemical £/m³", values: pmSacCurve.map((p: { cost: number }) => p.cost) }}
+              labels={["m³ per cycle", "Chemical £/m³"]}
+              floor={0}
+              ceiling={Math.max(...pmSacCurve.map((p: { thr: number }) => p.thr), 1) * 1.15}
+              format={(x: number) => fmt(x, 0)}
+              secondaryScale={{ floor: 0, ceiling: Math.max(...pmSacCurve.map((p: { cost: number }) => p.cost), 0.01) * 1.25, format: (x: number) => fmt(x, 3) }}
+              annotations={[{ at: pmBest(pmSacCurve), label: "Lowest £/m³" }]}
+            />
+            <Text>{`SBA Type ${pmSbaType === "2" ? "II" : "I"}, NaOH at ${fmt(pmRegenT, 0)} °C caustic, ${pmMode("pm_flow_sba", "counter") === "counter" ? "counter-flow" : "co-flow"}.`}</Text>
+            <LineChart
+              points={pmSbaCurve.map((p: { dose: number; thr: number }) => ({ label: String(p.dose), value: p.thr }))}
+              secondary={{ label: "Chemical £/m³", values: pmSbaCurve.map((p: { cost: number }) => p.cost) }}
+              labels={["m³ per cycle", "Chemical £/m³"]}
+              floor={0}
+              ceiling={Math.max(...pmSbaCurve.map((p: { thr: number }) => p.thr), 1) * 1.15}
+              format={(x: number) => fmt(x, 0)}
+              secondaryScale={{ floor: 0, ceiling: Math.max(...pmSbaCurve.map((p: { cost: number }) => p.cost), 0.01) * 1.25, format: (x: number) => fmt(x, 3) }}
+              annotations={[{ at: pmBest(pmSbaCurve), label: "Lowest £/m³" }]}
+            />
+          </Section>
+
+          <Section heading="What-if scenario" caption="Overrides apply only in the scenario column until you press Apply. Blank means keep the baseline. Chemistry multipliers of 100% leave the analysis unchanged. Scenario figures use the predictive model when a regen, flow or water override is set; price-only changes keep today's throughput." collapsible defaultOpen={false}>
+            <Grid columns={4} plain>
+              {inp("pm_sc_tds", "TDS multiplier (%)")}
+              {inp("pm_sc_hard", "Hardness multiplier (%)")}
+              {inp("pm_sc_alk", "Alkalinity multiplier (%)")}
+              {inp("pm_sc_sio2", "Silica multiplier (%)")}
+              {inp("pm_sc_t", "Feed temperature (°C, blank = analysis)")}
+              {inp("pm_sc_dose_sac", "SAC regen level (g/L 100%)")}
+              {sel("pm_sc_regen_sac", "SAC acid", [{ value: "", label: "Same as baseline" }, { value: "hcl", label: "HCl" }, { value: "h2so4", label: "H₂SO₄" }])}
+              {sel("pm_sc_flow_sac", "SAC flow", [{ value: "", label: "Same as baseline" }, { value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {inp("pm_sc_dose_wba", "WBA NaOH (g/L 100%)")}
+              {sel("pm_sc_flow_wba", "WBA flow", [{ value: "", label: "Same as baseline" }, { value: "co", label: "Co-flow" }, { value: "counter", label: "Counter-flow" }])}
+              {inp("pm_sc_dose_sba", "SBA NaOH (g/L 100%)")}
+              {sel("pm_sc_flow_sba", "SBA flow", [{ value: "", label: "Same as baseline" }, { value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {sel("pm_sc_sba_type", "SBA type", [{ value: "", label: "Same as baseline" }, { value: "1", label: "Type I" }, { value: "2", label: "Type II" }])}
+              {inp("pm_sc_regen_t", "Caustic temperature (°C)")}
+              {inp("pm_sc_dose_mb", "MB acid (g/L 100%)")}
+              {inp("pm_sc_dose_mb2", "MB NaOH (g/L 100%)")}
+              {sel("pm_sc_flow_mb", "MB flow", [{ value: "", label: "Same as baseline" }, { value: "counter", label: "Counter-flow" }, { value: "co", label: "Co-flow" }])}
+              {inp("pm_sc_q", "Feed flow (m³/h)")}
+              {inp("pm_sc_dem", "Product demand (m³/h)")}
+              {inp("pm_sc_n_sac", "SAC vessels in service")}
+              {inp("pm_sc_n_wba", "WBA vessels in service")}
+              {inp("pm_sc_n_sba", "SBA vessels in service")}
+              {inp("pm_sc_n_mb", "Mixed beds in service")}
+              {inp("pm_sc_end_sac", "SAC Na endpoint (mg/L)")}
+              {inp("pm_sc_end_sba", "SBA silica endpoint (µg/L)")}
+              {inp("pm_sc_end_mb", "MB conductivity endpoint (µS/cm)")}
+              {inp("pm_sc_c_hcl", "HCl price (£/t)")}
+              {inp("pm_sc_c_h2so4", "H₂SO₄ price (£/t)")}
+              {inp("pm_sc_c_naoh", "NaOH price (£/t)")}
+              {inp("pm_sc_c_water", "Water (£/m³)")}
+              {inp("pm_sc_c_eff", "Effluent (£/m³)")}
+              {inp("pm_sc_c_kwh", "Power (£/kWh)")}
+            </Grid>
+            <Grid columns={4} plain>
+              <Button label="Reset scenario" onClick={resetScenario} />
+              <Button label="Apply scenario to baseline" onClick={applyScenario} />
+            </Grid>
+            <Table
+              columns={["Result", "Current plant", "Scenario", "Delta"]}
+              align={["start", "end", "end", "end"]}
+              rows={[
+                ["SAC m³/cycle", fmt(svcThr("sac"), 0), fmt(pmScNow.thr.sac, 0), pmDelta(svcThr("sac"), pmScNow.thr.sac, 0)],
+                ["WBA m³/cycle", fmt(svcThr("wba"), 0), fmt(pmScNow.thr.wba, 0), pmDelta(svcThr("wba"), pmScNow.thr.wba, 0)],
+                ["SBA m³/cycle", fmt(svcThr("sba"), 0), fmt(pmScNow.thr.sba, 0), pmDelta(svcThr("sba"), pmScNow.thr.sba, 0)],
+                ["Mixed bed m³/cycle", fmt(svcThr("mb"), 0), fmt(pmScNow.thr.mb, 0), pmDelta(svcThr("mb"), pmScNow.thr.mb, 0)],
+                ["SAC run (h)", fmt(svcRun("sac"), 1), fmt(pmScNow.runH.sac, 1), pmDelta(svcRun("sac"), pmScNow.runH.sac, 1)],
+                ["Mixed bed run (h)", fmt(svcRun("mb"), 0), fmt(pmScNow.runH.mb, 0), pmDelta(svcRun("mb"), pmScNow.runH.mb, 0)],
+                ["SAC regens/yr", fmt(pmSac.regYr, 0), fmt(pmScNow.regYr.sac, 0), pmDelta(pmSac.regYr, pmScNow.regYr.sac, 0)],
+                ["SBA regens/yr", fmt(pmSba.regYr, 0), fmt(pmScNow.regYr.sba, 0), pmDelta(pmSba.regYr, pmScNow.regYr.sba, 0)],
+                ["Mixed bed regens/yr", fmt(pmMb.regYr, 1), fmt(pmScNow.regYr.mb, 1), pmDelta(pmMb.regYr, pmScNow.regYr.mb, 1)],
+                ["Chemical delivered (t/yr)", fmt(curChemT, 1), fmt(pmScNow.chemT, 1), pmDelta(curChemT, pmScNow.chemT, 1)],
+                ["Regen water (m³/yr)", fmt(pmWasteYr, 0), fmt(pmScNow.waste, 0), pmDelta(pmWasteYr, pmScNow.waste, 0)],
+                ["Operating cost (£/yr)", fmt(pmTotYr, 0), fmt(pmScNow.cost, 0), { text: pmDelta(pmTotYr, pmScNow.cost, 0), tone: pmScNow.cost < pmTotYr - 1 ? "success" : pmScNow.cost > pmTotYr + 1 ? "warning" : "success" }],
+                ["Na leakage (mg/L)", fmt(pmNaUsed, 2), fmt(pmScNow.na, 2), pmDelta(pmNaUsed, pmScNow.na, 2)],
+                ["Silica leakage (µg/L)", fmt(pmSiUsed, 0), fmt(pmScNow.si, 0), pmDelta(pmSiUsed, pmScNow.si, 0)],
+                ["Bottleneck", pmBn.name, pmScNow.bottleneck, ""],
+              ]}
+            />
+            <Text>{`£ savings if the scenario were the plant: ${fmt(pmTotYr - pmScNow.cost, 0)} per year (positive means the scenario costs less). Apply writes regen levels, flows, prices, vessel counts and feed multipliers onto the baseline and switches the plant to predicted values. Feed multipliers edit the shared analysis (or the local plant analysis).`}</Text>
+          </Section>
+
+          <Section heading="How the model works" collapsible defaultOpen={false}>
+            <Text>Capacities and leakages are indicative curves in the style of Dowex / AmberLite and Purolite engineering manuals for a gel strong-acid cation resin (about 8% DVB), a weak-base anion resin, and a Type I strong-base anion resin. They are not a vendor printout for a named grade. Calibrate them against your exhaustion tests.</Text>
+            <Text>SAC HCl capacity runs from about 0.70 eq/L at 40 g/L (100% HCl) to about 1.02 eq/L at 80 g/L and 1.26 eq/L at 160 g/L, co-flow, for a reference water near 40% sodium, alkalinity about 70% of the anions, 400 mg/L TDS and 25 °C. Sulphuric acid is taken as 90% of that capacity at the same g/L, and sodium leakage about 1.35×. Counter-flow adds about 12% capacity and cuts sodium leakage to about 40% of the co-flow figure. Further corrections: fraction of cations that are sodium, alkalinity over total anions, TDS, and service temperature. If the H₂SO₄ injection strength is above a calcium-based first step (about 0.8–4%), capacity is cut 15% and a precipitation warning is shown.</Text>
+            <Text>Sodium leakage on the co-flow HCl reference curve is about 12 mg/L at 40 g/L regen and about 2.5 mg/L at 80 g/L, then scaled for % sodium, TDS and temperature. The endpoint nudges capacity slightly (tighter endpoint, a little less throughput) but leakage is not claimed below the curve.</Text>
+            <Text>The degasser residual is the design figure at design flow, moves toward about 2 mg/L when under-loaded, and rises with (flow / capacity)² when overloaded. Fan off passes all of the SAC CO₂. WBA capacity is about 1.18 eq/L at 50 g/L NaOH, higher when sulphate dominates the FMA, and lower above about 30 °C. SBA Type I is about 0.44 eq/L at 64 g/L NaOH and 0.50 at 80 g/L, reduced when silica or CO₂ is a large share of the anion load. Type II is about 22% more capacity and about 2.2× the silica leakage. Silica leakage is quoted at the caustic temperature you enter (default 35 °C); cold caustic multiplies it sharply. Counter-flow SBA adds about 10% capacity and cuts silica leakage to about 55%.</Text>
+            <Text>Mixed beds use the lower of the acid and caustic levels: about 0.36 eq/L at 100 g/L of each. Their run is that capacity divided by the upstream sodium (mg/L ÷ 22.99) plus silica (µg/L ÷ 60,080). Efficiency below 85% (and below 70%) is flagged against your typed capacity, or against a measured m³/cycle if you enter one. Likely causes called out are fouling, channelling, poor distribution, an early endpoint, resin age, velocity, warm WBA resin, and calcium sulphate.</Text>
+            <Text>All of this is a screening model. Resin age, organics, iron, channeling and the real endpoint instruments move the result. Use it to see the direction of a change, then confirm on the plant.</Text>
           </Section>
 
           <Section heading="Plant summary">

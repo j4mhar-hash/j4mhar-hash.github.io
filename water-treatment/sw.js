@@ -1,5 +1,5 @@
 /* Service worker for /water-treatment/ only. Do not claim any other path on this origin. */
-const CACHE = "wts-v3";
+const CACHE = "wts-v4";
 const SHELL = [
   "./",
   "./index.html",

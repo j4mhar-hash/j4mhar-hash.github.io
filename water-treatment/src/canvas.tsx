@@ -268,7 +268,7 @@ type Pt = { label?: string; value: number };
 type Ann = { at: number; label: string };
 
 export function LineChart({
-  points, secondary, labels, ceiling, floor, format, annotations, unit, legend,
+  points, secondary, labels, ceiling, floor, format, annotations, unit, legend, secondaryScale,
 }: {
   points: Pt[];
   secondary?: { label?: string; values: number[] };
@@ -279,20 +279,29 @@ export function LineChart({
   annotations?: Ann[];
   unit?: string;
   legend?: boolean;
+  secondaryScale?: { floor?: number; ceiling?: number; format?: (x: number) => string };
 }) {
   const fmtY = format || ((x: number) => (isFinite(x) ? String(Math.round(x * 100) / 100) : "–"));
+  const fmtS = (secondaryScale && secondaryScale.format) || fmtY;
   const vals = points.map((p: Pt) => p.value).filter((x: number) => isFinite(x));
   const sec = secondary ? secondary.values.filter((x: number) => isFinite(x)) : [];
-  const all = [...vals, ...sec];
+  const dual = !!secondaryScale && !!secondary;
+  const all = dual ? vals : [...vals, ...sec];
   const y0 = floor != null && isFinite(floor) ? floor : (all.length ? Math.min(...all) : 0);
   let y1 = ceiling != null && isFinite(ceiling) ? ceiling : (all.length ? Math.max(...all) : 1);
   if (!(y1 > y0)) y1 = y0 + 1;
-  const w = 680, h = 240, padL = 56, padR = 16, padT = 18, padB = 32;
+  const s0 = dual ? (secondaryScale!.floor != null && isFinite(secondaryScale!.floor) ? secondaryScale!.floor : (sec.length ? Math.min(...sec) : 0)) : y0;
+  let s1 = dual ? (secondaryScale!.ceiling != null && isFinite(secondaryScale!.ceiling) ? secondaryScale!.ceiling : (sec.length ? Math.max(...sec) : 1)) : y1;
+  if (!(s1 > s0)) s1 = s0 + 1;
+  const w = 680, h = 240, padL = 56, padR = dual ? 58 : 16, padT = 18, padB = 32;
   const n = Math.max(points.length, 1);
   const X = (i: number): number => padL + (n <= 1 ? (w - padL - padR) / 2 : (i / (n - 1)) * (w - padL - padR));
-  const Y = (v: number): number => padT + (1 - (v - y0) / (y1 - y0)) * (h - padT - padB);
-  const path = (arr: number[]): string => arr.map((v: number, i: number) => `${i === 0 || !isFinite(arr[i - 1]) ? "M" : "L"}${X(i).toFixed(1)},${isFinite(v) ? Y(v).toFixed(1) : Y(y0).toFixed(1)}`).join(" ");
+  const Yof = (v: number, lo: number, hi: number): number => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB);
+  const Y = (v: number): number => Yof(v, y0, y1);
+  const Y2 = (v: number): number => Yof(v, s0, s1);
+  const path = (arr: number[], mapY: (v: number) => number): string => arr.map((v: number, i: number) => `${i === 0 || !isFinite(arr[i - 1]) ? "M" : "L"}${X(i).toFixed(1)},${isFinite(v) ? mapY(v).toFixed(1) : mapY(y0).toFixed(1)}`).join(" ");
   const ticks = [0, 1, 2, 3].map((i: number) => y0 + ((y1 - y0) * i) / 3);
+  const ticks2 = [0, 1, 2, 3].map((i: number) => s0 + ((s1 - s0) * i) / 3);
   const showLegend = legend !== false && ((labels && labels.length > 0) || !!secondary);
   const nameA = (labels && labels[0]) || "Series";
   const nameB = (labels && labels[1]) || (secondary && secondary.label) || "Secondary";
@@ -305,8 +314,11 @@ export function LineChart({
             <text x={padL - 8} y={Y(t) + 4} textAnchor="end" className="tick">{fmtY(t)}{unit && i === 3 ? unit : ""}</text>
           </g>
         ))}
-        <path d={path(points.map((p: Pt) => p.value))} className="series a" />
-        {secondary ? <path d={path(secondary.values)} className="series b" /> : null}
+        {dual ? ticks2.map((t: number, i: number) => (
+          <text key={`s${i}`} x={w - padR + 8} y={Y2(t) + 4} textAnchor="start" className="tick">{fmtS(t)}</text>
+        )) : null}
+        <path d={path(points.map((p: Pt) => p.value), Y)} className="series a" />
+        {secondary ? <path d={path(secondary.values, dual ? Y2 : Y)} className="series b" /> : null}
         {(annotations || []).map((a: Ann, i: number) => (
           isFinite(a.at) && a.at >= 0 && a.at < n ? (
             <g key={i}>
