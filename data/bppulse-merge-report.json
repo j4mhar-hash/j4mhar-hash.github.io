@@ -1,0 +1,287 @@
+{
+  "before": 39354,
+  "after": 39826,
+  "netNew": 472,
+  "fileBytes": 6869437,
+  "mode": "file",
+  "bppulseRaw": 1136,
+  "added": 472,
+  "matched": 662,
+  "enriched": 330,
+  "skipped": 2,
+  "nonUk": 0,
+  "privateExcluded": 2,
+  "addedKw": {
+    "11": 4,
+    "22": 12,
+    "50": 179,
+    "150": 114,
+    "180": 1,
+    "300": 61,
+    "400": 2,
+    "7.4": 99
+  },
+  "sampleAdds": [
+    {
+      "id": "bppulse:a5982c3b-4aa7-4e07-b4aa-9b62954cd695",
+      "n": "Buckingham SF Connect",
+      "op": "bp pulse",
+      "ad": "Old Stratford Road, Buckingham, MK18 1NY",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.00235,
+      "o": -0.98271
+    },
+    {
+      "id": "bppulse:8074",
+      "n": "New Continental Hotel",
+      "op": "bp pulse",
+      "ad": "New Continental Hotel, Plymouth, PL1 3LD",
+      "k": 50,
+      "c": [
+        "CHA",
+        "T2",
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 50.36857,
+      "o": -4.1484
+    },
+    {
+      "id": "bppulse:8258",
+      "n": "Brassmills",
+      "op": "bp pulse",
+      "ad": "Brassmills, Avon Mill Lane, Keynsham, Bristol, BS31 2UG",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.4175,
+      "o": -2.49212
+    },
+    {
+      "id": "bppulse:e59ebd8e-5953-4c67-aa61-8c3bc6a487fe",
+      "n": "West Street SF Connect",
+      "op": "bp pulse",
+      "ad": "50 West St, Westcliff-on-Sea, Southend-on-Sea, SS2 6HJ",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 6,
+      "a": 51.54789,
+      "o": 0.70178
+    },
+    {
+      "id": "bppulse:fc30869a-42eb-4376-9887-90d0eb6c5fb0",
+      "n": "Malling SF Connect",
+      "op": "bp pulse",
+      "ad": "96-106 Malling Street, Lewes, BN7 2RJ",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 50.87714,
+      "o": 0.02093
+    },
+    {
+      "id": "bppulse:1e8ec40f-bc69-4f4f-91bc-5fae03351515",
+      "n": "Mid Glamorgan Service Station",
+      "op": "bp pulse",
+      "ad": "Canal Road, Aberdare, CF44 0AG",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 3,
+      "a": 51.69789,
+      "o": -3.4094
+    },
+    {
+      "id": "bppulse:9013",
+      "n": "Kingsmead",
+      "op": "bp pulse",
+      "ad": "Kingsmead, High Wycombe, High Wycombe, HP11 1SR",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "a": 51.61208,
+      "o": -0.70788
+    },
+    {
+      "id": "bppulse:3bec4b6d-8cec-4144-b9bb-450f817a6431",
+      "n": "Co-op North Hykeham",
+      "op": "bp pulse",
+      "ad": "259-261 Lincoln Road, North Hykeham, Lincoln, LN6 8NH",
+      "k": 50,
+      "c": [
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 53.1832,
+      "o": -0.58812
+    },
+    {
+      "id": "bppulse:15638e48-cb4f-4051-9da6-9f4158a8908a",
+      "n": "Earlsgate SF Connect",
+      "op": "bp pulse",
+      "ad": "Falkirk Road, Junction 6 - A904/M9, Grangemouth, FK3 8XP",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 6,
+      "a": 56.01225,
+      "o": -3.74791
+    },
+    {
+      "id": "bppulse:1c11a084-0717-4757-aa6d-5889afc31866",
+      "n": "514 Holloway Rd",
+      "op": "bp pulse",
+      "ad": "514 Holloway Rd, London, N7 6JD",
+      "k": 50,
+      "c": [
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 51.55922,
+      "o": -0.12135
+    },
+    {
+      "id": "bppulse:cd5b44df-d11a-4615-8ab4-abe4929887e5",
+      "n": "M&S Camberley",
+      "op": "bp pulse",
+      "ad": "The Meadows, Marshall Road, Camberley, GU47 0FD",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 15,
+      "a": 51.33758,
+      "o": -0.77694
+    },
+    {
+      "id": "bppulse:10046",
+      "n": "Dean Street",
+      "op": "bp pulse",
+      "ad": "Dean Street, Trinity road, Marlow, SL7 3AB",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "a": 51.57354,
+      "o": -0.77638
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-158025",
+      "n": "The Stenson Fields",
+      "op": "Chargemaster",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS",
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "ocm-53042",
+      "n": "Silbury Court, 352-390 Silbury Boulevard",
+      "op": "BP Pulse (UK)",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 8
+    },
+    {
+      "id": "ocm-117763",
+      "n": "Frederick Avenue Car Park, Nottingham",
+      "op": "Charge Your Car",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "distM": 32
+    },
+    {
+      "id": "ocm-167343",
+      "n": "BP Rushett",
+      "op": "BP Pulse (UK)",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "distM": 26
+    },
+    {
+      "id": "ocm-101893",
+      "n": "Q-Park",
+      "op": "BP Pulse (UK)",
+      "k": 150,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 33
+    },
+    {
+      "id": "ocm-158052",
+      "n": "Runcorn East Railway Station",
+      "op": "BP Pulse (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-157957",
+      "n": "Worton Park Cark Park",
+      "op": "BP Pulse (UK)",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-268306",
+      "n": "Garden Terrace Road Car Park",
+      "op": "BP Pulse (UK)",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "distM": 16
+    }
+  ],
+  "generated": "2026-10-30T14:25:22.529Z",
+  "note": "bp pulse UK locations (party BPC) via Eco-Movement PCPR OCPI 2.2.1. Three-phase power is 230 V per phase × 3 (32 A = 22 kW, 63 A = 43 kW), not 400×A×3. Two (PRIVATE) IDIADA sites at CV10 7JS are excluded. The token and the raw snapshot are not stored in the repo."
+}
