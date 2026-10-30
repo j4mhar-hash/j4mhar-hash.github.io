@@ -1,0 +1,240 @@
+{
+  "before": 39826,
+  "feed": "geniepoint",
+  "operator": "GeniePoint",
+  "prefix": "geniepoint:",
+  "generated": "2026-10-30T21:48:24.615Z",
+  "sampleAdds": [
+    {
+      "id": "geniepoint:e52bc8ea-4056-4e11-9b60-b07000f60ff3",
+      "n": "Premier Inn Stourbridge Town Centre",
+      "op": "GeniePoint",
+      "ad": "Birmingham Street, Stourbridge, DY8 1JR",
+      "k": 50,
+      "c": [
+        "T2",
+        "CCS",
+        "CHA"
+      ],
+      "cap": 3,
+      "note": "Customers only",
+      "a": 52.45786,
+      "o": -2.14017
+    },
+    {
+      "id": "geniepoint:ffc39d2e-e7d3-4411-baee-b37200bc7093",
+      "n": "Premier Inn - Hastings",
+      "op": "GeniePoint",
+      "ad": "11-13 Cornwallis Street, Hastings, TN34 1ST",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "a": 50.87004,
+      "o": 0.58032
+    },
+    {
+      "id": "geniepoint:70cc8bb7-ccac-4811-a9a4-b14600f19631",
+      "n": "Crewe Multi Storey Car Park",
+      "op": "GeniePoint",
+      "ad": "Arriva North West, Crewe, Cw1 2JA",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 20,
+      "a": 53.09847,
+      "o": -2.44347
+    },
+    {
+      "id": "geniepoint:d9010319-5f91-4f11-92a5-aecb00bdf80f",
+      "n": "Waverley Brightwells Car Park",
+      "op": "GeniePoint",
+      "ad": "Brightwells Yard, East Street, Farnham, GU9 7UA",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 18,
+      "a": 51.216,
+      "o": -0.79541
+    },
+    {
+      "id": "geniepoint:7e55db9a-a6fb-4411-83f1-b39c00fb1bb2",
+      "n": "Premier Inn - Folkstone",
+      "op": "GeniePoint",
+      "ad": "Cherry Garden Lane, Folkestone, CT19 4AP",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "a": 51.09433,
+      "o": 1.15684
+    },
+    {
+      "id": "geniepoint:713b8048-82dd-4711-a52c-afdb00ec894b",
+      "n": "Premier Inn Gloucester Business Park",
+      "op": "GeniePoint",
+      "ad": "Premier Inn, Gloucester, GL3 4BJ",
+      "k": 50,
+      "c": [
+        "T2",
+        "CCS",
+        "CHA"
+      ],
+      "cap": 3,
+      "note": "Customers only",
+      "a": 51.84724,
+      "o": -2.17117
+    },
+    {
+      "id": "geniepoint:55cb2727-6d75-4e11-88db-afda01061a50",
+      "n": "Premier Inn Littlehampton",
+      "op": "GeniePoint",
+      "ad": "Premier Inn, Littlehampton, BN16 1EB",
+      "k": 60,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 3,
+      "note": "Customers only",
+      "a": 50.81757,
+      "o": -0.47626
+    },
+    {
+      "id": "geniepoint:4cb651f0-2055-4311-b144-b06800d9212e",
+      "n": "MMUH - Midland Metropolitan University Hospital",
+      "op": "GeniePoint",
+      "ad": "Midland Metropolitan University Hospital, Grove Lane, Birmingham, B66 2QT",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 30,
+      "a": 52.49094,
+      "o": -1.95051
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-480859",
+      "n": "Premier Inn Carlisle",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 1,
+      "note": "Customers only",
+      "distM": 21
+    },
+    {
+      "id": "ocm-200519",
+      "n": "Premier Inn Cribbs Causeway",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 75,
+      "c": [
+        "CHA",
+        "T2",
+        "CCS"
+      ],
+      "cap": 2,
+      "note": "Customers only",
+      "distM": 0
+    },
+    {
+      "id": "ocm-188051",
+      "n": "Dewsbury Railway Station",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 3,
+      "distM": 0
+    },
+    {
+      "id": "ocm-264881",
+      "n": "Keighley Leisure Centre",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 3,
+      "distM": 0
+    },
+    {
+      "id": "ocm-115148",
+      "n": "Cannon Workshops",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "note": "Customers only",
+      "distM": 13
+    },
+    {
+      "id": "ocm-254145",
+      "n": "Centaurus Retail Park",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 8,
+      "distM": 0
+    },
+    {
+      "id": "ocm-214634",
+      "n": "NHSWBS",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 20,
+      "distM": 0
+    },
+    {
+      "id": "ocm-255484",
+      "n": "Asda Morley",
+      "op": "The GeniePoint Network ( EQUANS EV Solutions )",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 3,
+      "distM": 0
+    }
+  ],
+  "note": "GeniePoint open data (party GPT). Operator is owner.name GeniePoint. Sites whose EVSEs are all parking_restrictions CUSTOMERS stay public and carry note 'Customers only'. PLUGGED is ignored.",
+  "label": "GeniePoint",
+  "raw": 300,
+  "added": 99,
+  "matched": 201,
+  "enriched": 121,
+  "skipped": 0,
+  "nonUk": 0,
+  "testExcluded": 0,
+  "removedExcluded": 0,
+  "customersOnly": 104,
+  "after": 40048,
+  "netNew": 222
+}

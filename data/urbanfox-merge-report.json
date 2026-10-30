@@ -1,0 +1,216 @@
+{
+  "before": 39826,
+  "feed": "urbanfox",
+  "operator": "Urban Fox",
+  "prefix": "urbanfox:",
+  "generated": "2026-10-30T21:48:24.620Z",
+  "sampleAdds": [
+    {
+      "id": "urbanfox:a68eafed-6f34-4ba6-bdf3-1dd0d59a1413",
+      "n": "Dock Street",
+      "op": "Urban Fox",
+      "ad": "Dock St, Dundee",
+      "k": 6.9,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "a": 56.46032,
+      "o": -2.96663
+    },
+    {
+      "id": "urbanfox:76a2874f-43d9-4958-916b-25c6486a18b6",
+      "n": "12 Redland Street",
+      "op": "Urban Fox",
+      "ad": "12 Redland St, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.59837,
+      "o": -2.99902
+    },
+    {
+      "id": "urbanfox:2801870d-b568-4604-9ff1-b5fd9e8d7e60",
+      "n": "21 Sutton Road",
+      "op": "Urban Fox",
+      "ad": "21 Sutton Rd, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.60002,
+      "o": -2.98381
+    },
+    {
+      "id": "urbanfox:b7c0a3f4-bfa2-47a8-8aa1-f30147f05d6e",
+      "n": "241 Chepstow Road",
+      "op": "Urban Fox",
+      "ad": "241 Chepstow Rd, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.58855,
+      "o": -2.97023
+    },
+    {
+      "id": "urbanfox:d60fb171-490f-45e8-8860-5f0c1e774f80",
+      "n": "2-54 Lambert Street",
+      "op": "Urban Fox",
+      "ad": "2 Lambert St, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.59606,
+      "o": -3.00342
+    },
+    {
+      "id": "urbanfox:26e30def-eb58-48dd-94a8-83bf38b6aa40",
+      "n": "259 Chepstow Road",
+      "op": "Urban Fox",
+      "ad": "259 Chepstow Rd, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.58842,
+      "o": -2.96908
+    },
+    {
+      "id": "urbanfox:e149798a-ccc1-44c9-a641-446d64257256",
+      "n": "26 Gordon Street",
+      "op": "Urban Fox",
+      "ad": "26 Gordon St, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.58695,
+      "o": -2.97809
+    },
+    {
+      "id": "urbanfox:949aa714-0674-407b-8315-3d021a868568",
+      "n": "35 Redland Street",
+      "op": "Urban Fox",
+      "ad": "35 Redland St, Newport",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.59915,
+      "o": -2.99901
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "monta:c5033168",
+      "n": "NWPT-COMP",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 40
+    },
+    {
+      "id": "monta:c5012543",
+      "n": "NWPT-ENVO",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "monta:c5021389",
+      "n": "NWPT-COZY",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "monta:c5021403",
+      "n": "NWPT-HOPE",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 1
+    },
+    {
+      "id": "monta:c5012539",
+      "n": "NWPT-MECH",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "monta:c5021423",
+      "n": "NWPT-GRID",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "monta:c5032104",
+      "n": "NWPT-KICK",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "monta:c5255330",
+      "n": "NWPT-BEST",
+      "op": "Urban Fox",
+      "k": 5.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 53
+    }
+  ],
+  "note": "Urban Fox open data (party UFX). Operator Urban Fox. Power is phases × 230 V × A / 1000 (single-phase 5.1 or 6.9 kW, three-phase 11 or 22 kW).",
+  "label": "Urban Fox",
+  "raw": 139,
+  "added": 24,
+  "matched": 115,
+  "enriched": 78,
+  "skipped": 0,
+  "nonUk": 0,
+  "testExcluded": 0,
+  "removedExcluded": 0,
+  "customersOnly": 0,
+  "after": 40048,
+  "netNew": 222
+}
