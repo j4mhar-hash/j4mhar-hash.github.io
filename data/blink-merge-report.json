@@ -1,0 +1,238 @@
+{
+  "before": 40048,
+  "after": 40417,
+  "netNew": 369,
+  "mode": "file",
+  "blinkRaw": 871,
+  "added": 369,
+  "matched": 502,
+  "enriched": 458,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "addedKw": {
+    "6": 1,
+    "11": 11,
+    "12": 1,
+    "14": 1,
+    "18": 1,
+    "19": 10,
+    "20": 1,
+    "21": 2,
+    "22": 221,
+    "25": 1,
+    "46": 1,
+    "50": 31,
+    "7.4": 69,
+    "5.8": 3,
+    "6.9": 2,
+    "6.7": 1,
+    "7.1": 1,
+    "8.3": 5,
+    "6.2": 1,
+    "3.7": 4,
+    "6.4": 1
+  },
+  "sampleAdds": [
+    {
+      "id": "blink:9f8b5f8d-0d4e-409e-a73c-20b2180fe619",
+      "n": "Sheepcot Lane East Car Park, Watford",
+      "op": "Blink Charging",
+      "ad": "200-218 Sheepcot Lane, Watford, WD25 7DE",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 10,
+      "a": 51.69382,
+      "o": -0.4009
+    },
+    {
+      "id": "blink:9b36dc5b-c799-4eb3-b14c-4eac39ebcd7c",
+      "n": "Darwen Street Car Park, Higher Walton",
+      "op": "Blink Charging",
+      "ad": "Darwen Street, Higher Walton, Preston, PR5 4DJ",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "a": 53.7431,
+      "o": -2.64347
+    },
+    {
+      "id": "blink:0e66df76-8399-4618-9931-3806649f99ad",
+      "n": "Kiveton Library, Rotherham",
+      "op": "Blink Charging",
+      "ad": "Wales Road Kiveton Park, Sheffield, S26 6RB",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 53.34081,
+      "o": -1.27659
+    },
+    {
+      "id": "blink:fbefdb95-2534-4a09-abc4-c5ea881600e8",
+      "n": "Wingfield Road",
+      "op": "Blink Charging",
+      "ad": "Wingfield Road, Norwich, NR3 3HG",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 52.63888,
+      "o": 1.28941
+    },
+    {
+      "id": "blink:70df1dec-687a-4b48-90e4-79953bb0b19b",
+      "n": "89 Dereham Road, Norwich",
+      "op": "Blink Charging",
+      "ad": "89 Dereham Road, Norwich, NR2 4HT",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.63346,
+      "o": 1.28055
+    },
+    {
+      "id": "blink:dff8cc31-ff28-4a75-a562-9435e9f79b4c",
+      "n": "Totton College, Southampton",
+      "op": "Blink Charging",
+      "ad": "Water Lane, Totton, Southampton, SO40 3ZX",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 4,
+      "a": 50.92028,
+      "o": -1.50832
+    },
+    {
+      "id": "blink:b37ab346-9ab8-48ab-8fef-1eef0d31b289",
+      "n": "Whitehawk Crescent new",
+      "op": "Blink Charging",
+      "ad": "Whitehawk Crescent Brighton and Hove, Brighton, BN2 5FB",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 50.81957,
+      "o": -0.10532
+    },
+    {
+      "id": "blink:837c3b6f-f205-46ac-a2a5-5cd9eb6126db",
+      "n": "Ashton Rise, Brighton",
+      "op": "Blink Charging",
+      "ad": "Ashton Rise, Brighton, BN2 9RE",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 6,
+      "a": 50.82623,
+      "o": -0.13315
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-254913",
+      "n": "Granvill Road, Watford",
+      "op": "Blink Charging (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-250866",
+      "n": "05787 Wilbury Avenue",
+      "op": "Blink Charging (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-200809",
+      "n": "Tucker Street",
+      "op": "Blink Charging (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-250811",
+      "n": "Westbourne Villas, Lamp Column 6",
+      "op": "Blink Charging (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "ocm-136610",
+      "n": "Sandon P&R 1",
+      "op": "Blink Charging (UK)",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 3
+    },
+    {
+      "id": "ocm-255333",
+      "n": "Broomspring Lane Car Park, Sheffield 1",
+      "op": "Blink Charging (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 0
+    },
+    {
+      "id": "ocm-149784",
+      "n": "05844 Gordon Road",
+      "op": "Blink Charging (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "ocm-250794",
+      "n": "05912 Craven Road",
+      "op": "Blink Charging (UK)",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    }
+  ],
+  "generated": "2026-11-02T09:14:05.806Z",
+  "note": "Blink Charging UK (party GB/BLK) via Eco-Movement PCPR OCPI 2.2.1, from a Source EV locations file. Power is V×A/1000, or 230 V per phase × 3 for three-phase (line voltage above 300 V uses √3×V×A). Same postcode within 100 m matches only Blink, EB Charging, or a blank operator. The raw snapshot is not stored in the repo."
+}
