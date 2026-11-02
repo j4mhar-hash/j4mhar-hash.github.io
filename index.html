@@ -609,7 +609,7 @@ $('#legend').innerHTML = BANDS.map(b=>`<span><span class="dot" style="background
 $('#bands').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const b=c.dataset.b; state.bands.has(b)?state.bands.delete(b):state.bands.add(b); c.classList.toggle('on'); rebuild(); };
 $('#conns').onclick=e=>{ const c=e.target.closest('.chip'); if(!c) return; const k=c.dataset.c; state.conns.has(k)?state.conns.delete(k):state.conns.add(k); c.classList.toggle('on'); rebuild(); };
 $('#est').onchange=e=>{ state.est=e.target.checked; rebuild(); };
-$('#showPrivate').onchange=e=>{ state.showPrivate=e.target.checked; rebuild(); };
+$('#showPrivate').onchange=e=>{ state.showPrivate=e.target.checked; rebuild(); paintDataInfo(); };
 $('#liveOnly').onchange=e=>{ state.liveOnly=e.target.checked; rebuild(); };
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); syncRouteChrome(); });
@@ -835,7 +835,14 @@ const _src = (window.UK_CHARGERS&&UK_CHARGERS.source)||'';
 const _srcLabel = /OCPI|PCPR|char\.gy|Monta|MFG|Clenergy|Fastned|Osprey/i.test(_src) ? 'Open Charge Map + PCPR/OCPI feeds' : (/Open Charge Map/i.test(_src) ? 'Open Charge Map' : (_src||'OpenStreetMap').split('(')[0].trim());
 const snapIds = new Set(((window.UK_CHARGERS&&UK_CHARGERS.items)||[]).map(s=>s.id));
 const extraManual = manualItems.filter(s=>s&&s.id&&!snapIds.has(s.id)).length;
-$('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${UK_CHARGERS.count.toLocaleString()}</b> public charging sites from ${esc(_srcLabel)} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.' + (extraManual ? ` <b>${extraManual}</b> further ${extraManual===1?'site is':'sites are'} added by hand where that snapshot has a gap.` : '');
+function paintDataInfo(){
+  const pool = stations.filter(s => state.showPrivate || !isPrivate(s));
+  const sites = collapseColocated(pool).length;
+  const records = pool.length;
+  const kind = state.showPrivate ? 'charging sites' : 'public charging sites';
+  $('#dataInfo').innerHTML = (window.UK_CHARGERS ? `Built-in map: <b>${sites.toLocaleString()}</b> ${kind} <span class="small">(${records.toLocaleString()} charge point records)</span> from ${esc(_srcLabel)} (${esc(UK_CHARGERS.regions||'the UK')}), saved ${new Date(UK_CHARGERS.generated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}. ` : '') + 'Chargers are drawn from that saved copy, so the map works with no server. Zoom 11+ can also refresh the area you are viewing from OpenStreetMap when those servers respond.' + (extraManual ? ` <b>${extraManual}</b> further ${extraManual===1?'site is':'sites are'} added by hand where that snapshot has a gap.` : '');
+}
+paintDataInfo();
 rebuild(); updateHint(); loadLive();
 // URL params for quick links/testing: ?q=Manchester  or  ?from=London&to=Birmingham&corridor=3
 const P=new URLSearchParams(location.search);
