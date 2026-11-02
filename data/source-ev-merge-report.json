@@ -1,0 +1,128 @@
+{
+  "before": 40417,
+  "after": 40454,
+  "netNew": 37,
+  "mode": "file",
+  "sourceEvRaw": 37,
+  "added": 37,
+  "matched": 0,
+  "enriched": 0,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "sourceev:kingsway_west_ev_hub",
+      "n": "Dundee, Broomhill Road",
+      "op": "Source EV",
+      "ad": "11 Broomhill road, Dundee, DD2 3WT",
+      "k": 150,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 8,
+      "a": 56.4813,
+      "o": -3.01646
+    },
+    {
+      "id": "sourceev:castlebank_street_ev_hub",
+      "n": "Glasgow, Castlebank Street",
+      "op": "Source EV",
+      "ad": "Castlebank Street, Glasgow, G11 6RD",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "a": 55.87013,
+      "o": -4.32155
+    },
+    {
+      "id": "sourceev:tower_retail_park_ev_hub",
+      "n": "Lowestoft, Tower Retail Park",
+      "op": "Source EV",
+      "ad": "Lowestoft; Tower Retail Park, Suffolk, NR33 7NG",
+      "k": 160,
+      "c": [
+        "CCS"
+      ],
+      "cap": 10,
+      "a": 52.44296,
+      "o": 1.72304
+    },
+    {
+      "id": "sourceev:edinburgh_business_park_ev_hub",
+      "n": "Edinburgh, Edinburgh Business Park",
+      "op": "Source EV",
+      "ad": "Lochside View, Edinburgh, EH12 9DH",
+      "k": 160,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 10,
+      "a": 55.93456,
+      "o": -3.31964
+    },
+    {
+      "id": "sourceev:myrekirk_ev_hub",
+      "n": "Dundee, Myrekirk Roundabout",
+      "op": "Source EV",
+      "ad": "Fulton Road, Dundee, DD2 4SW",
+      "k": 300,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 24,
+      "a": 56.47385,
+      "o": -3.05063
+    },
+    {
+      "id": "sourceev:gapton_hall_ev_hub",
+      "n": "Great Yarmouth, Gapton Hall Retail Park",
+      "op": "Source EV",
+      "ad": "Gapton Hall Road, GREAT YARMOUTH, NR31 0LZ",
+      "k": 150,
+      "c": [
+        "T2",
+        "CCS"
+      ],
+      "cap": 10,
+      "a": 52.5976,
+      "o": 1.7122
+    },
+    {
+      "id": "sourceev:alloa_park_drive_ev_hub",
+      "n": "Alloa, Alloa Park Drive",
+      "op": "Source EV",
+      "ad": "Clackmannan Road Roundabout, Alloa, FK10 4DA",
+      "k": 300,
+      "c": [
+        "CCS"
+      ],
+      "cap": 10,
+      "a": 56.11472,
+      "o": -3.77053
+    },
+    {
+      "id": "sourceev:parc_pemberton_ev_hub",
+      "n": "Llanelli, Parc Pemberton Retail Park",
+      "op": "Source EV",
+      "ad": "Parc Pemberton Retail Park, Llanelli, SA14 9UZ",
+      "k": 160,
+      "c": [
+        "CCS",
+        "T2",
+        "CHA"
+      ],
+      "cap": 12,
+      "a": 51.68006,
+      "o": -4.13111
+    }
+  ],
+  "sampleEnriched": [],
+  "generated": "2026-11-02T09:19:13.957Z",
+  "note": "Source EV UK hubs (party GB/SGB) via Eco-Movement PCPR OCPI 2.2.1. Published max_electric_power is kept; missing power uses V×A/1000 or 230 V per phase × 3. Same postcode within 100 m matches only Source EV or a blank operator. The raw snapshot is not stored in the repo."
+}
