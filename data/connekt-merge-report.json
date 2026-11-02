@@ -1,0 +1,123 @@
+{
+  "before": 40454,
+  "after": 40820,
+  "netNew": 366,
+  "mode": "file",
+  "connektRaw": 371,
+  "added": 366,
+  "matched": 5,
+  "enriched": 0,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "connekt:5",
+      "n": "51 St Meddans Street",
+      "op": "Connekt Charging",
+      "ad": "51 St Meddans Troon, Troon, KA10 6HL",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 55.54469,
+      "o": -4.65586
+    },
+    {
+      "id": "connekt:6",
+      "n": "Bojangles Guest House",
+      "op": "Connekt Charging",
+      "ad": "Bojangles Guest House 103 Annan Road, Gretna, Gretna, DG16 5DN",
+      "k": 7.4,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 54.99536,
+      "o": -3.06109
+    },
+    {
+      "id": "connekt:7",
+      "n": "Rosslea Hall Hotel",
+      "op": "Connekt Charging",
+      "ad": "Rosslea Hall Hotel, Ferry Road, Rosneath, Rhu, Rosneath, G84 8NF",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 3,
+      "a": 56.01725,
+      "o": -4.78382
+    },
+    {
+      "id": "connekt:8",
+      "n": "Rufflets St Andrews Hotel",
+      "op": "Connekt Charging",
+      "ad": "B939, Strathkinness Low Road, St Andrews, St Andrews, KY16 9TX",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 56.33402,
+      "o": -2.84027
+    },
+    {
+      "id": "connekt:10",
+      "n": "Sale Golf Club",
+      "op": "Connekt Charging",
+      "ad": "Sale Lodge, Golf Road, Sale Golf Club, Sale, M33 2XU",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 53.42434,
+      "o": -2.29079
+    },
+    {
+      "id": "connekt:11",
+      "n": "Seaview Caravan Park",
+      "op": "Connekt Charging",
+      "ad": "Ardross Road, Seamill, Ayrshire, Seamill, KA23 9NG",
+      "k": 40,
+      "c": [
+        "T2",
+        "CCS"
+      ],
+      "cap": 6,
+      "a": 55.67537,
+      "o": -4.85256
+    },
+    {
+      "id": "connekt:12",
+      "n": "Sherbrooke Castle Hotel",
+      "op": "Connekt Charging",
+      "ad": "Sherbrook Avenue, Bellahouston, Glasgow, Glasgow, G41 4PG",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 55.84312,
+      "o": -4.29671
+    },
+    {
+      "id": "connekt:13",
+      "n": "Somerton House Hotel",
+      "op": "Connekt Charging",
+      "ad": "Carlisle Road, Lockerbie, Lockerbie, DG11 2DR",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 55.11219,
+      "o": -3.35501
+    }
+  ],
+  "sampleEnriched": [],
+  "generated": "2026-11-02T15:06:46.806Z",
+  "note": "Connekt Charging UK (party GB/CON) PCPR OCPI 2.2.1 emailed 2026-11-02. Coordinates are parsed from strings. Published max_electric_power is kept; missing power uses V×A/1000 or 230 V per phase × 3. Same postcode within 100 m matches only Connekt or a blank operator. The raw snapshot is not stored in the repo."
+}
