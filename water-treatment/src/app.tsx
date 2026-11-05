@@ -92,7 +92,9 @@ const PM_DEF: Vals = PM_UNITS.reduce((o: Vals, u: PmUnit) => {
   pm_src: "shared", pm_q: "60", pm_dem: "50", pm_hrs: "24", pm_days: "365", pm_naleak: "1.0", pm_sileak: "50", pm_tf: "no", pm_pair: "yes",
   pm_dg_co2: "5", pm_dg_fan: "on", pm_dg_ph: "", pm_dg_cap: "80", pm_dg_kw: "4",
   pm_tk_vol: "150", pm_tk_lvl: "60", pm_tk_hi: "90", pm_tk_lo: "25",
+  pm_bl_n: "2", pm_bl_duty: "1",
   pm_p_n: "2", pm_p_duty: "1", pm_p_q: "60", pm_p_h: "45", pm_p_kw: "15", pm_p_eff: "65", pm_p_meff: "92", pm_p_hrs: "8760",
+  pm_pp_n: "5", pm_pp_duty: "4", pm_pp_q: "20", pm_pp_h: "40", pm_pp_kw: "0", pm_pp_eff: "70", pm_pp_meff: "90", pm_pp_hrs: "8760",
   pm_mb_cond: "0.1", pm_mb_si: "10", pm_rt_sac: "2.5", pm_rt_an: "4", pm_rt_mb: "6",
   pm_c_hcl: "180", pm_c_hcls: "33", pm_c_h2so4: "150", pm_c_h2so4s: "96", pm_c_naoh: "400", pm_c_naohs: "47",
   pm_c_kwh: "0.20", pm_c_water: "1.50", pm_c_eff: "1.20",
@@ -1124,7 +1126,15 @@ export default function App() {
   const pmPkwh = pmPkw * n("pm_p_hrs");
   const pmPrimHrs = pmPrimYr / pmQ;
   const pmFanKwh = v.pm_dg_fan === "off" ? 0 : n("pm_dg_kw") * pmPrimHrs;
-  const pmPowYr = (pmPkwh + pmFanKwh) * n("pm_c_kwh");
+  const pmBlN = Math.max(Math.round(n("pm_bl_n")) || 0, 0);
+  const pmBlD = Math.min(pmBlN, Math.max(Math.round(n("pm_bl_duty")) || 0, 0));
+  const pmPpN = Math.max(Math.round(n("pm_pp_n")) || 0, 0);
+  const pmPpD = Math.min(pmPpN, Math.max(Math.round(n("pm_pp_duty")) || 0, 0));
+  const pmPpEach = pmPpD > 0 ? pmDem / pmPpD : NaN;
+  const pmPpShaft = pmPpD > 0 && n("pm_pp_eff") > 0 ? ((pmPpEach * n("pm_pp_h")) / 367) / (n("pm_pp_eff") / 100) : 0;
+  const pmPpKw = n("pm_pp_kw") > 0 && n("pm_pp_meff") > 0 ? (pmPpShaft / (n("pm_pp_meff") / 100)) * pmPpD : 0;
+  const pmPpKwh = pmPpKw * (isFinite(n("pm_pp_hrs")) ? n("pm_pp_hrs") : 0);
+  const pmPowYr = (pmPkwh + pmFanKwh + pmPpKwh) * n("pm_c_kwh");
   const pmChemYr = pmSum(pmStages.map((s: PmStage) => s.chemYr));
   const pmWaterP = n("pm_c_water") + n("pm_c_eff");
   const pmWasteYr = pmSum(pmStages.map((s: PmStage) => s.wasteYr));
@@ -1151,7 +1161,7 @@ export default function App() {
   const pmHyd: PmHyd[] = [
     { name: "SAC", cap: pmSac.capAll, need: pmQ }, { name: "Degasser", cap: pmDgCap, need: pmQ },
     { name: "WBA", cap: pmWba.capAll, need: pmQ }, { name: "SBA", cap: pmSba.capAll, need: pmQ },
-    { name: "Transfer pumps (duty)", cap: pmPd * n("pm_p_q"), need: pmDem }, { name: "Mixed beds", cap: pmMb.capAll, need: pmDem },
+    { name: "Extraction pumps (duty)", cap: pmPd * n("pm_p_q"), need: pmDem }, { name: "Mixed beds", cap: pmMb.capAll, need: pmDem },
   ];
   const pmBn = pmHyd.reduce((a: PmHyd, b: PmHyd) => (b.cap / b.need < a.cap / a.need ? b : a));
   pmAdd(pmBn.cap < pmBn.need ? "danger" : pmBn.cap < 1.2 * pmBn.need ? "warning" : "success",
@@ -1206,8 +1216,8 @@ export default function App() {
   if (pmMbSave > 0) pmAdd("warning", `SAC sodium leakage ${fmt(pmNaUsed, 2)} mg/L loads the mixed beds. Bringing it to 0.5 mg/L (for example counter-flow regeneration, acid quality and level, or SAC endpoint) cuts MB regenerations by ${fmt((1 - pmMbNew / pmLoad.mb) * 100, 0)}%.`, pmMbSave);
   if (pmSiUsed > 200) pmAdd("warning", `SBA silica leakage ${fmt(pmSiUsed, 0)} µg/L is high for mixed-bed feed; the ${fmt(n("pm_mb_si"), 0)} µg/L product target is at risk.`);
   const pmPeffSave = n("pm_p_eff") < 75 ? pmPkwh * (1 - n("pm_p_eff") / 75) * n("pm_c_kwh") : 0;
-  if (pmPeffSave > 0) pmAdd("warning", `Transfer pump efficiency ${fmt(n("pm_p_eff"), 0)}%: a pump at about 75% would cut pumping energy by ${fmt((1 - n("pm_p_eff") / 75) * 100, 0)}%.`, pmPeffSave);
-  if (pmPd > 0 && (n("pm_p_q") > 1.3 * pmPq || pmPload < 60)) pmAdd("warning", `Transfer pumps look oversized: ${fmt(pmPq, 0)} m³/h per duty pump against ${fmt(n("pm_p_q"), 0)} m³/h rated, motor ${fmt(pmPload, 0)}% loaded. A VSD or impeller trim typically saves 10–20% (15% used here).`, 0.15 * pmPkwh * n("pm_c_kwh"));
+  if (pmPeffSave > 0) pmAdd("warning", `Extraction pump efficiency ${fmt(n("pm_p_eff"), 0)}%: a pump at about 75% would cut pumping energy by ${fmt((1 - n("pm_p_eff") / 75) * 100, 0)}%.`, pmPeffSave);
+  if (pmPd > 0 && (n("pm_p_q") > 1.3 * pmPq || pmPload < 60)) pmAdd("warning", `Extraction pumps look oversized: ${fmt(pmPq, 0)} m³/h per duty pump against ${fmt(n("pm_p_q"), 0)} m³/h rated, motor ${fmt(pmPload, 0)}% loaded. A VSD or impeller trim typically saves 10–20% (15% used here).`, 0.15 * pmPkwh * n("pm_c_kwh"));
   pmStages.forEach((s: PmStage) => {
     const rem = s.rs.filter((r: PmRes) => r.status === "svc" && isFinite(r.remH) && r.remH > 0).map((r: PmRes) => r.remH).sort((a: number, b: number) => a - b);
     for (let i = 1; i < rem.length; i++) {
@@ -1445,11 +1455,13 @@ export default function App() {
   const pmUnitOpts: Opt[] = [
     { value: "feed", label: "Raw water feed & demand" },
     ...PM_UNITS.filter((u: PmUnit) => u.type === "sac").map((u: PmUnit) => ({ value: u.id, label: u.label })),
-    { value: "dg", label: "Degasser" },
+    { value: "dg", label: "Atmospheric degasser" },
+    { value: "vd", label: "Vacuum degasser (not used)" },
+    { value: "pp", label: "Extraction duty pumps" },
     ...PM_UNITS.filter((u: PmUnit) => u.type === "wba" || u.type === "sba").map((u: PmUnit) => ({ value: u.id, label: u.label })),
-    { value: "tk", label: "Demin storage tank" },
-    { value: "pp", label: "Transfer pumps" },
-    ...PM_UNITS.filter((u: PmUnit) => u.type === "mb").map((u: PmUnit) => ({ value: u.id, label: u.label })),
+    { value: "tk", label: "Control tank" },
+    { value: "pf", label: "Polishing plant feed pumps" },
+    ...PM_UNITS.filter((u: PmUnit) => u.type === "mb").map((u: PmUnit) => ({ value: u.id, label: `Polishing plant (mixed bed) ${u.id.slice(2)}` })),
   ];
   const pmTone = (r: PmRes): { s: string; f: string; lbl: string; short: string } => {
     if (r.status === "oos") return { s: pmTh.text.tertiary, f: pmTh.bg.subtle, lbl: "Out of service", short: "OUT OF SVC" };
@@ -1481,151 +1493,205 @@ export default function App() {
     );
   };
   const pmMimic = () => {
-    const rows = [85, 210, 335];
-    const mbY = [49, 131, 213, 295, 377];
-    const np = Math.min(Math.max(pmPn, 1), 4);
-    const pY = Array.from({ length: np }, (_: unknown, i: number) => 210 + (i - (np - 1) / 2) * 60);
-    const lvl = Math.max(0, Math.min(isFinite(n("pm_tk_lvl")) ? n("pm_tk_lvl") : 0, 100));
-    const tkY = 110, tkH = 200;
-    const lvH = ((tkH - 6) * lvl) / 100;
-    const tkC = lvl <= n("pm_tk_lo") ? pmTh.text.danger : lvl >= n("pm_tk_hi") ? pmTh.text.warning : pmTh.text.accent;
+    const yC = [150, 290, 430];
+    const yP = [78, 166, 254, 342, 430];
     const fanOn = v.pm_dg_fan !== "off";
+    const blShow = Math.min(Math.max(pmBlN, 1), 2);
+    const blRun = fanOn ? Math.min(pmBlD, blShow) : 0;
+    const exN = Math.min(Math.max(pmPn, 1), 3);
+    const exY = Array.from({ length: exN }, (_: unknown, i: number) => 290 + (i - (exN - 1) / 2) * 100);
+    const ppShow = Math.min(Math.max(pmPpN, 1), 5);
+    const ppY = Array.from({ length: ppShow }, (_: unknown, i: number) => (ppShow === 1 ? 290 : 78 + (i * (430 - 78)) / (ppShow - 1)));
+    const lvl = Math.max(0, Math.min(isFinite(n("pm_tk_lvl")) ? n("pm_tk_lvl") : 0, 100));
+    const tkX = 980, tkY = 150, tkW = 78, tkH = 250;
+    const lvH = ((tkH - 8) * lvl) / 100;
+    const tkC = lvl <= n("pm_tk_lo") ? pmTh.text.danger : lvl >= n("pm_tk_hi") ? pmTh.text.warning : pmTh.text.accent;
     const selS = (id: string): string => (pmSel === id ? pmTh.border.focus : pmTh.border.strong);
     const selW = (id: string): number => (pmSel === id ? 4 : 2);
-    const sp = (y: number): number => tkY + tkH * (1 - Math.max(0, Math.min(y, 100)) / 100);
+    const sp = (pct: number): number => tkY + tkH * (1 - Math.max(0, Math.min(pct, 100)) / 100);
     const legend: { c: string; f: string; l: string }[] = [
       { c: pmTh.text.success, f: pmTh.fill.successSubtle, l: "In service" },
       { c: pmTh.text.warning, f: pmTh.fill.warningSubtle, l: "≥90% of run used" },
       { c: pmTh.text.danger, f: pmTh.fill.dangerSubtle, l: "Exhausted (alarm)" },
       { c: pmTh.text.accent, f: pmTh.fill.accentSubtle, l: "Regenerating" },
       { c: pmTh.text.secondary, f: pmTh.bg.elevated, l: "Standby" },
-      { c: pmTh.text.tertiary, f: pmTh.bg.subtle, l: "Out of service" },
+      { c: pmTh.text.tertiary, f: pmTh.bg.subtle, l: "Not used / out of service" },
     ];
+    const pumpGlyph = (cx: number, cy: number, duty: boolean, sel: boolean, key: string, name: string) => {
+      const col = duty ? pmTh.text.success : pmTh.text.secondary;
+      return (
+        <g key={key}>
+          <circle cx={cx} cy={cy} r={15} fill={duty ? pmTh.fill.successSubtle : pmTh.bg.elevated} stroke={sel ? pmTh.border.focus : col} strokeWidth={sel ? 4 : 2} />
+          <path d={`M${cx - 7},${cy - 7} L${cx + 9},${cy} L${cx - 7},${cy + 7} z`} fill={col} />
+          {pmTxt(cx, cy + 26, name, key + "t", 8, col, 600)}
+        </g>
+      );
+    };
     return (
       <div style={{ overflowX: "auto", width: "100%" }}>
-        <svg viewBox="0 0 900 452" width="100%" style={{ minWidth: 720, display: "block" }} role="img" aria-label="Demineralisation plant mimic">
+        <svg viewBox="0 0 1560 590" width="100%" style={{ minWidth: 1100, display: "block" }} role="img" aria-label="Deionisation plant mimic">
           <defs>
             <marker id="pmArr" viewBox="0 0 10 10" refX={9} refY={5} markerWidth={5} markerHeight={5} orient="auto">
               <path d="M0,0 L10,5 L0,10 z" fill={pmTh.text.secondary} />
             </marker>
           </defs>
-          {pmTxt(37, 22, "Feed", "h0", 11, pmTh.text.secondary, 600)}
-          {pmTxt(128, 22, "SAC", "h1", 11, pmTh.text.secondary, 600)}
-          {pmTxt(240, 22, "Degasser", "h2", 11, pmTh.text.secondary, 600)}
-          {pmTxt(386, 22, "WBA → SBA trains", "h3", 11, pmTh.text.secondary, 600)}
-          {pmTxt(545, 22, "Demin tank", "h4", 11, pmTh.text.secondary, 600)}
-          {pmTxt(647, 22, "Pumps", "h5", 11, pmTh.text.secondary, 600)}
-          {pmTxt(750, 12, "Mixed beds", "h6", 11, pmTh.text.secondary, 600)}
-          {pmTxt(868, 22, "Product", "h7", 11, pmTh.text.secondary, 600)}
+          {pmTxt(48, 28, "From pretreatment", "h0", 11, pmTh.text.secondary, 600)}
+          {pmTxt(168, 28, "Cation units", "h1", 11, pmTh.text.secondary, 600)}
+          {pmTxt(268, 28, "Atmospheric degasser", "h2", 11, pmTh.text.secondary, 600)}
+          {pmTxt(400, 28, "Vacuum degasser", "h2b", 11, pmTh.text.tertiary, 600)}
+          {pmTxt(500, 28, "Extraction pumps", "h5", 11, pmTh.text.secondary, 600)}
+          {pmTxt(760, 28, "WBA → SBA", "h3", 11, pmTh.text.secondary, 600)}
+          {pmTxt(1019, 28, "Control tank", "h4", 11, pmTh.text.secondary, 600)}
+          {pmTxt(1188, 28, "Polishing feed pumps", "h5b", 11, pmTh.text.secondary, 600)}
+          {pmTxt(1388, 28, "Polishing plant (mixed bed) 1–5", "h6", 11, pmTh.text.secondary, 600)}
 
-          {/* feed */}
           <g onClick={() => setPmSel("feed")} style={{ cursor: "pointer" }}>
-            <rect x={6} y={178} width={62} height={64} rx={8} fill={pmTh.fill.accentSubtle} stroke={selS("feed")} strokeWidth={selW("feed")} />
-            {pmTxt(37, 200, "Raw water", "f1", 10, "", 600)}
-            {pmTxt(37, 215, `${fmt(pmQ, 0)} m³/h`, "f2", 10)}
-            {pmTxt(37, 230, `${fmt(pmCh.cat, 2)} meq/L`, "f3", 8, pmTh.text.secondary)}
+            <rect x={8} y={252} width={84} height={76} rx={8} fill={pmTh.fill.accentSubtle} stroke={selS("feed")} strokeWidth={selW("feed")} />
+            {pmTxt(50, 274, "From", "f0", 10, "", 600)}
+            {pmTxt(50, 288, "pretreatment", "f1", 10, "", 600)}
+            {pmTxt(50, 306, `${fmt(pmQ, 0)} m³/h`, "f2", 10)}
+            {pmTxt(50, 320, `${fmt(pmCh.cat, 2)} meq/L`, "f3", 8, pmTh.text.secondary)}
+            {pmPipe(50, 252, 50, 118, "soft")}
+            {pmTxt(50, 108, "To softening section", "softl", 9, pmTh.text.secondary, 600)}
           </g>
-          {pmPipe(68, 210, 80, 210, "sf")}
-          {pmPipe(80, 85, 80, 335, "sm1")}
-          {rows.map((y: number, i: number) => (
-            <g key={`sacr${i}`}>
-              {pmPipe(80, y, 99, y, `sa${i}`, true)}
-              {pmPipe(156, y, 180, y, `sb${i}`)}
-              {pmVessel(pmById(`sac${i + 1}`), 100, y - 45, 56, 90)}
+          {pmPipe(92, 290, 112, 290, "sf")}
+          {pmPipe(112, 150, 112, 430, "cm1")}
+          {yC.map((y: number, i: number) => (
+            <g key={`cat${i}`}>
+              {pmPipe(112, y, 128, y, `ca${i}`, true)}
+              {pmPipe(184, y, 204, y, `cb${i}`)}
+              {pmVessel(pmById(`sac${i + 1}`), 128, y - 42, 56, 84)}
             </g>
           ))}
-          {pmPipe(180, 85, 180, 335, "sm2")}
-          {pmPipe(180, 210, 214, 210, "sd", true)}
+          {pmPipe(204, 150, 204, 430, "cm2")}
+          {pmPipe(204, 290, 228, 290, "cd", true)}
 
-          {/* degasser */}
+          <path d="M204 118 H430" fill="none" stroke={pmTh.text.tertiary} strokeWidth={2} strokeDasharray="6 4" />
+          {pmTxt(310, 110, "Bypass", "byp", 9, pmTh.text.tertiary, 600)}
+
           <g onClick={() => setPmSel("dg")} style={{ cursor: "pointer" }}>
-            <rect x={215} y={70} width={50} height={215} rx={8} fill={pmTh.bg.elevated} stroke={selS("dg")} strokeWidth={selW("dg")} />
-            {[0, 1, 2, 3, 4, 5].map((i: number) => (
-              <line key={`pk${i}`} x1={219} y1={100 + i * 26} x2={261} y2={114 + i * 26} stroke={pmTh.border.default} strokeWidth={1} />
+            <rect x={228} y={120} width={52} height={230} rx={8} fill={pmTh.bg.elevated} stroke={selS("dg")} strokeWidth={selW("dg")} />
+            {[0, 1, 2, 3, 4].map((i: number) => (
+              <line key={`pk${i}`} x1={232} y1={150 + i * 32} x2={276} y2={166 + i * 32} stroke={pmTh.border.default} strokeWidth={1} />
             ))}
-            <text x={240} y={182} textAnchor="middle" fontSize={10} fontWeight={600} fill={pmTh.text.secondary} fontFamily={pmTh.font.family} transform="rotate(-90 240 182)">FORCED-DRAUGHT CO₂ STRIPPER</text>
-            <line x1={240} y1={62} x2={240} y2={70} stroke={pmTh.border.strong} strokeWidth={2} />
-            <circle cx={240} cy={48} r={14} fill={fanOn ? pmTh.fill.successSubtle : pmTh.fill.dangerSubtle} stroke={fanOn ? pmTh.text.success : pmTh.text.danger} strokeWidth={2} />
-            {[0, 120, 240].map((a: number) => (
-              <line key={`bl${a}`} x1={240} y1={48} x2={240 + 11 * Math.cos((a * Math.PI) / 180)} y2={48 + 11 * Math.sin((a * Math.PI) / 180)} stroke={fanOn ? pmTh.text.success : pmTh.text.danger} strokeWidth={2} />
-            ))}
-            {pmTxt(278, 46, fanOn ? "Fan on" : "Fan OFF", "fan", 9, fanOn ? pmTh.text.success : pmTh.text.danger, 600)}
-            {pmPipe(240, 285, 240, 292, "dgs")}
-            <rect x={205} y={292} width={70} height={46} rx={6} fill={pmTh.fill.accentSubtle} stroke={selS("dg")} strokeWidth={selW("dg")} />
-            {pmTxt(240, 310, "Sump", "sump", 10, "", 600)}
-            {pmTxt(240, 327, `CO₂ ${fmt(pmCo2Model, 1)} mg/L`, "co2", 8, pmCo2Model > 5 ? pmTh.text.warning : pmTh.text.secondary)}
-          </g>
-          {pmPipe(275, 315, 299, 315, "tr", true)}
-
-          {/* anion trains */}
-          {pmPipe(300, 85, 300, 335, "am1")}
-          {rows.map((y: number, i: number) => (
-            <g key={`anr${i}`}>
-              {pmPipe(300, y, 319, y, `aa${i}`, true)}
-              {pmPipe(372, y, 399, y, `ab${i}`, true)}
-              {pmPipe(452, y, 475, y, `ac${i}`)}
-              {pmVessel(pmById(`wba${i + 1}`), 320, y - 45, 52, 90)}
-              {pmVessel(pmById(`sba${i + 1}`), 400, y - 45, 52, 90)}
-            </g>
-          ))}
-          {pmPipe(475, 85, 475, 335, "am2")}
-          {pmPipe(475, 210, 499, 210, "tki", true)}
-
-          {/* tank */}
-          <g onClick={() => setPmSel("tk")} style={{ cursor: "pointer" }}>
-            <rect x={500} y={tkY} width={90} height={tkH} rx={6} fill={pmTh.bg.elevated} stroke={selS("tk")} strokeWidth={selW("tk")} />
-            <rect x={503} y={tkY + tkH - 3 - lvH} width={84} height={lvH} fill={tkC} opacity={0.3} />
-            <line x1={500} y1={sp(n("pm_tk_hi"))} x2={590} y2={sp(n("pm_tk_hi"))} stroke={pmTh.text.warning} strokeWidth={1} strokeDasharray="4 3" />
-            <line x1={500} y1={sp(n("pm_tk_lo"))} x2={590} y2={sp(n("pm_tk_lo"))} stroke={pmTh.text.danger} strokeWidth={1} strokeDasharray="4 3" />
-            {pmTxt(510, sp(n("pm_tk_hi")) - 3, "H", "tkh", 8, pmTh.text.warning, 600)}
-            {pmTxt(510, sp(n("pm_tk_lo")) - 3, "L", "tkl", 8, pmTh.text.danger, 600)}
-            {pmTxt(545, tkY + tkH / 2 - 6, `${fmt(lvl, 0)}%`, "tk1", 15, "", 600)}
-            {pmTxt(545, tkY + tkH / 2 + 11, `${fmt((pmTkVol * lvl) / 100, 0)} of ${fmt(pmTkVol, 0)} m³`, "tk2", 9)}
-            {pmTxt(545, tkY + tkH / 2 + 25, `${fmt(pmTkHrs, 1)} h to low`, "tk3", 9, pmTh.text.secondary)}
-          </g>
-
-          {/* pumps */}
-          {pmPipe(590, 210, 615, 210, "po")}
-          {np > 1 ? pmPipe(615, pY[0], 615, pY[np - 1], "ph1") : null}
-          {np > 1 ? pmPipe(680, pY[0], 680, pY[np - 1], "ph2") : null}
-          <g onClick={() => setPmSel("pp")} style={{ cursor: "pointer" }}>
-            {pY.map((y: number, i: number) => {
-              const duty = i < pmPd;
-              const col = duty ? pmTh.text.success : pmTh.text.secondary;
+            <text x={254} y={230} textAnchor="middle" fontSize={9} fontWeight={600} fill={pmTh.text.secondary} fontFamily={pmTh.font.family} transform="rotate(-90 254 230)">ATMOSPHERIC DEGASSER</text>
+            {pmTxt(254, 108, "Vent CO₂ + air", "vent", 9, pmTh.text.secondary, 600)}
+            <line x1={254} y1={116} x2={254} y2={120} stroke={pmTh.border.strong} strokeWidth={2} />
+            {Array.from({ length: blShow }, (_: unknown, i: number) => {
+              const run = i < blRun;
+              const bx = 318 + i * 42;
               return (
-                <g key={`pu${i}`}>
-                  {pmPipe(615, y, 629, y, `pi${i}`)}
-                  {pmPipe(661, y, 680, y, `pd${i}`)}
-                  <circle cx={645} cy={y} r={16} fill={duty ? pmTh.fill.successSubtle : pmTh.bg.elevated} stroke={pmSel === "pp" ? pmTh.border.focus : col} strokeWidth={pmSel === "pp" ? 4 : 2} />
-                  <path d={`M638,${y - 8} L655,${y} L638,${y + 8} z`} fill={col} />
-                  {pmTxt(645, y + 27, `P-${i + 1} ${duty ? "duty" : "standby"}`, `pl${i}`, 8, col, 600)}
+                <g key={`blw${i}`}>
+                  <circle cx={bx} cy={78} r={14} fill={run ? pmTh.fill.successSubtle : pmTh.bg.elevated} stroke={run ? pmTh.text.success : pmTh.text.secondary} strokeWidth={2} />
+                  {[0, 120, 240].map((a: number) => (
+                    <line key={a} x1={bx} y1={78} x2={bx + 10 * Math.cos((a * Math.PI) / 180)} y2={78 + 10 * Math.sin((a * Math.PI) / 180)} stroke={run ? pmTh.text.success : pmTh.text.secondary} strokeWidth={2} />
+                  ))}
+                  {pmTxt(bx, 104, run ? "Duty" : "Standby", `bln${i}`, 8, run ? pmTh.text.success : pmTh.text.secondary, 600)}
                 </g>
               );
             })}
+            <rect x={214} y={352} width={80} height={40} rx={6} fill={pmTh.fill.accentSubtle} stroke={selS("dg")} strokeWidth={selW("dg")} />
+            {pmTxt(254, 368, "Sump", "sump", 10, "", 600)}
+            {pmTxt(254, 384, `CO₂ ${fmt(pmCo2Model, 1)}`, "co2", 8, pmCo2Model > 5 ? pmTh.text.warning : pmTh.text.secondary)}
           </g>
-          {pmPipe(680, 210, 704, 210, "pmo", true)}
+          {pmPipe(254, 350, 254, 352, "dgs")}
+          {pmPipe(294, 372, 430, 372, "dgo")}
 
-          {/* mixed beds */}
-          {pmPipe(705, 49, 705, 377, "mm1")}
-          {mbY.map((y: number, i: number) => (
-            <g key={`mbr${i}`}>
-              {pmPipe(705, y, 724, y, `ma${i}`, true)}
-              {pmPipe(775, y, 800, y, `mb${i}`)}
-              {pmVessel(pmById(`mb${i + 1}`), 725, y - 31, 50, 62)}
+          <g onClick={() => setPmSel("vd")} style={{ cursor: "pointer" }}>
+            <rect x={360} y={150} width={48} height={170} rx={8} fill={pmTh.bg.subtle} stroke={pmTh.text.tertiary} strokeWidth={selS("vd") === pmTh.border.focus ? 4 : 1.5} strokeDasharray="5 3" />
+            <text x={384} y={230} textAnchor="middle" fontSize={9} fontWeight={700} fill={pmTh.text.tertiary} fontFamily={pmTh.font.family} transform="rotate(-90 384 230)">VACUUM DEGASSER</text>
+            {pmTxt(384, 336, "NOT USED", "vdn", 9, pmTh.text.tertiary, 700)}
+          </g>
+
+          {pmPipe(430, exY[0], 430, exY[exN - 1], "exh1")}
+          {pmPipe(500, exY[0], 500, exY[exN - 1], "exh2")}
+          <path d="M500 210 H520 V450 H430" fill="none" stroke={pmTh.border.strong} strokeWidth={2} />
+          {pmTxt(548, 228, "Recirc", "rec", 9, pmTh.text.secondary, 600)}
+          <g onClick={() => setPmSel("pp")} style={{ cursor: "pointer" }}>
+            {exY.map((y: number, i: number) => (
+              <g key={`ex${i}`}>
+                {pmPipe(430, y, 452, y, `exi${i}`)}
+                {pmPipe(482, y, 500, y, `exo${i}`)}
+                {pumpGlyph(467, y, i < pmPd, pmSel === "pp", `exg${i}`, i < pmPd ? "Duty" : "Standby")}
+              </g>
+            ))}
+          </g>
+          {pmPipe(500, 290, 560, 290, "exa", true)}
+
+          <g onClick={() => setPmSel("feed")} style={{ cursor: "pointer" }}>
+            <path d="M560 278 L584 290 L560 302 Z" fill={pmTh.fill.accentSubtle} stroke={selS("feed")} strokeWidth={2} />
+            <path d="M584 278 L560 290 L584 302 Z" fill={pmTh.bg.elevated} stroke={selS("feed")} strokeWidth={2} />
+            {pmTxt(572, 248, "Anion inlet valve", "aiv", 9, pmTh.text.secondary, 600)}
+            {pmPipe(548, 278, 548, 128, "tmb")}
+            {pmTxt(470, 120, "To mixed beds", "tmbl", 9, pmTh.text.secondary, 600)}
+            {pmPipe(584, 318, 660, 318, "rw")}
+            {pmTxt(620, 334, "From R/W tanks", "rwl", 9, pmTh.text.secondary, 600)}
+          </g>
+
+          <path d="M600 100 H900" fill="none" stroke={pmTh.text.tertiary} strokeWidth={2} strokeDasharray="6 4" />
+          {pmTxt(750, 92, "Anion bypass", "anb", 9, pmTh.text.tertiary, 600)}
+
+          {pmPipe(600, 150, 600, 430, "am1")}
+          {yC.map((y: number, i: number) => (
+            <g key={`an${i}`}>
+              {pmPipe(600, y, 620, y, `aa${i}`, true)}
+              {pmPipe(676, y, 700, y, `ab${i}`, true)}
+              {pmPipe(756, y, 790, y, `ac${i}`)}
+              {pmVessel(pmById(`wba${i + 1}`), 620, y - 42, 56, 84)}
+              {pmVessel(pmById(`sba${i + 1}`), 700, y - 42, 56, 84)}
             </g>
           ))}
-          {pmPipe(800, 49, 800, 377, "mm2")}
-          {pmPipe(800, 213, 846, 213, "prd", true)}
-          <g onClick={() => setPmSel("feed")} style={{ cursor: "pointer" }}>
-            {pmTxt(870, 200, `${fmt(pmDem, 0)} m³/h`, "pr1", 11, "", 600)}
-            {pmTxt(870, 232, `£${fmt(pmCostM3, 2)}/m³`, "pr2", 10, pmTh.text.secondary)}
+          {pmPipe(790, 150, 790, 430, "am2")}
+          {pmPipe(790, 290, 860, 290, "condi", true)}
+
+          <g onClick={() => setPmSel("tk")} style={{ cursor: "pointer" }}>
+            <circle cx={878} cy={290} r={18} fill={pmTh.bg.elevated} stroke={selS("tk")} strokeWidth={selW("tk")} />
+            {pmTxt(878, 294, "κ", "condc", 14, "", 700)}
+            {pmTxt(878, 322, "Conductivity", "condl", 8, pmTh.text.secondary, 600)}
+          </g>
+          {pmPipe(896, 290, 980, 290, "tki", true)}
+
+          <g onClick={() => setPmSel("tk")} style={{ cursor: "pointer" }}>
+            <rect x={tkX} y={tkY} width={tkW} height={tkH} rx={6} fill={pmTh.bg.elevated} stroke={selS("tk")} strokeWidth={selW("tk")} />
+            <rect x={tkX + 3} y={tkY + tkH - 4 - lvH} width={tkW - 6} height={lvH} fill={tkC} opacity={0.3} />
+            <line x1={tkX} y1={sp(n("pm_tk_hi"))} x2={tkX + tkW} y2={sp(n("pm_tk_hi"))} stroke={pmTh.text.warning} strokeWidth={1} strokeDasharray="4 3" />
+            <line x1={tkX} y1={sp(n("pm_tk_lo"))} x2={tkX + tkW} y2={sp(n("pm_tk_lo"))} stroke={pmTh.text.danger} strokeWidth={1} strokeDasharray="4 3" />
+            {pmTxt(tkX + tkW / 2, tkY + tkH / 2 - 8, `${fmt(lvl, 0)}%`, "tk1", 14, "", 600)}
+            {pmTxt(tkX + tkW / 2, tkY + tkH / 2 + 10, `${fmt((pmTkVol * lvl) / 100, 0)} m³`, "tk2", 9)}
+            {pmTxt(tkX + tkW / 2, tkY + tkH / 2 + 24, `${fmt(pmTkHrs, 1)} h to low`, "tk3", 8, pmTh.text.secondary)}
+          </g>
+          {pmPipe(tkX + tkW, 290, 1120, 290, "tko")}
+          {pmPipe(1120, ppY[0], 1120, ppY[ppShow - 1], "pph1")}
+          {pmPipe(1220, ppY[0], 1220, ppY[ppShow - 1], "pph2")}
+          <g onClick={() => setPmSel("pf")} style={{ cursor: "pointer" }}>
+            {ppY.map((y: number, i: number) => (
+              <g key={`pf${i}`}>
+                {pmPipe(1120, y, 1142, y, `pfi${i}`)}
+                {pmPipe(1172, y, 1220, y, `pfo${i}`)}
+                {pumpGlyph(1157, y, i < pmPpD, pmSel === "pf", `pfg${i}`, i < pmPpD ? "Duty" : "Standby")}
+              </g>
+            ))}
+          </g>
+          {pmPipe(1220, 254, 1288, 254, "pfm", true)}
+          {pmPipe(1288, yP[0], 1288, yP[4], "mm1")}
+          {yP.map((y: number, i: number) => (
+            <g key={`pol${i}`}>
+              {pmPipe(1288, y, 1306, y, `ma${i}`, true)}
+              {pmPipe(1362, y, 1400, y, `mb${i}`)}
+              {pmVessel(pmById(`mb${i + 1}`), 1306, y - 30, 56, 60)}
+            </g>
+          ))}
+          {pmPipe(1400, yP[0], 1400, yP[4], "mm2")}
+          {pmPipe(1400, 254, 1460, 254, "out", true)}
+          <g onClick={() => setPmSel("pf")} style={{ cursor: "pointer" }}>
+            {pmTxt(1490, 246, `${fmt(pmDem, 0)} m³/h`, "pr1", 11, "", 600)}
+            {pmTxt(1490, 268, `£${fmt(pmCostM3, 2)}/m³`, "pr2", 10, pmTh.text.secondary)}
           </g>
 
-          {/* legend */}
           {legend.map((g: { c: string; f: string; l: string }, i: number) => (
             <g key={`lg${i}`}>
-              <rect x={10 + i * 146} y={428} width={14} height={14} rx={3} fill={g.f} stroke={g.c} strokeWidth={2} />
-              <text x={30 + i * 146} y={439} fontSize={10} fill={pmTh.text.secondary} fontFamily={pmTh.font.family}>{g.l}</text>
+              <rect x={16 + i * 250} y={548} width={14} height={14} rx={3} fill={g.f} stroke={g.c} strokeWidth={2} />
+              <text x={36 + i * 250} y={560} fontSize={11} fill={pmTh.text.secondary} fontFamily={pmTh.font.family}>{g.l}</text>
             </g>
           ))}
         </svg>
@@ -1957,10 +2023,12 @@ export default function App() {
       <Fragment>
         <Grid columns={4} plain>
           {inp("pm_dg_co2", "Design CO₂ out (mg/L)")}
-          {sel("pm_dg_fan", "Fan", [{ value: "on", label: "Running" }, { value: "off", label: "Off / tripped" }])}
+          {sel("pm_dg_fan", "Air blowers", [{ value: "on", label: "Running" }, { value: "off", label: "Off / tripped" }])}
+          {inp("pm_bl_n", "Number of air blowers")}
+          {inp("pm_bl_duty", "Duty blowers")}
           {inp("pm_dg_ph", "Measured inlet pH (optional)")}
           {inp("pm_dg_cap", "Flow capacity (m³/h)")}
-          {inp("pm_dg_kw", "Fan power (kW)")}
+          {inp("pm_dg_kw", "Air blower power (kW, total when running)")}
         </Grid>
         {table([
           ["CO₂ into degasser (all alkalinity converted by SAC)", fmt(pmCo2In, 1), "mg/L", null],
@@ -1971,7 +2039,8 @@ export default function App() {
           ["Expected inlet pH (FMA as mineral acid)", fmt(pmPhIn, 2), "", null],
           ["Measured inlet pH", fmt(n("pm_dg_ph"), 2), "", isFinite(n("pm_dg_ph")) ? (n("pm_dg_ph") > pmPhIn + 0.5 ? { text: "High: SAC leakage?", tone: "warning" } : { text: "Consistent", tone: "success" }) : null],
           ["SBA load from residual CO₂", fmt(pmCo2Out / 44.01, 3), "eq/m³", { text: `${fmt(((pmCo2Out / 44.01) / pmLoad.sba) * 100, 0)}% of SBA load` }],
-          ["Fan energy", fmt(pmFanKwh, 0), "kWh/yr", null],
+          ["Air blowers duty / standby", `${v.pm_dg_fan !== "off" ? pmBlD : 0} / ${Math.max(pmBlN - (v.pm_dg_fan !== "off" ? pmBlD : 0), 0)}`, "blowers", pmBlN > pmBlD ? { text: "Standby available", tone: "success" } : { text: "No standby blower", tone: "warning" }],
+          ["Blower energy", fmt(pmFanKwh, 0), "kWh/yr", null],
         ])}
       </Fragment>
     );
@@ -1991,11 +2060,16 @@ export default function App() {
         ])}
       </Fragment>
     );
+    if (pmSel === "vd") return (
+      <Fragment>
+        <Text>The vacuum degasser is on the plant drawing and is not used. No flow is taken through it, and it is not in the capacity or cost model.</Text>
+      </Fragment>
+    );
     if (pmSel === "pp") return (
       <Fragment>
         <Grid columns={4} plain>
-          {inp("pm_p_n", "Number of pumps")}
-          {inp("pm_p_duty", "Duty pumps")}
+          {inp("pm_p_n", "Number of extraction pumps")}
+          {inp("pm_p_duty", "Duty extraction pumps")}
           {inp("pm_p_q", "Rated flow per pump (m³/h)")}
           {inp("pm_p_h", "Head (m)")}
           {inp("pm_p_kw", "Motor rating (kW)")}
@@ -2013,6 +2087,29 @@ export default function App() {
           ["Energy", fmt(pmPkwh, 0), "kWh/yr", null],
           ["Pumping cost", fmt(pmPkwh * n("pm_c_kwh"), 0), "£/yr", null],
           ["Specific energy", fmt(pmPkw / pmDem, 3), "kWh/m³", null],
+        ])}
+      </Fragment>
+    );
+    if (pmSel === "pf") return (
+      <Fragment>
+        <Text>These five pumps take anion-treated water from the control tank to the polishing mixed beds. Motor kW defaults to 0 so they do not change operating cost until you enter a rating.</Text>
+        <Grid columns={4} plain>
+          {inp("pm_pp_n", "Number of polishing feed pumps")}
+          {inp("pm_pp_duty", "Duty polishing feed pumps")}
+          {inp("pm_pp_q", "Rated flow per pump (m³/h)")}
+          {inp("pm_pp_h", "Head (m)")}
+          {inp("pm_pp_kw", "Motor rating (kW)")}
+          {inp("pm_pp_eff", "Pump efficiency (%)")}
+          {inp("pm_pp_meff", "Motor efficiency (%)")}
+          {inp("pm_pp_hrs", "Running hours per year")}
+        </Grid>
+        {table([
+          ["Duty / standby", `${pmPpD} / ${Math.max(pmPpN - pmPpD, 0)}`, "pumps", pmPpN > pmPpD ? { text: "Standby available", tone: "success" } : { text: "No standby", tone: "warning" }],
+          ["Polishing feed (control tank outlet)", fmt(pmDem, 1), "m³/h", null],
+          ["Duty capacity", fmt(pmPpD * n("pm_pp_q"), 1), "m³/h", pmPpD * n("pm_pp_q") >= pmDem ? { text: "Covers polishing feed", tone: "success" } : { text: "Below polishing feed", tone: "danger" }],
+          ["Flow per duty pump", fmt(pmPpEach, 1), "m³/h", { text: `${fmt((pmPpEach / n("pm_pp_q")) * 100, 0)}% of rated` }],
+          ["Electrical power", fmt(pmPpKw, 2), "kW", pmPpKw === 0 ? { text: "No motor kW entered", tone: "success" } : null],
+          ["Pumping cost", fmt(pmPpKwh * n("pm_c_kwh"), 0), "£/yr", null],
         ])}
       </Fragment>
     );
@@ -3155,7 +3252,7 @@ export default function App() {
         <Fragment>
           <Section
             heading="Plant mimic: demineralisation plant"
-            caption="Feed → 3 SAC → degasser → 3 WBA/SBA trains → demin tank → transfer pumps → 5 mixed beds. Click a unit to open its inputs and results below. Colour shows status; the fill and % show how much of the current run is used. On a phone, scroll the drawing sideways or pick a unit from the list."
+            caption="From pretreatment → 3 cation units → atmospheric degasser (vacuum degasser not used) → 2 extraction pumps → 3 WBA/SBA pairs → conductivity cell → control tank → 5 polishing feed pumps → polishing plant mixed beds 1–5. Scroll sideways on a phone. Click a unit, or pick it from the list."
             actions={resetBtn("pm_")}
           >
             <Callout tone="warning" lead="Typical defaults: replace with your plant data.">
@@ -3368,7 +3465,7 @@ export default function App() {
                 s.okN1 ? { text: "Met", tone: "success" } : { text: "Not met", tone: "danger" }, fmt((s.regYr / 365) * 7, 2), fmt(s.chemYr, 0), fmt(s.wasteYr, 0),
               ])}
             />
-            <Text>{`Degasser: ${fmt(pmQ, 0)} of ${fmt(pmDgCap, 0)} m³/h (single unit, no standby). Transfer pumps: ${pmPd} duty + ${Math.max(pmPn - pmPd, 0)} standby, ${fmt(pmPd * n("pm_p_q"), 0)} m³/h duty capacity against ${fmt(pmDem, 0)} m³/h demand.`}</Text>
+            <Text>{`Atmospheric degasser: ${fmt(pmQ, 0)} of ${fmt(pmDgCap, 0)} m³/h. Air blowers: ${v.pm_dg_fan !== "off" ? pmBlD : 0} running of ${pmBlN}. Extraction pumps: ${pmPd} duty + ${Math.max(pmPn - pmPd, 0)} standby, ${fmt(pmPd * n("pm_p_q"), 0)} m³/h against ${fmt(pmDem, 0)} m³/h. Polishing feed pumps: ${pmPpD} duty + ${Math.max(pmPpN - pmPpD, 0)} standby, ${fmt(pmPpD * n("pm_pp_q"), 0)} m³/h against ${fmt(pmDem, 0)} m³/h from the control tank. The five polishing vessels are the mixed beds.`}</Text>
           </Section>
 
           <Section heading="Costs, regeneration times and resin" collapsible defaultOpen={false}>
