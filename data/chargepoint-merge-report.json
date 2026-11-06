@@ -1,0 +1,212 @@
+{
+  "before": 42130,
+  "after": 42346,
+  "netNew": 216,
+  "mode": "file",
+  "chargepointRaw": 344,
+  "privateMarked": 1,
+  "added": 216,
+  "matched": 128,
+  "enriched": 90,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "chargepoint:GBCPIL7408345",
+      "n": "ENGLISH LAKES LANCASTER 02",
+      "op": "ChargePoint",
+      "ad": "Lancaster house hotel Green lane, Bailrigg, LA1 4GJ",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "a": 54.007,
+      "o": -2.78874
+    },
+    {
+      "id": "chargepoint:GBCPIL6820605",
+      "n": "PORTAKABIN STATION 1",
+      "op": "ChargePoint",
+      "ad": "Westburn Farm Road, Cambuslang, G72 7UB",
+      "k": 22.1,
+      "c": [
+        "T1"
+      ],
+      "cap": 2,
+      "a": 55.82317,
+      "o": -4.15636
+    },
+    {
+      "id": "chargepoint:GBCPIL7140895",
+      "n": "GOLDINGS WRENCHARGER3",
+      "op": "ChargePoint",
+      "ad": "Wrens Cross, Maidstone, ME15",
+      "k": 7.7,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "a": 51.26977,
+      "o": 0.52568
+    },
+    {
+      "id": "chargepoint:GBCPIL7439205",
+      "n": "MERCEDESBENZ LINK REAR 5",
+      "op": "ChargePoint",
+      "ad": "1 Delaware Dr, Milton Keynes, MK15 8BA",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 52.06405,
+      "o": -0.73166
+    },
+    {
+      "id": "chargepoint:GBCPIL6788015",
+      "n": "BABCOCK STATION 24",
+      "op": "ChargePoint",
+      "ad": "1B Wolseley Road, Plymouth, PL2 2ED",
+      "k": 7.7,
+      "c": [
+        "T2"
+      ],
+      "cap": 7,
+      "a": 50.39374,
+      "o": -4.17662
+    },
+    {
+      "id": "chargepoint:GBCPIL6784365",
+      "n": "AMRGP EXECUTIVE 8",
+      "op": "ChargePoint",
+      "ad": "Dadford Road, Silverstone, NN12",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 52.07734,
+      "o": -1.02721
+    },
+    {
+      "id": "chargepoint:GBCPIL7324735",
+      "n": "EVIELIFE POWDERMILLS 1",
+      "op": "ChargePoint",
+      "ad": "Powdermill hotel, Battle, TN33 0SP",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 50.90393,
+      "o": 0.47838
+    },
+    {
+      "id": "chargepoint:GBCPIL7389895",
+      "n": "PHQ CAR PARK CHARGER 2",
+      "op": "ChargePoint",
+      "ad": "Portsmouth Historic Dockyard Car Park Admiral, Portsmouth, PO1 3GW",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "a": 50.80015,
+      "o": -1.10435
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-214792",
+      "n": "FPE SEALS BARRINGTON 3",
+      "op": "ChargePoint",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 2
+    },
+    {
+      "id": "ocm-267981",
+      "n": "VINES GROUP GUILDFORD AC 2",
+      "op": "ChargePoint",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-268302",
+      "n": "WOODCHESTER W17",
+      "op": "ChargePoint",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "distM": 11
+    },
+    {
+      "id": "ocm-250977",
+      "n": "COUNTY MALL COUNTY MALL 3",
+      "op": "ChargePoint",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 11
+    },
+    {
+      "id": "ocm-71798",
+      "n": "Newbury Parkway Shopping Centre Car Park",
+      "op": "ChargePoint",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 27
+    },
+    {
+      "id": "ocm-213881",
+      "n": "OTFORDPC CARPARK 1",
+      "op": "ChargePoint",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ocm-485105",
+      "n": "Colton Retail Park",
+      "op": "ChargePoint",
+      "k": 22.1,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 39
+    },
+    {
+      "id": "ocm-214573",
+      "n": "MCMULLEN KINGS REACH 1",
+      "op": "ChargePoint",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 4
+    }
+  ],
+  "generated": "2026-11-06T16:06:40.653Z",
+  "note": "ChargePoint UK CPOs (party GB/CPI) via Eco-Movement PCPR OCPI 2.2.1. Operator shown as ChargePoint. Published max_electric_power is kept. Staff and taxi-only names are access private. Same postcode within 100 m matches only ChargePoint or a blank operator. The raw snapshot and any token are not stored in the repo."
+}
