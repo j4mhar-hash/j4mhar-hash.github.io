@@ -1,0 +1,139 @@
+{
+  "before": 42114,
+  "after": 42130,
+  "netNew": 16,
+  "mode": "file",
+  "fuuseRaw": 26,
+  "taxiOnly": 7,
+  "added": 16,
+  "matched": 10,
+  "enriched": 0,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "fuuse:739e6214-fe24-4c1e-bb23-42a319f4d62b",
+      "n": "Prince Of Wales Rd GB237",
+      "op": "RAW Charging",
+      "ad": "Prince Of Wales Road, Sheffield, S9 4QB",
+      "k": 50,
+      "c": [
+        "T2",
+        "CCS",
+        "CHA"
+      ],
+      "cap": 3,
+      "a": 53.3859,
+      "o": -1.4098
+    },
+    {
+      "id": "fuuse:2189b549-cb88-4389-93bf-5402c6cd3afb",
+      "n": "Prince Of Wales Rd GB238 - Taxi Only",
+      "op": "RAW Charging",
+      "ad": "Prince Of Wales Road, Sheffield, S9 4QB",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 3,
+      "a": 53.3859,
+      "o": -1.4098
+    },
+    {
+      "id": "fuuse:2b0766ed-c8c6-4b1d-a7a5-b67d79a810d2",
+      "n": "Hale Street GB302",
+      "op": "RAW Charging",
+      "ad": "Hale Street, Sheffield, S8 0YE",
+      "k": 50,
+      "c": [
+        "T2",
+        "CCS",
+        "CHA"
+      ],
+      "cap": 3,
+      "a": 53.3603,
+      "o": -1.4787
+    },
+    {
+      "id": "fuuse:b7817db2-33d6-4c79-a048-9db2416a689a",
+      "n": "Edward Street GB310",
+      "op": "RAW Charging",
+      "ad": "Edward Street, Sheffield, S36 1FU",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS",
+        "T2"
+      ],
+      "cap": 3,
+      "a": 53.4816,
+      "o": -1.5951
+    },
+    {
+      "id": "fuuse:1af94b6f-8acb-49d5-9539-591d9e0a4d99",
+      "n": "Blyde Road CarPark GB239",
+      "op": "RAW Charging",
+      "ad": "Blyde Road, Sheffield, S5 7AF",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 3,
+      "a": 53.4071,
+      "o": -1.4534
+    },
+    {
+      "id": "fuuse:a5f3b7de-a4a5-4ce1-b22a-a696f4469faa",
+      "n": "Howard Lane GB243 - Taxi Only",
+      "op": "RAW Charging",
+      "ad": "Howard Lane, Sheffield, S1 2FT",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS",
+        "T2"
+      ],
+      "cap": 3,
+      "a": 53.3787,
+      "o": -1.4673
+    },
+    {
+      "id": "fuuse:aeee4fdd-4cdb-43d6-96b5-dc6699289362",
+      "n": "Pond Hill GB261 - Taxi Only",
+      "op": "RAW Charging",
+      "ad": "Pond Hill, Sheffield, S1 2BG",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS",
+        "T2"
+      ],
+      "cap": 3,
+      "a": 53.3811,
+      "o": -1.463
+    },
+    {
+      "id": "fuuse:ee6493a8-1788-48d2-8a45-bedc393d8de6",
+      "n": "Zion Lane - GB354",
+      "op": "RAW Charging",
+      "ad": "Zion Lane, Sheffield, S9 3YH",
+      "k": 50,
+      "c": [
+        "CHA",
+        "T2",
+        "CCS"
+      ],
+      "cap": 3,
+      "a": 53.3943,
+      "o": -1.4322
+    }
+  ],
+  "sampleEnriched": [],
+  "generated": "2026-11-06T09:51:49.525Z",
+  "note": "Fuuse open data for RAW Charging Network Ltd, fetched 2026-11-06. Operator shown as RAW Charging. Locations whose name contains Taxi Only are access private and stay hidden until the private/staff filter is on. Published max_electric_power is kept. Same postcode within 100 m matches only RAW Charging or a blank operator. The raw snapshot is not stored in the repo."
+}
