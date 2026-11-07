@@ -1,0 +1,230 @@
+{
+  "before": 42748,
+  "after": 43223,
+  "netNew": 475,
+  "mode": "file",
+  "instavoltRaw": 944,
+  "privateMarked": 0,
+  "added": 475,
+  "matched": 421,
+  "enriched": 198,
+  "skipped": 48,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "instavolt:GBCPIL2893035",
+      "n": "MURTON",
+      "op": "InstaVolt",
+      "ad": "Co-op Murton Church Street, Murton, SR7 9BP",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "a": 54.815,
+      "o": -1.38499
+    },
+    {
+      "id": "instavolt:GBCPIL2894705",
+      "n": "MANVERS WAY",
+      "op": "InstaVolt",
+      "ad": "KFC, Manvers Way, Wath upon Dearne, S63 7DQ",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 53.5107,
+      "o": -1.35775
+    },
+    {
+      "id": "instavolt:GBCPIL2895495",
+      "n": "NETHERFIELD",
+      "op": "InstaVolt",
+      "ad": "Costa Netherfield Victoria Park Way, Netherfield, NG4 2PA",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.96124,
+      "o": -1.06829
+    },
+    {
+      "id": "instavolt:GBCPIL2898705",
+      "n": "TENBY",
+      "op": "InstaVolt",
+      "ad": "Tenby Filling Station, Carmarthen, SA33 5DP",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 51.84816,
+      "o": -4.3714
+    },
+    {
+      "id": "instavolt:GBCPIL2899975",
+      "n": "NOTTINGHAM",
+      "op": "InstaVolt",
+      "ad": "KFC Nottingham Daleside Road, Nottingham, NG2 3GG",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.94695,
+      "o": -1.12952
+    },
+    {
+      "id": "instavolt:GBCPIL2900555",
+      "n": "CANNOCK",
+      "op": "InstaVolt",
+      "ad": "KFC Cannock North Old Hednesford Road, Hednesford, WS12 1LT",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.70016,
+      "o": -2.00651
+    },
+    {
+      "id": "instavolt:GBCPIL2910455",
+      "n": "STOURBRIDGE",
+      "op": "InstaVolt",
+      "ad": "Mill Race Lane Retail Park 12 Market St, Stourbridge, DY8 1JN",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.4599,
+      "o": -2.14737
+    },
+    {
+      "id": "instavolt:GBCPIL6451295",
+      "n": "DERBY",
+      "op": "InstaVolt",
+      "ad": "163 Osmaston Park Rd, Derby, DE23 8AG",
+      "k": 62.5,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "a": 52.89708,
+      "o": -1.47395
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-113576",
+      "n": "Grange Farm Service Station",
+      "op": "InstaVolt Ltd",
+      "k": 62.5,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "distM": 13
+    },
+    {
+      "id": "ocm-250910",
+      "n": "Station Hill",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CHA",
+        "T2",
+        "CCS"
+      ],
+      "cap": 2,
+      "distM": 3
+    },
+    {
+      "id": "ocm-238216",
+      "n": "McDonald's Hanworth",
+      "op": "InstaVolt Ltd",
+      "k": 62.5,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "distM": 3
+    },
+    {
+      "id": "ocm-100997",
+      "n": "Bannatyne Health Club Stepps",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "distM": 12
+    },
+    {
+      "id": "ocm-168701",
+      "n": "Booths Kendal Instavolt",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 4,
+      "distM": 9
+    },
+    {
+      "id": "ocm-202806",
+      "n": "Booths",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 2,
+      "distM": 58
+    },
+    {
+      "id": "ocm-108284",
+      "n": "Cresswells Garage",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "CCS1"
+      ],
+      "cap": 2,
+      "distM": 7
+    },
+    {
+      "id": "ocm-129380",
+      "n": "Booths - Garstang",
+      "op": "InstaVolt Ltd",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 4,
+      "distM": 4
+    }
+  ],
+  "generated": "2026-11-07T12:08:14.796Z",
+  "note": "InstaVolt UK OCPI locations, fetched 2026-11-07, all GBR. Operator shown as InstaVolt; OCM \"InstaVolt Ltd\" matches as the same operator. Power is V×A/1000 from connector voltage and amperage. Locations with no live EVSE are skipped. Same postcode within 100 m matches only InstaVolt or a blank operator. The raw snapshot is not stored in the repo."
+}
