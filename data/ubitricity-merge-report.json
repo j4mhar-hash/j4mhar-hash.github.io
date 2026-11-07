@@ -1,214 +1,215 @@
 {
-  "before": 32265,
-  "after": 39080,
-  "netNew": 6815,
-  "fileBytesBefore": 5499537,
-  "fileBytesAfter": 6722705,
-  "gzipBytesBefore": 1164386,
-  "gzipBytesAfter": 1357883,
+  "before": 43404,
+  "after": 43422,
+  "netNew": 18,
+  "fileBytesBefore": 7534938,
+  "fileBytesAfter": 7537926,
+  "gzipBytesBefore": 1563821,
+  "gzipBytesAfter": 1564317,
   "mode": "file",
-  "ubitricityRaw": 12531,
-  "added": 6815,
-  "matched": 5716,
-  "enriched": 3673,
+  "ubitricityRaw": 12550,
+  "added": 18,
+  "matched": 12532,
+  "enriched": 8,
   "skipped": 0,
   "nonUk": 0,
+  "represented": 69,
   "sampleAdds": [
     {
-      "id": "ubitricity:4270",
-      "n": "67 Urquhart Road",
+      "id": "ubitricity:16619",
+      "n": "12 Willenhall Road",
       "op": "Ubitricity",
-      "ad": "67 Urquhart Road, Thatcham, RG19 4RW",
+      "ad": "12 Willenhall Road, London, SE18 6TY",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.39499,
-      "o": -1.24894
+      "a": 51.48348,
+      "o": 0.06765
     },
     {
-      "id": "ubitricity:13188",
-      "n": "19 Byng Street, Byng Street",
+      "id": "ubitricity:16654",
+      "n": "3 Rideout Street",
       "op": "Ubitricity",
-      "ad": "19 Byng Street, Byng Street, London, E14 8LP",
+      "ad": "3 Rideout Street, London, SE18 5HF",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.50051,
-      "o": -0.02395
+      "a": 51.48807,
+      "o": 0.05312
     },
     {
-      "id": "ubitricity:12254",
-      "n": "79 Penrhyn Avenue",
+      "id": "ubitricity:16648",
+      "n": "45-55 Belson Road",
       "op": "Ubitricity",
-      "ad": "79 Penrhyn Avenue, London, E17 5DF",
+      "ad": "45-55 Belson Road, London, SE18 5PU",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.59829,
-      "o": -0.01801
+      "a": 51.49091,
+      "o": 0.05678
     },
     {
-      "id": "ubitricity:17868",
-      "n": "18 Iffley Road, Opposite 18",
+      "id": "ubitricity:16652",
+      "n": "70 Frederick Place",
       "op": "Ubitricity",
-      "ad": "18 Iffley Road, Opposite 18, London, W6 0PA",
-      "k": 4.8,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "a": 51.49553,
-      "o": -0.2293
-    },
-    {
-      "id": "ubitricity:10055",
-      "n": "53 Bruce Avenue",
-      "op": "Ubitricity",
-      "ad": "53 Bruce Avenue, Middlesbrough, TS5 4HH",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 2,
-      "a": 54.55518,
-      "o": -1.26497
-    },
-    {
-      "id": "ubitricity:17000",
-      "n": "4 Bovingdon Road, Outside 4",
-      "op": "Ubitricity",
-      "ad": "4 Bovingdon Road, Outside 4, London, SW6 2AP",
-      "k": 4.8,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "a": 51.47434,
-      "o": -0.19143
-    },
-    {
-      "id": "ubitricity:13581",
-      "n": "Moody Street, Junc. Bancroft Road, Moody Stre",
-      "op": "Ubitricity",
-      "ad": "Moody Street, Junc. Bancroft Road, Moody Stre, London, E1 4BY",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 2,
-      "a": 51.52553,
-      "o": -0.04433
-    },
-    {
-      "id": "ubitricity:19726",
-      "n": "48 Woodhurst Road",
-      "op": "Ubitricity",
-      "ad": "48 Woodhurst Road, London, SE2 0HE",
+      "ad": "70 Frederick Place, London, SE18 7BH",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.4866,
-      "o": 0.1051
+      "a": 51.48542,
+      "o": 0.07094
+    },
+    {
+      "id": "ubitricity:16618",
+      "n": "17 Belson Road",
+      "op": "Ubitricity",
+      "ad": "17 Belson Road, London, SE18 5PU",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.49088,
+      "o": 0.05606
+    },
+    {
+      "id": "ubitricity:16649",
+      "n": "32-58 Samuel Street",
+      "op": "Ubitricity",
+      "ad": "32-58 Samuel Street, London, SE18 5LJ",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.49123,
+      "o": 0.05169
+    },
+    {
+      "id": "ubitricity:16625",
+      "n": "3 Willenhall Road",
+      "op": "Ubitricity",
+      "ad": "3 Willenhall Road, London, SE18 6TY",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.48324,
+      "o": 0.06813
+    },
+    {
+      "id": "ubitricity:16632",
+      "n": "Frederick Place, Side of 190 burrage road",
+      "op": "Ubitricity",
+      "ad": "Frederick Place, Side of 190 burrage road, London, SE18 7LA",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "a": 51.48522,
+      "o": 0.07287
     }
   ],
   "sampleEnriched": [
     {
-      "id": "ocm-136274",
-      "n": "Kensington Gardens Square 22",
-      "op": "Shell Recharge Solutions (UK)",
+      "id": "ubitricity:15764",
+      "n": "47 Mornington Road",
+      "op": "Ubitricity",
       "k": 5,
       "c": [
         "T2"
       ],
-      "cap": 1,
-      "distM": 10
-    },
-    {
-      "id": "ocm-286407",
-      "n": "157 Tanfield Avenue",
-      "op": "Shell Recharge Solutions (UK)",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
+      "cap": 3,
       "distM": 0
     },
     {
-      "id": "ocm-214307",
-      "n": "Shell Recharge/Ubitricity",
-      "op": "Shell Recharge Solutions (UK)",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "distM": 29
-    },
-    {
-      "id": "ocm-200496",
-      "n": "95 Hartswood Road",
-      "op": "Shell Recharge Solutions (UK)",
+      "id": "ubitricity:17694",
+      "n": "13 Grove Mews, Opposite No 13",
+      "op": "Ubitricity",
       "k": 4.8,
       "c": [
         "T2"
       ],
-      "cap": 1,
-      "distM": 51
-    },
-    {
-      "id": "ocm-254385",
-      "n": "Randolph Ave 256",
-      "op": "Shell Recharge Solutions (UK)",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
       "cap": 2,
-      "distM": 8
-    },
-    {
-      "id": "ocm-253668",
-      "n": "42 Arbour Square",
-      "op": "Shell Recharge Solutions (UK)",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 2,
-      "distM": 4
-    },
-    {
-      "id": "ocm-254339",
-      "n": "104 Nutbourne Street",
-      "op": "Shell Recharge Solutions (UK)",
-      "k": 5,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
       "distM": 0
     },
     {
-      "id": "ocm-214269",
-      "n": "opp.",
-      "op": "Shell Recharge Solutions (UK)",
+      "id": "ubitricity:16926",
+      "n": "5 Beavor Lane, Outside 5 Merchant Terrace",
+      "op": "Ubitricity",
+      "k": 4.8,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ubitricity:10940",
+      "n": "72 Fashoda Road.",
+      "op": "Ubitricity",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 2,
-      "distM": 36
+      "distM": 0
+    },
+    {
+      "id": "ubitricity:19131",
+      "n": "95-97 Ravenscourt Road, Outside 95 97",
+      "op": "Ubitricity",
+      "k": 4.8,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ubitricity:19040",
+      "n": "62 Hartswood Road, East F W O S 62",
+      "op": "Ubitricity",
+      "k": 4.8,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ubitricity:15514",
+      "n": "Aston Street, Junc. Pechora Way",
+      "op": "Ubitricity",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
+    },
+    {
+      "id": "ubitricity:2573",
+      "n": "150 Ossulston Street",
+      "op": "Ubitricity",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "distM": 0
     }
   ],
-  "generated": "2026-10-26T17:33:46.333Z",
-  "note": "ubitricity UK lamp posts via Eco-Movement PCPR OCPI 2.2.1. Same-operator match within 75 m only (including Shell Recharge/Ubitricity and slow Shell Recharge Solutions rows). Postcode matching is not used, and new posts are not collapsed into each other. The token and the raw snapshot are not stored in the repo. Site names drop the repeated \"ubitricity Distributed Energy Systems UK Ltd.\" prefix."
+  "generated": "2026-11-07T16:09:44.157Z",
+  "note": "ubitricity UK lamp posts via Eco-Movement PCPR OCPI 2.2.1, refreshed from the 2026-11-07T16:05:12Z pull. An existing ubitricity: id is updated from that location only. A different ubitricity: id within 75 m is already represented and is not overwritten. Slow Shell Recharge Solutions lamp posts can still match; shell: hubs are left alone. Postcode matching is not used. Tariffs are not stored on sites. The token and the raw snapshot are not stored in the repo."
 }

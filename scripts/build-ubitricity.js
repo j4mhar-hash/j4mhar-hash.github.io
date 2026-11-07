@@ -135,6 +135,9 @@ function prepareBaseItem(s) {
 // OCM name/operator variants for the same lamp-post network.
 // Rapid Shell forecourts stay out of this set.
 function baseIsUbitricity(b) {
+  // Shell Recharge hub rows use shell: ids. Slow OCM "Shell Recharge Solutions"
+  // lamp posts stay in this set; the hubs do not.
+  if (String(b.id).startsWith('shell:')) return false;
   if (mentionsUbitricity(b.op) || mentionsUbitricity(b.n)) return true;
   const op = normOp(b.op);
   const slow = b.k == null || b.k <= 22;
@@ -142,7 +145,7 @@ function baseIsUbitricity(b) {
   return false;
 }
 
-function enrich(base, feedItem) {
+function enrich(base, feedItem, exact) {
   let changed = false;
   if (feedItem.k != null) {
     if (base.k == null || feedItem.k > base.k) {
@@ -171,9 +174,15 @@ function enrich(base, feedItem) {
     base.ad = feedItem.ad;
     changed = true;
   }
-  if ((base.cap == null || base.cap === '') && feedItem.cap != null) {
-    base.cap = feedItem.cap;
-    changed = true;
+  if (feedItem.cap != null && feedItem.cap !== '') {
+    const feedCap = +feedItem.cap;
+    const baseCap = base.cap == null || base.cap === '' ? null : +base.cap;
+    // Only an exact ubitricity: id may raise a bay count. A nearby post often
+    // has more EVSEs and must not inflate this lamp post.
+    if (baseCap == null || (exact && isFinite(feedCap) && feedCap > baseCap)) {
+      base.cap = feedItem.cap;
+      changed = true;
+    }
   }
   return changed;
 }
@@ -186,23 +195,35 @@ function stripInternal(s) {
   if (s.op) o.op = s.op;
   if (s.cap != null && s.cap !== '') o.cap = s.cap;
   if (s.ad) o.ad = s.ad;
+  if (s.note) o.note = s.note;
+  if (s.access) o.access = s.access;
   for (const k of ['fee', 'acc', 'h', 'cl', 'dev']) {
     if (s[k] != null) o[k] = s[k];
   }
   return o;
 }
 
-function findMatch(item, baseItems, grid) {
+function findMatch(item, baseItems, grid, idIndex) {
+  if (idIndex.has(item.id)) return { i: idIndex.get(item.id), dist: 0, exact: true };
   const idxs = neighbours(grid, item.a, item.o);
   let best = null;
+  let represented = false;
   for (const i of idxs) {
     const b = baseItems[i];
+    if (b.access === 'private') continue;
     if (!baseIsUbitricity(b)) continue;
     const dist = metresBetween(item.a, item.o, b.a, b.o);
     if (dist > MATCH_OP_M) continue;
+    // A different ubitricity: id is already its own lamp post. Do not copy this location onto it.
+    if (String(b.id).startsWith('ubitricity:') && b.id !== item.id) {
+      represented = true;
+      continue;
+    }
     if (!best || dist < best.dist) best = { i, dist };
   }
-  return best;
+  if (best) return best;
+  if (represented) return { represented: true };
+  return null;
 }
 
 function connKw(c) {
@@ -435,6 +456,7 @@ async function main() {
   const byId = new Map();
   for (const s of baseDoc.items) byId.set(s.id, prepareBaseItem(s));
   for (const s of manualItems) {
+    if (!s || s.access === 'private') continue;
     if (!byId.has(s.id)) byId.set(s.id, prepareBaseItem(s));
   }
 
@@ -442,6 +464,7 @@ async function main() {
   // kept even when they sit within 75 m of each other.
   const matchItems = [...byId.values()];
   const grid = buildIndex(matchItems);
+  const idIndex = new Map(matchItems.map((s, i) => [s.id, i]));
 
   const loaded = await loadUbitricityLocations();
   const rawLocations = loaded.locations || [];
@@ -451,7 +474,8 @@ async function main() {
     matched = 0,
     enriched = 0,
     skipped = 0,
-    nonUk = 0;
+    nonUk = 0,
+    represented = 0;
   const sampleAdds = [];
   const sampleEnriched = [];
 
@@ -465,10 +489,15 @@ async function main() {
       skipped++;
       continue;
     }
-    const match = findMatch(item, matchItems, grid);
+    const match = findMatch(item, matchItems, grid, idIndex);
+    if (match && match.represented) {
+      matched++;
+      represented++;
+      continue;
+    }
     if (match) {
       matched++;
-      if (enrich(matchItems[match.i], item)) {
+      if (enrich(matchItems[match.i], item, !!match.exact)) {
         enriched++;
         if (sampleEnriched.length < 8) {
           const b = matchItems[match.i];
@@ -496,6 +525,26 @@ async function main() {
 
   const outItems = [...byId.values()].map(stripInternal);
   outItems.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const prefixCount = (rows, prefix) => rows.filter(s => String(s.id).startsWith(prefix)).length;
+  for (const prefix of ['shell:', 'zest:', 'instavolt:', 'chargepoint:', 'rawcharging:', 'fuuse:']) {
+    const before = prefixCount(baseDoc.items, prefix);
+    const after = prefixCount(outItems, prefix);
+    if (after !== before) throw new Error(prefix + ' count changed ' + before + ' -> ' + after);
+  }
+  const privateBefore = baseDoc.items.filter(s => s.access === 'private').length;
+  const privateAfter = outItems.filter(s => s.access === 'private').length;
+  if (privateAfter !== privateBefore) throw new Error('private access changed ' + privateBefore + ' -> ' + privateAfter);
+  const notesBefore = baseDoc.items.filter(s => s.note === 'Customers only').length;
+  const notesAfter = outItems.filter(s => s.note === 'Customers only').length;
+  if (notesAfter !== notesBefore) throw new Error('Customers only notes changed ' + notesBefore + ' -> ' + notesAfter);
+  const shellBefore = new Map(baseDoc.items.filter(s => String(s.id).startsWith('shell:')).map(s => [s.id, s]));
+  for (const s of outItems) {
+    const prev = shellBefore.get(s.id);
+    if (!prev) continue;
+    if (prev.k !== s.k || prev.op !== s.op || prev.a !== s.a || prev.o !== s.o) {
+      throw new Error('Shell hub row changed: ' + s.id);
+    }
+  }
 
   const feeds = Object.assign({}, baseDoc.feeds || {}, {
     ubitricity: {
@@ -507,6 +556,7 @@ async function main() {
       enriched,
       skipped,
       nonUk,
+      represented,
     },
   });
 
@@ -544,10 +594,11 @@ async function main() {
     enriched,
     skipped,
     nonUk,
+    represented,
     sampleAdds,
     sampleEnriched,
     generated: meta.generated,
-    note: 'ubitricity UK lamp posts via Eco-Movement PCPR OCPI 2.2.1. Same-operator match within 75 m only (including Shell Recharge/Ubitricity and slow Shell Recharge Solutions rows). Postcode matching is not used, and new posts are not collapsed into each other. The token and the raw snapshot are not stored in the repo.',
+    note: 'ubitricity UK lamp posts via Eco-Movement PCPR OCPI 2.2.1, refreshed from the 2026-11-07T16:05:12Z pull. An existing ubitricity: id is updated from that location only. A different ubitricity: id within 75 m is already represented and is not overwritten. Slow Shell Recharge Solutions lamp posts can still match; shell: hubs are left alone. Postcode matching is not used. Tariffs are not stored on sites. The token and the raw snapshot are not stored in the repo.',
   };
   fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
 
@@ -555,7 +606,7 @@ async function main() {
   console.log('Mode:', loaded.mode);
   console.log('Before:', beforeCount, 'bytes', beforeBytes, 'gzip', beforeGzip);
   console.log('After:', outItems.length, 'bytes', afterBytes, 'gzip', afterGzip);
-  console.log('Added:', added, 'matched:', matched, 'enriched:', enriched, 'skipped:', skipped, 'nonUk:', nonUk);
+  console.log('Added:', added, 'matched:', matched, 'enriched:', enriched, 'represented:', represented, 'skipped:', skipped, 'nonUk:', nonUk);
   console.log('Net new:', outItems.length - beforeCount);
   console.log('Wrote', OUT_PATH);
   console.log('Wrote', REPORT_PATH);
