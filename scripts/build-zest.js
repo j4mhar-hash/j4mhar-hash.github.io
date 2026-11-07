@@ -190,19 +190,55 @@ function stripInternal(s) {
   if (s.cap != null && s.cap !== '') o.cap = s.cap;
   if (s.ad) o.ad = s.ad;
   if (s.note) o.note = s.note;
+  if (s.access) o.access = s.access;
   for (const k of ['fee', 'acc', 'h', 'cl', 'dev']) {
     if (s[k] != null) o[k] = s[k];
   }
   return o;
 }
 
+function syncOwn(base, feedItem) {
+  let changed = false;
+  if (feedItem.k != null && base.k !== feedItem.k) {
+    base.k = feedItem.k;
+    changed = true;
+  }
+  if (feedItem.c && feedItem.c.length) {
+    const before = [...(base.c || [])].sort().join(',');
+    const next = [...feedItem.c].sort().join(',');
+    if (before !== next) {
+      base.c = feedItem.c.slice();
+      changed = true;
+    }
+  }
+  if (feedItem.cap != null && base.cap !== feedItem.cap) {
+    base.cap = feedItem.cap;
+    changed = true;
+  }
+  if (feedItem.n && base.n !== feedItem.n) {
+    base.n = feedItem.n;
+    changed = true;
+  }
+  if (feedItem.ad && !base.ad) {
+    base.ad = feedItem.ad;
+    changed = true;
+  }
+  return changed;
+}
+
 function findMatch(item, baseItems, grid) {
   const idxs = neighbours(grid, item.a, item.o);
   let best = null;
+  let represented = false;
   for (const i of idxs) {
     const b = baseItems[i];
     const dist = metresBetween(item.a, item.o, b.a, b.o);
     if (dist > MATCH_PC_M) continue;
+    // A different zest: id is already its own site. Do not copy this location's power onto it.
+    if (String(b.id).startsWith('zest:') && b.id !== item.id) {
+      if (item._op && b._op === item._op && dist <= MATCH_OP_M) represented = true;
+      continue;
+    }
     const sameOp = item._op && b._op && item._op === b._op;
     const samePc = item._pc && b._pc && item._pc === b._pc;
     let ok = false;
@@ -211,7 +247,9 @@ function findMatch(item, baseItems, grid) {
     if (!ok) continue;
     if (!best || dist < best.dist) best = { i, dist, sameOp, samePc };
   }
-  return best;
+  if (best) return best;
+  if (represented) return { represented: true };
+  return null;
 }
 
 function connKw(c) {
@@ -370,7 +408,7 @@ function main() {
   console.log('Reading Zest snapshot', file);
   const locations = extractLocations(JSON.parse(fs.readFileSync(file, 'utf8')));
 
-  let added = 0, matched = 0, enriched = 0, skipped = 0, nonUk = 0, privateExcluded = 0;
+  let added = 0, matched = 0, enriched = 0, skipped = 0, nonUk = 0, privateExcluded = 0, represented = 0;
   const sampleAdds = [];
   const sampleEnriched = [];
   let matchedOther = 0;
@@ -391,7 +429,24 @@ function main() {
       continue;
     }
     item._pc = item._pc || extractPostcode(item.ad);
+    const exactI = baseItems.findIndex(s => s.id === item.id);
+    if (exactI >= 0) {
+      matched++;
+      if (syncOwn(baseItems[exactI], item)) {
+        enriched++;
+        if (sampleEnriched.length < 8) {
+          const b = baseItems[exactI];
+          sampleEnriched.push({ id: b.id, n: b.n, op: b.op, k: b.k, c: b.c, cap: b.cap, distM: 0 });
+        }
+      }
+      continue;
+    }
     const match = findMatch(item, baseItems, grid);
+    if (match && match.represented) {
+      matched++;
+      represented++;
+      continue;
+    }
     if (match) {
       matched++;
       const base = baseItems[match.i];
@@ -435,6 +490,7 @@ function main() {
       skipped,
       nonUk,
       privateExcluded,
+      represented,
     },
   });
   const meta = {
@@ -464,10 +520,11 @@ function main() {
     skipped,
     nonUk,
     privateExcluded,
+    represented,
     sampleAdds,
     sampleEnriched,
     generated: meta.generated,
-    note: 'Zest UK (party GB/ZST) PCPR open data emailed 2026-11-03, snapshot dated 2026-11-02. Operator shown as Zest; OCM "Zest Charging" and "Zest EV" match as the same operator. Published max_electric_power is kept; missing power uses V×A/1000 or 230 V per phase × 3. Same postcode within 100 m matches only Zest or a blank operator. The raw snapshot is not stored in the repo.',
+    note: 'Official Zest open data dated 2026-11-02 (support reply 2026-11-03, no extra licence terms). Same 2,025 GB/ZST locations as the earlier Eco-Movement ingest. An existing zest: id is updated from that location only. A different zest: id within 75 m is already represented and is not overwritten. OCM Zest Charging still matches within 75 m. Tariffs are not stored on sites. The raw snapshot is not stored in the repo.',
   };
   fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
   console.log('Before:', beforeCount);

@@ -1,211 +1,212 @@
 {
-  "before": 40820,
-  "after": 42114,
-  "netNew": 1294,
+  "before": 43380,
+  "after": 43404,
+  "netNew": 24,
   "mode": "file",
   "zestRaw": 2025,
-  "added": 1294,
-  "matched": 731,
-  "enriched": 94,
+  "added": 24,
+  "matched": 2001,
+  "enriched": 72,
   "skipped": 0,
   "nonUk": 0,
   "privateExcluded": 0,
+  "represented": 675,
   "sampleAdds": [
     {
-      "id": "zest:790",
-      "n": "7 Benn Street",
+      "id": "zest:631",
+      "n": "24 St Kilda's Road",
       "op": "Zest",
-      "ad": "7 Benn Street, London, E9 5SU",
+      "ad": "24 St Kilda's Road, London, N16 5BZ",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.54568,
-      "o": -0.03512
+      "a": 51.56781,
+      "o": -0.08208
     },
     {
-      "id": "zest:290",
-      "n": "138 Culford Road",
+      "id": "zest:654",
+      "n": "57 Gunton Road",
       "op": "Zest",
-      "ad": "138 Culford Road, London, N1 4HU",
+      "ad": "57 Gunton Rd, London, E5 9JT",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.54381,
-      "o": -0.08121
+      "a": 51.56171,
+      "o": -0.05415
     },
     {
-      "id": "zest:771",
-      "n": "20 Albion Square",
+      "id": "zest:592",
+      "n": "Britannia Walk",
       "op": "Zest",
-      "ad": "20 Albion Square, London, E8 4ES",
-      "k": 5,
+      "ad": "Britannia Walk, London, N1 7NG",
+      "k": 22,
       "c": [
         "T2"
       ],
-      "cap": 1,
-      "a": 51.53981,
-      "o": -0.07238
+      "cap": 2,
+      "a": 51.52908,
+      "o": -0.08957
     },
     {
-      "id": "zest:496",
-      "n": "122 Oldfield Road",
+      "id": "zest:1900",
+      "n": "1C Farleigh Road",
       "op": "Zest",
-      "ad": "122 Oldfield Road, London, N16 0RJ",
-      "k": 5,
+      "ad": "1C Farleigh Road, London, N16 7TD",
+      "k": 22,
       "c": [
         "T2"
       ],
-      "cap": 1,
-      "a": 51.56125,
-      "o": -0.0794
+      "cap": 2,
+      "a": 51.55495,
+      "o": -0.07014
     },
     {
-      "id": "zest:701",
-      "n": "68 Fairholt Road",
+      "id": "zest:2253",
+      "n": "201A Brooke Road",
       "op": "Zest",
-      "ad": "68 Fairholt Road, London, N16 5HN",
+      "ad": "201A Brooke Road, London, E5 8AB",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.56938,
-      "o": -0.08475
+      "a": 51.55977,
+      "o": -0.05927
     },
     {
-      "id": "zest:169",
-      "n": "83 Downs Road",
+      "id": "zest:2060",
+      "n": "20A Clovelly Road",
       "op": "Zest",
-      "ad": "83 Downs Rd, London, E5 8DS",
+      "ad": "20A Clovelly Road, Southsea, PO4 8DL",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.55565,
-      "o": -0.05804
+      "a": 50.79149,
+      "o": -1.06169
     },
     {
-      "id": "zest:2296",
-      "n": "Falkirk Street",
+      "id": "zest:980",
+      "n": "9 Adolphus Road",
       "op": "Zest",
-      "ad": "Falkirk Street, London, E1 7PN",
+      "ad": "9 Adolphus Road, London, N4 2AT",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.53078,
-      "o": -0.07912
+      "a": 51.56611,
+      "o": -0.10009
     },
     {
-      "id": "zest:2221",
-      "n": "King's Crescent junc' Queens Drive",
+      "id": "zest:946",
+      "n": "Clarence Mews",
       "op": "Zest",
-      "ad": "King's Crescent, London, N4 2SY",
+      "ad": "Clarence Mews, London, E5 8HL",
       "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "a": 51.56177,
-      "o": -0.09519
+      "a": 51.55051,
+      "o": -0.05493
     }
   ],
   "sampleEnriched": [
     {
-      "id": "zest:431",
-      "n": "151B Elderfield Road",
+      "id": "zest:290",
+      "n": "138 Culford Road",
       "op": "Zest",
-      "k": 22,
+      "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "distM": 29
-    },
-    {
-      "id": "ocm-286809",
-      "n": "zest-year-help-word",
-      "op": "Zest Charging",
-      "k": 22,
-      "c": [
-        "T2"
-      ],
-      "cap": 2,
       "distM": 0
     },
     {
-      "id": "ocm-213856",
-      "n": "zest-cyan-pour-toby",
-      "op": "Zest Charging",
-      "k": 22,
+      "id": "zest:386",
+      "n": "11 Charnock Road",
+      "op": "Zest",
+      "k": 5,
       "c": [
         "T2"
       ],
-      "cap": 2,
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "zest:2246",
+      "n": "6A De Beauvoir Road",
+      "op": "Zest",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "zest:401",
+      "n": "53 Blurton Road",
+      "op": "Zest",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "zest:815",
+      "n": "42 Sylvester Road",
+      "op": "Zest",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "zest:338",
+      "n": "51 Forest Road",
+      "op": "Zest",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "distM": 0
+    },
+    {
+      "id": "zest:930",
+      "n": "Cazenove Mansions 1 Cazenove Road",
+      "op": "Zest",
+      "k": 5,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
       "distM": 0
     },
     {
       "id": "zest:398",
       "n": "13 Norcott Road",
       "op": "Zest",
-      "k": 22,
+      "k": 5,
       "c": [
         "T2"
       ],
       "cap": 1,
-      "distM": 49
-    },
-    {
-      "id": "ocm-213801",
-      "n": "zest-date-owed-dust",
-      "op": "Zest Charging",
-      "k": 22,
-      "c": [
-        "T2"
-      ],
-      "cap": 4,
-      "distM": 23
-    },
-    {
-      "id": "zest:1110",
-      "n": "59 Springdale Road",
-      "op": "Zest",
-      "k": 22,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "distM": 32
-    },
-    {
-      "id": "zest:290",
-      "n": "138 Culford Road",
-      "op": "Zest",
-      "k": 22,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "distM": 72
-    },
-    {
-      "id": "zest:297",
-      "n": "34 Provost Street",
-      "op": "Zest",
-      "k": 22,
-      "c": [
-        "T2"
-      ],
-      "cap": 1,
-      "distM": 98
+      "distM": 0
     }
   ],
-  "generated": "2026-11-03T12:25:22.423Z",
-  "note": "Zest UK (party GB/ZST) PCPR open data emailed 2026-11-03, snapshot dated 2026-11-02. Operator shown as Zest; OCM \"Zest Charging\" and \"Zest EV\" match as the same operator. Published max_electric_power is kept; missing power uses V×A/1000 or 230 V per phase × 3. Same postcode within 100 m matches only Zest or a blank operator. The raw snapshot is not stored in the repo."
+  "generated": "2026-11-07T13:27:24.630Z",
+  "note": "Official Zest open data dated 2026-11-02 (support reply 2026-11-03, no extra licence terms). Same 2,025 GB/ZST locations as the earlier Eco-Movement ingest. An existing zest: id is updated from that location only. A different zest: id within 75 m is already represented and is not overwritten. OCM Zest Charging still matches within 75 m. Tariffs are not stored on sites. The raw snapshot is not stored in the repo."
 }
