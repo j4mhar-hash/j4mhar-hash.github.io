@@ -1,0 +1,228 @@
+{
+  "before": 43223,
+  "after": 43380,
+  "netNew": 157,
+  "mode": "file",
+  "shellRaw": 266,
+  "privateMarked": 0,
+  "added": 157,
+  "matched": 109,
+  "enriched": 90,
+  "skipped": 0,
+  "nonUk": 0,
+  "privateExcluded": 0,
+  "sampleAdds": [
+    {
+      "id": "shell:346",
+      "n": "Shell Recharge Shell Stirchley Services",
+      "op": "Shell Recharge",
+      "ad": "Holmer Farm Road West Midlands, Telford, TF3 1QU",
+      "k": 175,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 52.65459,
+      "o": -2.42873
+    },
+    {
+      "id": "shell:5368",
+      "n": "Shell Recharge Shell Rising Bridge",
+      "op": "Shell Recharge",
+      "ad": "Blackburn Road, Accrington, BB5 2SB",
+      "k": 300,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 15,
+      "a": 53.72538,
+      "o": -2.33057
+    },
+    {
+      "id": "shell:5070",
+      "n": "Shell Recharge EV Waitrose - Longfield",
+      "op": "Shell Recharge",
+      "ad": "63 Station Road, Longfield, DA3 7QA",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 51.3967,
+      "o": 0.3
+    },
+    {
+      "id": "shell:5042",
+      "n": "Shell Recharge EV Waitrose Lincoln",
+      "op": "Shell Recharge",
+      "ad": "Searby Road, Lincoln, LN2 4DS",
+      "k": 120,
+      "c": [
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 53.25142,
+      "o": -0.51962
+    },
+    {
+      "id": "shell:5111",
+      "n": "Shell Recharge EV Waitrose Paddock Wood",
+      "op": "Shell Recharge",
+      "ad": "Church Road, Tonbridge, TN12 6EX",
+      "k": 150,
+      "c": [
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 51.18165,
+      "o": 0.39124
+    },
+    {
+      "id": "shell:769",
+      "n": "Shell Recharge EV Waitrose - New Malden",
+      "op": "Shell Recharge",
+      "ad": "24-28 High Street, New Malden, KT3 4HE",
+      "k": 120,
+      "c": [
+        "CCS"
+      ],
+      "cap": 4,
+      "a": 51.40272,
+      "o": -0.25611
+    },
+    {
+      "id": "shell:5057",
+      "n": "Shell Recharge EV Waitrose Malmesbury",
+      "op": "Shell Recharge",
+      "ad": "A429, Avon Mills, Malmesbury, SN16 9FN",
+      "k": 50,
+      "c": [
+        "CCS"
+      ],
+      "cap": 3,
+      "a": 51.58058,
+      "o": -2.0933
+    },
+    {
+      "id": "shell:5093",
+      "n": "Shell Recharge Shell Elstree Way",
+      "op": "Shell Recharge",
+      "ad": "Elstree Way, Borehamwood, WD6 1LB",
+      "k": 150,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 10,
+      "a": 51.65966,
+      "o": -0.26451
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-154637",
+      "n": "Shell Recharge Markham Moor",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 10,
+      "distM": 27
+    },
+    {
+      "id": "ocm-154635",
+      "n": "Shell Barthomley",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 50,
+      "c": [
+        "T2",
+        "CCS",
+        "CHA"
+      ],
+      "cap": 1,
+      "distM": 27
+    },
+    {
+      "id": "ocm-212432",
+      "n": "Waitrose Havant",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 120,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 4,
+      "distM": 37
+    },
+    {
+      "id": "ocm-214575",
+      "n": "Fourwentways",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 180,
+      "c": [
+        "CHA",
+        "T2",
+        "CCS"
+      ],
+      "cap": 7,
+      "distM": 40
+    },
+    {
+      "id": "ocm-187574",
+      "n": "SHELL RECHARGE CHANDLERS FORD",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 180,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 1,
+      "distM": 30
+    },
+    {
+      "id": "ocm-259443",
+      "n": "Shell Layby",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 400,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 4,
+      "distM": 52
+    },
+    {
+      "id": "ocm-267060",
+      "n": "Waitrose Balham",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 50,
+      "c": [
+        "CHA",
+        "CCS"
+      ],
+      "cap": 2,
+      "distM": 10
+    },
+    {
+      "id": "ocm-187639",
+      "n": "SHELL RECHARGE PLOUGH LANE",
+      "op": "Shell Recharge Solutions (UK)",
+      "k": 50,
+      "c": [
+        "T2",
+        "CHA",
+        "CCS"
+      ],
+      "cap": 4,
+      "distM": 17
+    }
+  ],
+  "generated": "2026-11-07T12:58:20.182Z",
+  "note": "Shell Recharge UK hubs (party GB/TNM) via Eco-Movement PCPR OCPI 2.2.1, fetched 2026-11-07. This is not the ubitricity lamp-post feed. Slow Shell Recharge Solutions rows and ubitricity: ids are not matched. Published max_electric_power is kept. Same postcode within 100 m matches only a Shell Recharge hub or a blank operator. The raw snapshot is not stored in the repo."
+}
