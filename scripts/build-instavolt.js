@@ -207,7 +207,24 @@ function stripInternal(s) {
   return o;
 }
 
-function findMatch(item, baseItems, grid) {
+function placeTokens(s) {
+  const stop = new Set(['mcdonalds', 'mcdonald', 'services', 'instavolt', 'retail', 'street', 'station', 'service']);
+  return new Set(
+    String(s || '')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(w => w.length >= 6 && !stop.has(w))
+  );
+}
+
+function sharesPlace(a, b) {
+  const A = placeTokens(a);
+  for (const w of placeTokens(b)) if (A.has(w)) return true;
+  return false;
+}
+
+function findMatch(item, baseItems, grid, idIndex) {
+  if (idIndex && idIndex.has(item.id)) return { i: idIndex.get(item.id), dist: 0, exact: true };
   const idxs = neighbours(grid, item.a, item.o);
   let best = null;
   for (const i of idxs) {
@@ -225,7 +242,21 @@ function findMatch(item, baseItems, grid) {
     if (!ok) continue;
     if (!best || dist < best.dist) best = { i, dist, sameOp, samePc };
   }
-  return best;
+  if (best) return best;
+  // A re-issued location id can move the pin a few metres past 75 m, or rename
+  // the same retail park. Do not add a second marker for that site.
+  let drift = null;
+  for (const i of idxs) {
+    const b = baseItems[i];
+    if ((item.access === 'private') !== (b.access === 'private')) continue;
+    if (!item._op || b._op !== item._op) continue;
+    const dist = metresBetween(item.a, item.o, b.a, b.o);
+    if (dist > 150) continue;
+    if (dist <= 80 || sharesPlace(item.n, b.n)) {
+      if (!drift || dist < drift.dist) drift = { i, dist, sameOp: true, samePc: false, reidentified: true };
+    }
+  }
+  return drift;
 }
 
 function connKw(c) {
@@ -378,6 +409,7 @@ function main() {
   }
   const baseItems = [...byId.values()];
   const grid = buildIndex(baseItems);
+  const idIndex = new Map(baseItems.map((s, i) => [s.id, i]));
   const file = resolveFile();
   if (!file) {
     console.error('No snapshot. Set INSTAVOLT_OCPI_FILE or pass a JSON path.');
@@ -386,7 +418,7 @@ function main() {
   console.log('Reading InstaVolt snapshot', file);
   const locations = extractLocations(JSON.parse(fs.readFileSync(file, 'utf8')));
 
-  let added = 0, matched = 0, enriched = 0, skipped = 0, nonUk = 0, privateExcluded = 0;
+  let added = 0, matched = 0, enriched = 0, skipped = 0, nonUk = 0, privateExcluded = 0, reidentified = 0;
   const sampleAdds = [];
   const sampleEnriched = [];
   let matchedOther = 0;
@@ -407,9 +439,10 @@ function main() {
       continue;
     }
     item._pc = item._pc || extractPostcode(item.ad);
-    const match = findMatch(item, baseItems, grid);
+    const match = findMatch(item, baseItems, grid, idIndex);
     if (match) {
       matched++;
+      if (match.reidentified) reidentified++;
       const base = baseItems[match.i];
       if (!isInstaVoltOrUnknown(base._op)) matchedOther++;
       if (enrich(base, item)) {
@@ -442,6 +475,15 @@ function main() {
   if (addedItems.some(s => !isRestrictedName(s.n) && s.access === 'private')) throw new Error('A public InstaVolt site was marked private');
   const keptPrivate = outItems.filter(s => String(s.id).startsWith('fuuse:') && /taxi only/i.test(s.n || ''));
   if (keptPrivate.some(s => s.access !== 'private')) throw new Error('An existing taxi site lost its private flag');
+  const prefixCount = (rows, prefix) => rows.filter(s => String(s.id).startsWith(prefix)).length;
+  for (const prefix of ['shell:', 'zest:', 'ubitricity:', 'chargepoint:', 'rawcharging:', 'fuuse:']) {
+    const beforeN = prefixCount(baseDoc.items, prefix);
+    const afterN = prefixCount(outItems, prefix);
+    if (afterN !== beforeN) throw new Error(prefix + ' count changed ' + beforeN + ' -> ' + afterN);
+  }
+  const privateBefore = baseDoc.items.filter(s => s.access === 'private').length;
+  const privateAfter = outItems.filter(s => s.access === 'private').length;
+  if (privateAfter !== privateBefore) throw new Error('private access changed ' + privateBefore + ' -> ' + privateAfter);
 
   const feeds = Object.assign({}, baseDoc.feeds || {}, {
     instavolt: {
@@ -454,6 +496,7 @@ function main() {
       skipped,
       nonUk,
       privateExcluded,
+      reidentified,
     },
   });
   const meta = {
@@ -484,15 +527,18 @@ function main() {
     skipped,
     nonUk,
     privateExcluded,
+    reidentified,
+    vanishedKept: baseDoc.items.filter(s => String(s.id).startsWith('instavolt:') && !locations.some(l => 'instavolt:' + l.id === s.id)).length,
+    removed: 0,
     sampleAdds,
     sampleEnriched,
     generated: meta.generated,
-    note: 'InstaVolt UK OCPI locations, fetched 2026-11-07, all GBR. Operator shown as InstaVolt; OCM "InstaVolt Ltd" matches as the same operator. Power is V×A/1000 from connector voltage and amperage. Locations with no live EVSE are skipped. Same postcode within 100 m matches only InstaVolt or a blank operator. The raw snapshot is not stored in the repo.',
+    note: 'InstaVolt UK OCPI 2.1.1 locations, fetched 2026-11-16, party GB/JHR, all GBR. Replaces the 7 November pull. An existing instavolt: id is updated from that location. A new id on the same site (within 75 m, the same postcode within 100 m, or a re-issued pin within 150 m that shares the place name) updates the existing record and is not added again. Locations with no live EVSE are skipped. Ids that disappeared from the feed are kept. The raw snapshot is not stored in the repo.',
   };
   fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
   console.log('Before:', beforeCount);
   console.log('After:', outItems.length);
-  console.log('Added:', added, 'matched:', matched, 'enriched:', enriched, 'skipped:', skipped, 'private:', privateExcluded);
+  console.log('Added:', added, 'matched:', matched, 'enriched:', enriched, 'reidentified:', reidentified, 'skipped:', skipped, 'private:', privateExcluded);
   console.log('Wrote', OUT_PATH);
   console.log('Wrote', REPORT_PATH);
 }
