@@ -1,0 +1,239 @@
+{
+  "before": 43480,
+  "after": 43984,
+  "netNew": 504,
+  "mode": "file",
+  "evoltRaw": 720,
+  "added": 504,
+  "matched": 198,
+  "enriched": 196,
+  "represented": 2,
+  "skipped": 17,
+  "nonUk": 1,
+  "privateMarked": 20,
+  "evoltPrefix": 504,
+  "sampleAdds": [
+    {
+      "id": "evolt:95471",
+      "n": "Rutland Car Park 1 - County Hall, Glenfield, Leicester",
+      "op": "Evolt",
+      "ad": "Rutland Car Park, Leicester, LE3 8RA",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.65664,
+      "o": -1.18699
+    },
+    {
+      "id": "evolt:95487",
+      "n": "Loughborough Technology Centre",
+      "op": "Evolt",
+      "ad": "Epinal Way, Leicester, LE11 3GE",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.76896,
+      "o": -1.223
+    },
+    {
+      "id": "evolt:95491",
+      "n": "Championship Way Underground Car Park",
+      "op": "Evolt",
+      "ad": "Championship Way, Leicester, LE3 8RN",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.65599,
+      "o": -1.18913
+    },
+    {
+      "id": "evolt:95495",
+      "n": "Coalville Business Park",
+      "op": "Evolt",
+      "ad": "Coalville Business Park, Leicester, LE67 3FT",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.72968,
+      "o": -1.37091
+    },
+    {
+      "id": "evolt:95496",
+      "n": "Banana Car park, Leicester County Hall",
+      "op": "Evolt",
+      "ad": "Banana Car park, County Hall, Leicester, LE3 8RN",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.65743,
+      "o": -1.18819
+    },
+    {
+      "id": "evolt:95540",
+      "n": "Visitors car Park - Leicestershire County Hall",
+      "op": "Evolt",
+      "ad": "Visitors Car park, Leicester, LE3 8RN",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 52.65571,
+      "o": -1.18917
+    },
+    {
+      "id": "evolt:95552",
+      "n": "National Grid - Solihull",
+      "op": "Evolt",
+      "ad": "Homer Road, Birmingham, B91 3QJ",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 6,
+      "fee": "£0.20/kWh incl. VAT",
+      "a": 52.41205,
+      "o": -1.78347
+    },
+    {
+      "id": "evolt:95560",
+      "n": "Broadgate Car Park",
+      "op": "Evolt",
+      "ad": "Exchange House, London, EC2A 2BQ",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 4,
+      "fee": "£0.49/kWh incl. VAT",
+      "a": 51.5203,
+      "o": -0.08055
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-132462",
+      "n": "Penylan Library Car Park - Cardiff",
+      "op": "Evolt",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132460",
+      "n": "Stallcourt Avenue - Cardiff",
+      "op": "Evolt",
+      "k": 3,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132457",
+      "n": "Victoria Park Road - Cardiff",
+      "op": "Evolt",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132459",
+      "n": "Turning Head Car Park - Cardiff",
+      "op": "Evolt",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-125886",
+      "n": "Martello Car Park",
+      "op": "Evolt",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 3,
+      "fee": "£0.30/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132458",
+      "n": "Butleigh Avenue - Cardiff",
+      "op": "Evolt",
+      "k": 22,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132454",
+      "n": "Rennie Street",
+      "op": "Evolt",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 1,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    },
+    {
+      "id": "ocm-132456",
+      "n": "Anglesey Street - Cardiff",
+      "op": "Evolt",
+      "k": 7,
+      "c": [
+        "T2"
+      ],
+      "cap": 2,
+      "fee": "£0.60/kWh incl. VAT",
+      "distM": 0,
+      "kind": "evolt"
+    }
+  ],
+  "generated": "2026-11-17T15:06:46.546Z",
+  "note": "Evolt Network open data from SWARCO Smart Charging (party GB/SSM), public locations feed. One Australian location is excluded. Glasgow G2 longitude +4.26 is stored as -4.26. Evolt or Swarco within 75 m, or the same postcode within 100 m when the operator is Evolt or unknown, is updated in place. A different operator is updated only when the place name matches within 35 m. Taxi, staff and restricted sites are access private. Tariffs are the VAT-inclusive energy price on fee. The raw snapshot is not stored."
+}
