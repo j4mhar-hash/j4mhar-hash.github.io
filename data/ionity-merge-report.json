@@ -1,0 +1,226 @@
+{
+  "before": 43426,
+  "after": 43480,
+  "netNew": 54,
+  "mode": "file",
+  "ionityRaw": 84,
+  "added": 54,
+  "matched": 30,
+  "enriched": 30,
+  "skipped": 0,
+  "ionityPrefix": 54,
+  "sampleAdds": [
+    {
+      "id": "ionity:2069",
+      "n": "IONITY Chester VH",
+      "op": "IONITY",
+      "ad": "St. David's Park VH Hotel, Deeside, CH5 3YB",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh (10 bays), £0.519/kWh (2 bays), incl. VAT",
+      "a": 53.19059,
+      "o": -3.05296
+    },
+    {
+      "id": "ionity:1360",
+      "n": "IONITY Bournemouth VH",
+      "op": "IONITY",
+      "ad": "Deansleigh Rd, Bournemouth, BH7 7DZ",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh (10 bays), £0.519/kWh (2 bays), incl. VAT",
+      "a": 50.74656,
+      "o": -1.81904
+    },
+    {
+      "id": "ionity:2563",
+      "n": "IONITY Greenwich",
+      "op": "IONITY",
+      "ad": "Bugsby's Way, London, SE7 7ST",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh incl. VAT",
+      "a": 51.48926,
+      "o": 0.02393
+    },
+    {
+      "id": "ionity:963",
+      "n": "IONITY South Normanton",
+      "op": "IONITY",
+      "ad": "Carter Lane East Castlewood, South Normanton, DE55 2EH",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 24,
+      "fee": "£0.6944/kWh incl. VAT",
+      "a": 53.10353,
+      "o": -1.32231
+    },
+    {
+      "id": "ionity:1304",
+      "n": "IONITY Hull VH",
+      "op": "IONITY",
+      "ad": "Henry Boot Way, Priory Way, Hull, HU4 7DY",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh (10 bays), £0.519/kWh (2 bays), incl. VAT",
+      "a": 53.72327,
+      "o": -0.40913
+    },
+    {
+      "id": "ionity:1129",
+      "n": "IONITY Sunderland",
+      "op": "IONITY",
+      "ad": "Wessington Way, Sunderland, SR5 3NU",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh incl. VAT",
+      "a": 54.91885,
+      "o": -1.43277
+    },
+    {
+      "id": "ionity:896",
+      "n": "IONITY Greenock",
+      "op": "IONITY",
+      "ad": "Cartsdyke Avenue, Greenock, PA15 1DT",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "fee": "£0.6944/kWh incl. VAT",
+      "a": 55.94458,
+      "o": -4.73717
+    },
+    {
+      "id": "ionity:1296",
+      "n": "IONITY Bristol VH",
+      "op": "IONITY",
+      "ad": "Bullfinch Close, Bristol, BS34 6FG",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh (10 bays), £0.519/kWh (2 bays), incl. VAT",
+      "a": 51.52282,
+      "o": -2.56996
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-194471",
+      "n": "IONITY Stafford",
+      "op": "IONITY",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-480902",
+      "n": "Ionity York",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "fee": "£0.6944/kWh incl. VAT",
+      "distM": 7
+    },
+    {
+      "id": "ocm-157559",
+      "n": "Ionity Peterborough",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 24,
+      "fee": "£0.7417/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-127714",
+      "n": "MK Coachway Ionity",
+      "op": "IONITY",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh incl. VAT",
+      "distM": 116
+    },
+    {
+      "id": "ocm-291174",
+      "n": "Ionity Toome",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "fee": "£0.6944/kWh incl. VAT",
+      "distM": 19
+    },
+    {
+      "id": "ocm-175096",
+      "n": "IONITY Cullompton",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "fee": "£0.7417/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-157583",
+      "n": "Ionity Extra MSA Cambridge Services",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 24,
+      "fee": "£0.7417/kWh incl. VAT",
+      "distM": 4
+    },
+    {
+      "id": "ocm-255699",
+      "n": "Ionity Newcaslte",
+      "op": "IONITY",
+      "k": 350,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.6944/kWh incl. VAT",
+      "distM": 6
+    }
+  ],
+  "generated": "2026-11-17T11:50:54.069Z",
+  "note": "IONITY UK OCPI 2.2.1, party GB/IOY, fetched 2026-11-17T11:41:14Z. Matched only existing Ionity records within 75 m, plus Abergavenny (ocm-485175, feed 960, 112 m) and MK Coachway (ocm-127714, feed 269, 116 m). Other operators at the same services were not matched. Thetford postcode P24 3QL is stored as IP24 3QL. Ad hoc tariffs are on the fee field, incl. VAT. The raw snapshot and any token are not stored."
+}
