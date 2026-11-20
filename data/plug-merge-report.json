@@ -1,0 +1,15 @@
+{
+  "before": 45246,
+  "after": 45416,
+  "netNew": 170,
+  "raw": 176,
+  "added": 170,
+  "matched": 4,
+  "enriched": 4,
+  "represented": 0,
+  "skipped": 2,
+  "privateMarked": 0,
+  "plugPrefix": 170,
+  "generated": "2026-11-20T12:49:03.213Z",
+  "note": "PLUG Charging Wales OCPI 2.2.1, party GB/PLG. Prices exclude VAT and are stored including 20% VAT. Open Government Licence v3.0. No token is stored."
+}
