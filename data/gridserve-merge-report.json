@@ -1,0 +1,241 @@
+{
+  "before": 43984,
+  "after": 43998,
+  "netNew": 14,
+  "mode": "file",
+  "gridserveRaw": 237,
+  "added": 14,
+  "matched": 193,
+  "enriched": 189,
+  "represented": 4,
+  "skipped": 0,
+  "unpublished": 30,
+  "gridservePrefix": 14,
+  "sampleAdds": [
+    {
+      "id": "gridserve:18adb54e-649d-4577-8f08-2d290634f891",
+      "n": "Mollies Bristol - Patrons",
+      "op": "GRIDSERVE",
+      "ad": "A4018 motel, Bristol, BS10 7TL",
+      "k": 11,
+      "c": [
+        "T2"
+      ],
+      "cap": 7,
+      "fee": "£0.59/kWh incl. VAT",
+      "a": 51.52711,
+      "o": -2.61156
+    },
+    {
+      "id": "gridserve:2b0694e3-c878-40a8-9553-f29a5498ebad",
+      "n": "Aldershot South",
+      "op": "GRIDSERVE",
+      "ad": "Tongham Road, Junction of A331 and A31, Tongham, GU10 1PJ",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 6,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 51.22911,
+      "o": -0.74312
+    },
+    {
+      "id": "gridserve:505149be-a0b4-4a72-a76c-39e696469c3e",
+      "n": "MOTO Sawtry",
+      "op": "GRIDSERVE",
+      "ad": "Toll Bar Way, Great North Road, Huntingdon, PE28 5XW",
+      "k": 360,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.92/kWh incl. VAT",
+      "a": 52.42747,
+      "o": -0.27124
+    },
+    {
+      "id": "gridserve:585efb5a-67ad-4507-ba2d-38ad7c3aac7a",
+      "n": "Fort Kinnaird Retail Park",
+      "op": "GRIDSERVE",
+      "ad": "Fort Kinnaird Retail Park, Edinburgh, EH15 3RD",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 55.93413,
+      "o": -3.10541
+    },
+    {
+      "id": "gridserve:78393a81-bb72-45dd-b240-fe4e9d9c95fc",
+      "n": "Centaurus Retail Park",
+      "op": "GRIDSERVE",
+      "ad": "Centaurus Retail Park, Bristol, BS34 5TS",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 8,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 51.52751,
+      "o": -2.59839
+    },
+    {
+      "id": "gridserve:9cea849c-23f4-4b98-bb60-259fdda9a520",
+      "n": "St James Retail Park",
+      "op": "GRIDSERVE",
+      "ad": "St James Retail Park, Sheffield, S8 8BS",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 53.32778,
+      "o": -1.46759
+    },
+    {
+      "id": "gridserve:a85f9ad2-188f-40e2-93dc-76407c93df82",
+      "n": "Cardiff East",
+      "op": "GRIDSERVE",
+      "ad": "Drive Through, Church Road, Pontprennau, Cardiff, CF23 8XQ",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 51.52822,
+      "o": -3.13241
+    },
+    {
+      "id": "gridserve:bd6d56f9-e767-4090-8a34-ed94fe57cd1b",
+      "n": "Mayflower Retail Park",
+      "op": "GRIDSERVE",
+      "ad": "Mayflower Retail Park, Basildon, SS14 3HZ",
+      "k": 400,
+      "c": [
+        "CCS"
+      ],
+      "cap": 12,
+      "fee": "£0.85/kWh incl. VAT",
+      "a": 51.59103,
+      "o": 0.48101
+    }
+  ],
+  "sampleEnriched": [
+    {
+      "id": "ocm-258935",
+      "n": "Welcome Break Charnock Richard North Services",
+      "op": "GRIDSERVE",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 5,
+      "fee": "£0.92/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-258950",
+      "n": "MOTO Hilton Park Southbound Services",
+      "op": "GRIDSERVE",
+      "k": 360,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 18,
+      "fee": "£0.92/kWh (16 bays), £0.59/kWh (2 bays), incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-258992",
+      "n": "Welcome Break Michaelwood Southbound Services",
+      "op": "GRIDSERVE",
+      "k": 50,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 6,
+      "fee": "£0.92/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-296107",
+      "n": "Priory Fields",
+      "op": "GRIDSERVE",
+      "k": 180,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 8,
+      "fee": "£0.85/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-258990",
+      "n": "Roadchef Taunton Deane Northbound Services",
+      "op": "GRIDSERVE",
+      "k": 360,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 9,
+      "fee": "£0.92/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-259001",
+      "n": "Mollie's Buckland",
+      "op": "GRIDSERVE",
+      "k": 180,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 8,
+      "fee": "£0.92/kWh incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-259009",
+      "n": "Moto Swansea Services",
+      "op": "GRIDSERVE",
+      "k": 350,
+      "c": [
+        "CCS",
+        "CHA",
+        "T2"
+      ],
+      "cap": 22,
+      "fee": "£0.92/kWh (23 bays), £0.59/kWh (2 bays), incl. VAT",
+      "distM": 0
+    },
+    {
+      "id": "ocm-308038",
+      "n": "Derriford Retail Park",
+      "op": "GRIDSERVE",
+      "k": 180,
+      "c": [
+        "CCS",
+        "CHA"
+      ],
+      "cap": 12,
+      "fee": "£0.85/kWh incl. VAT",
+      "distM": 0
+    }
+  ],
+  "generated": "2026-11-20T09:25:49.643Z",
+  "note": "GRIDSERVE Open Data API, party GB/GRD. Unpublished locations are excluded. Existing GRIDSERVE and Electric Highway pins within 200 m are updated in place. Other operators at the same services are not matched. EH, HU and eHGV name prefixes are removed. Energy prices are stored including 20% VAT. No API key is stored."
+}
