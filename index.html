@@ -31,8 +31,10 @@ input[type=text]:focus,input[type=search]:focus{outline:2px solid var(--accent);
 button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
 button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 button:disabled{opacity:.5;cursor:default}
-.results{position:absolute;top:calc(100% - 10px);left:14px;right:14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:240px;overflow:auto}
-.results div{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line)}.results div:hover{background:#f1f5f9}
+.results{position:absolute;top:calc(100% - 10px);left:14px;right:14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:5;max-height:240px;overflow:auto;-webkit-overflow-scrolling:touch}
+.results div{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line);touch-action:manipulation}.results div:hover{background:#f1f5f9}
+.results .svc-meta{display:block;color:var(--muted);font-size:12px;font-weight:400}
+#searchForm.pinned .results{z-index:6;max-height:min(240px,42vh)}
 .tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}
 .tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:8px 10px;color:var(--muted);font-weight:600}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
@@ -94,7 +96,7 @@ html.search-focused,html.search-focused body{overflow:hidden}
 <div id="map"></div>
 <div id="panel">
   <header><h1>⚡ UK <span>EV</span> Charger Map</h1><button id="locate" title="Use my location">◎</button><button id="toggle" title="Show/hide panel">▾</button></header>
-  <form class="search" id="searchForm" role="search" action="#" autocomplete="off"><input id="q" type="search" enterkeyhint="go" placeholder="Search a town, place or postcode" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="qgo" class="primary" type="submit">Go</button><div id="qres" class="results" hidden></div></form>
+  <form class="search" id="searchForm" role="search" action="#" autocomplete="off"><input id="q" type="search" enterkeyhint="go" placeholder="Search a town, service area or postcode" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="qgo" class="primary" type="submit">Go</button><div id="qres" class="results" hidden></div></form>
   <div class="row" id="baseRow"><button type="button" id="baseStreets" class="on" aria-pressed="true">Map</button><button type="button" id="baseSat" aria-pressed="false">Satellite</button></div>
   <div class="tabs"><button data-tab="explore" class="on">Explore</button><button data-tab="route">Route</button><button data-tab="about">Data</button></div>
   <div class="body">
@@ -121,7 +123,7 @@ html.search-focused,html.search-focused body{overflow:hidden}
     <div data-pane="about" hidden>
       <p class="small" id="dataInfo"></p>
       <div class="legend" id="legend"></div>
-      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned), <a href="https://open-chargepoints.com/" target="_blank">Pod Point data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">ubitricity data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">Aldi, Travis Perkins, Volvo &amp; Drax network data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">bp pulse data via Eco-Movement</a>, ParkRecharge, GeniePoint and Urban Fox open data (PCPR), Blink Charging and Source EV open data (PCPR, via Eco-Movement), Connekt Charging open data (PCPR), Zest open data (PCPR), Fuuse / RAW Charging open data (PCPR), ChargePoint open data (PCPR, via Eco-Movement), RAW Charging open data (PCPR, via Eco-Movement), InstaVolt open data (OCPI), Shell Recharge open data (PCPR, via Eco-Movement), IONITY (via Eco-Movement, PCPR open data), Evolt Network open data (SWARCO Smart Charging), GRIDSERVE Open Data API, and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (streets without labels, place and road names above the route). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place and road names are a separate OpenFreeMap label layer above the route.</p>
+      <p class="small">Charger locations: © <a href="https://openchargemap.org" target="_blank">Open Charge Map</a> contributors and data providers (CC BY 4.0 and other licences), via the public <a href="https://github.com/openchargemap/ocm-export" target="_blank">ocm-export</a> snapshot, merged with open OCPI / PCPR location feeds from <a href="https://char.gy" target="_blank">char.gy</a>, <a href="https://api.clenergy.online/development/pcpr/locations" target="_blank">Clenergy (CEV)</a>, <a href="https://opendata.motorfuelgroup.net/locations" target="_blank">Motor Fuel Group (MFG)</a> and <a href="https://public-api.monta.com/api/v1/open-data/locations" target="_blank">Monta</a>, plus <a href="https://www.fastnedcharging.com/en-gb/uk-open-data" target="_blank">Fastned</a> UK Open Data API / OCPI 2.2.1 (adapted; source: Fastned), <a href="https://open-chargepoints.com/" target="_blank">Pod Point data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">ubitricity data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">Aldi, Travis Perkins, Volvo &amp; Drax network data via Eco-Movement</a>, <a href="https://open-chargepoints.com/" target="_blank">bp pulse data via Eco-Movement</a>, ParkRecharge, GeniePoint and Urban Fox open data (PCPR), Blink Charging and Source EV open data (PCPR, via Eco-Movement), Connekt Charging open data (PCPR), Zest open data (PCPR), Fuuse / RAW Charging open data (PCPR), ChargePoint open data (PCPR, via Eco-Movement), RAW Charging open data (PCPR, via Eco-Movement), InstaVolt open data (OCPI), Shell Recharge open data (PCPR, via Eco-Movement), IONITY (via Eco-Movement, PCPR open data), Evolt Network open data (SWARCO Smart Charging), GRIDSERVE Open Data API, and <a href="https://www.ospreycharging.co.uk/" target="_blank">Osprey Charging</a> open data / UK PCPR OCPI 2.2.1 (adapted; source: Osprey Charging) (UK Public Charge Point Regulations 2023), plus a few manual additions. Live Overpass updates still pull from © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Service area locations in search are © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (ODbL). Live status: the same open OCPI feeds (when running <code>node server.js</code>). Search: postcodes.io &amp; Nominatim. Routing: OSRM demo server. Map tiles: <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors (streets without labels, place and road names above the route). Satellite: Esri World Imagery (Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community); roads © Esri, HERE, Garmin, © OpenStreetMap contributors; place and road names are a separate OpenFreeMap label layer above the route.</p>
       <p class="small">Power and connectors come from Open Charge Map, the merged PCPR/OCPI feeds, Fastned, Pod Point, ubitricity, Aldi, Travis Perkins, Volvo, Drax, bp pulse, ParkRecharge, GeniePoint, Urban Fox, Blink Charging, Source EV, Connekt Charging, Zest, Fuuse / RAW Charging, ChargePoint, RAW Charging, InstaVolt, Shell Recharge, IONITY, Evolt, GRIDSERVE, and Osprey where available; live area refresh uses OSM tags (<code>socket:*:output</code>, <code>charging_station:output</code>). Sites without power show as "Unknown" unless a DC connector is present, in which case they can be treated as rapid (marked "estimated"). Always check on site.</p>
     </div>
   </div>
@@ -136,6 +138,7 @@ html.search-focused,html.search-focused body{overflow:hidden}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="data/uk-chargers.js" onerror="window.__chargersFailed=1"></script><!-- UK snapshot; app shows an error if this fails -->
 <script src="data/manual-chargers.js"></script><!-- hand-added sites; a missing file must not break the map -->
+<script src="data/service-areas.js"></script><!-- motorway and A-road service areas; a missing file must not break search -->
 <script>
 'use strict';
 // ---------- config ----------
@@ -624,7 +627,93 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.qu
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); state.tab=b.dataset.tab; $('#panel').classList.remove('collapsed'); syncRouteChrome(); });
 $('#toggle').onclick=()=>{ $('#panel').classList.toggle('collapsed'); syncRouteChrome(); updateLists(); };
 
-// ---------- geocoding (postcodes.io for UK postcodes, Nominatim otherwise; no autocomplete per Nominatim policy) ----------
+// ---------- search: local service areas, then postcodes.io / Nominatim (no Nominatim autocomplete) ----------
+function foldSearch(s){
+  return String(s||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function serviceTitle(s){
+  return s.n+(s.dir?' ('+s.dir+')':'');
+}
+function serviceAreas(){
+  return (window.SERVICE_AREAS && SERVICE_AREAS.items) || [];
+}
+function matchServices(q){
+  const query=foldSearch(q).replace(/\bservices?\b/g,'').replace(/\s+/g,' ').trim();
+  if(query.length<2) return [];
+  const tokens=query.split(' ').filter(Boolean);
+  const scored=[];
+  for(const s of serviceAreas()){
+    const name=foldSearch(s.n);
+    const dir=foldSearch(s.dir||'');
+    const op=foldSearch(s.op||'');
+    const road=foldSearch(s.road||'');
+    const hay=' '+[name,dir,op,road].filter(Boolean).join(' ')+' ';
+    if(!tokens.every(t=>hay.includes(' '+t+' '))) continue;
+    let score=40;
+    const titled=foldSearch(serviceTitle(s));
+    if(name===query || titled===query) score=100;
+    else if(name.startsWith(query) || titled.startsWith(query)) score=80;
+    else if(tokens.every(t=>name.includes(t) || dir.includes(t))) score=70;
+    score-=name.length/100;
+    scored.push({s,score});
+  }
+  scored.sort((a,b)=>b.score-a.score || a.s.n.localeCompare(b.s.n) || String(a.s.dir||'').localeCompare(String(b.s.dir||'')));
+  return scored.slice(0,8).map(x=>x.s);
+}
+function chargersNearService(s){
+  const list=(stations&&stations.length)?stations:((window.UK_CHARGERS&&UK_CHARGERS.items)||[]);
+  let n=0;
+  for(const c of list){
+    if(!(state&&state.showPrivate) && c.access==='private') continue;
+    if(kmBetween(s.a,s.o,c.a,c.o)*1000<=400) n++;
+  }
+  return n;
+}
+function serviceResultHtml(s){
+  const meta=[s.op,s.road,s.j?('J'+s.j):''].filter(Boolean).join(' · ');
+  const n=chargersNearService(s);
+  const bits=[meta, n? (n+(n===1?' charger':' chargers')+' within 400 m') : 'No saved chargers within 400 m'].filter(Boolean);
+  return `<b>${esc(serviceTitle(s))}</b><span class="svc-meta">${esc(bits.join(' · '))}</span>`;
+}
+let searchHits=[];
+function paintSearchHits(hits){
+  searchHits=hits;
+  if(!hits.length){ $('#qres').hidden=true; return; }
+  $('#qres').innerHTML=hits.map((h,i)=>`<div data-i="${i}">${h.html}</div>`).join('');
+  $('#qres').hidden=false;
+}
+function focusService(s){
+  searchLayer.clearLayers();
+  L.marker([s.a,s.o]).addTo(searchLayer).bindTooltip(serviceTitle(s),{direction:'top'});
+  showAt(s.a,s.o,16);
+}
+function showServices(list){
+  searchLayer.clearLayers();
+  list.forEach(s=>L.marker([s.a,s.o]).addTo(searchLayer).bindTooltip(serviceTitle(s),{direction:'top'}));
+  if(list.length===1){ showAt(list[0].a,list[0].o,15); return; }
+  const b=L.latLngBounds(list.map(s=>[s.a,s.o]));
+  const sw=b.getSouthWest(), ne=b.getNorthEast();
+  if(kmBetween(sw.lat,sw.lng,ne.lat,ne.lng)<6){
+    map.fitBounds(b.pad(0.5), Object.assign({maxZoom:15, animate:false}, mapPad()));
+    return;
+  }
+  showAt(list[0].a,list[0].o,15);
+}
+$('#qres').addEventListener('pointerdown', e=>{ if(e.target.closest('[data-i]')) e.preventDefault(); });
+$('#qres').onclick=e=>{
+  const d=e.target.closest('[data-i]'); if(!d) return;
+  const hit=searchHits[+d.dataset.i]; if(!hit) return;
+  $('#qres').hidden=true;
+  if(hit.svc) focusService(hit.svc);
+  else goTo(hit.place);
+};
+$('#q').addEventListener('input', ()=>{
+  const q=$('#q').value.trim();
+  if(q.length<2){ $('#qres').hidden=true; return; }
+  const svcs=matchServices(q);
+  if(!svcs.length){ if(document.activeElement===$('#q')) $('#qres').hidden=true; return; }
+  paintSearchHits(svcs.map(s=>({svc:s, html:serviceResultHtml(s)})));
+});
 const PC = /^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})?$/i;
 async function geocode(q){
   q=q.trim(); if(!q) return [];
@@ -638,11 +727,23 @@ async function geocode(q){
   return (await r.json()).map(x=>({name:x.display_name, lat:+x.lat, lon:+x.lon, bbox:x.boundingbox}));
 }
 async function doSearch(){
-  const q=$('#q').value; if(!q.trim()) return; $('#qres').hidden=true;
+  const q=$('#q').value; if(!q.trim()) return;
+  const svcs=matchServices(q);
+  if(svcs.length){
+    paintSearchHits(svcs.map(s=>({svc:s, html:serviceResultHtml(s)})));
+    showServices(svcs.slice(0,4));
+    try{
+      const places=await geocode(q);
+      if($('#q').value.trim()!==q.trim() || $('#qres').hidden) return;
+      const extra=places.filter(p=>!svcs.some(s=>Math.abs(s.a-p.lat)<0.01 && Math.abs(s.o-p.lon)<0.01)).slice(0,3);
+      if(extra.length) paintSearchHits(svcs.map(s=>({svc:s, html:serviceResultHtml(s)})).concat(extra.map(p=>({place:p, html:esc(p.name)}))));
+    }catch{}
+    return;
+  }
+  $('#qres').hidden=true;
   try{ const res=await geocode(q); if(!res.length) return toast('No UK place found for “'+q+'”');
     goTo(res[0]); if(res.length===1) return;
-    $('#qres').innerHTML='<div class="small" style="cursor:default">Other matches:</div>'+res.slice(1).map((r,i)=>`<div data-i="${i+1}">${esc(r.name)}</div>`).join(''); $('#qres').hidden=false; clearTimeout(window._qt); window._qt=setTimeout(()=>$('#qres').hidden=true,8000);
-    $('#qres').onclick=e=>{ const d=e.target.closest('[data-i]'); if(d){ $('#qres').hidden=true; goTo(res[+d.dataset.i]); } };
+    paintSearchHits(res.slice(1).map(r=>({place:r, html:esc(r.name)})));
   }catch(err){ toast(err.message); } }
 function goTo(r){ searchLayer.clearLayers(); L.marker([r.lat,r.lon]).addTo(searchLayer).bindTooltip(r.name.split(',')[0]);
   if(r.bbox){ const [s,n,w,e]=r.bbox.map(Number); const b=L.latLngBounds([s,w],[n,e]); if(kmBetween(s,w,n,e)<40) { map.fitBounds(b, Object.assign({maxZoom:14, animate:false}, mapPad())); if(map.getZoom()<12) showAt(r.lat,r.lon,12); return; } }

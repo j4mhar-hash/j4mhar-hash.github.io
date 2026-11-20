@@ -30,6 +30,7 @@ Quick links: `?q=M1 1AE`, `?from=London&to=Birmingham&corridor=3`, `&bands=rapid
 - `index.html`: the entire app (Leaflet and MarkerCluster are loaded from unpkg).
 - `server.js`: optional local server, live-status proxy and Overpass cache.
 - `data/uk-chargers.js`: saved public charging sites for the whole UK. `index.html` loads it automatically.
+- `data/service-areas.js`: motorway and major A-road service areas from OpenStreetMap (`highway=services`, ODbL). Search uses this list. It is not part of the charger count. Rebuild with `node scripts/build-service-areas.js /path/to/overpass.json`.
 - `data/manual-chargers.js`: hand-added public sites missing from OCM/OCPI (Drax Hub Visitors). The merge script folds these into the snapshot; the page also merges them at load time so an Open Charge Map-only rebuild does not drop them.
 - `data/ocpi-merge-report.json`: counts from the last PCPR/OCPI merge.
 - `data/fastned-merge-report.json`: counts from the last Fastned merge.
