@@ -158,12 +158,16 @@
   /* labelled toggles */
   .toggle{position:relative; min-width:74px; height:72px; border-radius:20px; background:#fff; box-shadow:0 5px 0 rgba(29,43,83,.22); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:4px 8px; line-height:1;}
   .toggle:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(29,43,83,.22);}
-  .toggle .ticon{position:relative; font-size:28px; line-height:1;}
+  .toggle .ticon{position:relative; font-size:28px; line-height:1; display:inline-block;}
   .toggle .tlabel{font-size:13px; font-weight:bold;}
   .toggle .tstate{font-size:11px; font-weight:bold; color:#fff; background:var(--green); border-radius:8px; padding:2px 7px; margin-top:2px;}
   .toggle.off{background:#e4e7ef; color:#6e7690;}
-  .toggle.off .ticon{filter:grayscale(1); opacity:.55;}
-  .toggle.off .ticon::after{content:""; position:absolute; left:-5px; right:-5px; top:46%; height:4px; border-radius:2px; background:#e8473a; transform:rotate(-40deg);}
+  .toggle .ico{display:block; width:30px; height:30px;}
+  .toggle .ticon.talk{color:#2f80ed;} .toggle .ticon.note{color:#7b5cff;}
+  /* identical OFF treatment for every toggle: grey icon + red slash (slash is not filtered, so it stays red) */
+  .toggle.off .ticon{color:#8189a0!important;}
+  .toggle.off .ticon .ico{opacity:.9;}
+  .toggle.off .ticon::after{content:""; position:absolute; left:-6px; right:-6px; top:calc(50% - 2.5px); height:5px; border-radius:3px; background:#e8473a; box-shadow:0 0 0 2px #e4e7ef; transform:rotate(-40deg);}
   .toggle.off .tstate{background:#9aa1b5;}
   .toggle.say .tstate{display:none;}
   /* adult gate */
@@ -266,6 +270,8 @@
   @keyframes flash{0%{background:#fff4c2; transform:scale(1.04);} 100%{background:#fff; transform:scale(1);}}
   .caption-toast{max-width:min(92vw,820px); margin:8px auto 0; background:var(--ink); color:#fff; font-size:clamp(16px,2.6vw,22px); font-weight:bold; padding:8px 16px; border-radius:16px; text-align:center; animation:pop .25s;}
   .caption-toast.tip{background:#7b5cff;}
+  .vstate{font-size:12px; font-weight:bold; color:#fff; background:var(--green); border-radius:8px; padding:2px 7px; vertical-align:middle;}
+  .vstate.off{background:#9aa1b5;}
 </style>
 </head>
 <body>
@@ -306,8 +312,8 @@
       <span class="pring" aria-hidden="true"><svg viewBox="0 0 40 40"><circle class="trk" cx="20" cy="20" r="17"/><circle class="fil" cx="20" cy="20" r="17"/></svg><span class="gear">⚙️</span></span><span class="plabel">Grown-ups</span>
     </button>
     <div class="group">
-      <button class="toggle" id="speechToggle" type="button" aria-label="Talking" title="Talking: Ollie reads the questions aloud"><span class="ticon" aria-hidden="true">💬</span><span class="tlabel">Talking</span><span class="tstate">ON</span></button>
-      <button class="toggle" id="muteBtn" type="button" aria-label="Sounds" title="Sounds: music and sound effects"><span class="ticon" aria-hidden="true">🎵</span><span class="tlabel">Sounds</span><span class="tstate">ON</span></button>
+      <button class="toggle" id="speechToggle" type="button" aria-label="Talking" title="Talking: Ollie reads the questions aloud"><span class="ticon talk" aria-hidden="true"><svg class="ico" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 6h26a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5H17l-8 7v-7H7a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5z" fill="currentColor"/><circle cx="12" cy="18" r="2.8" fill="#fff"/><circle cx="20" cy="18" r="2.8" fill="#fff"/><circle cx="28" cy="18" r="2.8" fill="#fff"/></svg></span><span class="tlabel">Talking</span><span class="tstate">ON</span></button>
+      <button class="toggle" id="muteBtn" type="button" aria-label="Sounds" title="Sounds: music and sound effects"><span class="ticon note" aria-hidden="true"><svg class="ico" viewBox="0 0 40 40" aria-hidden="true"><path d="M14 8l20-5v23.5a5.5 4.5 0 1 1-3-4V11l-14 3.5V30.5a5.5 4.5 0 1 1-3-4z" fill="currentColor"/></svg></span><span class="tlabel">Sounds</span><span class="tstate">ON</span></button>
     </div>
   </div>
   <div class="holdhint" id="holdHint" hidden>Keep holding for 2 seconds</div>
@@ -329,7 +335,7 @@
     <div class="progress" id="progress"></div>
     <div class="group">
       <button class="toggle say" id="sayBtn" type="button" aria-label="Hear the question again" title="Hear the question again"><span class="ticon" aria-hidden="true">👂</span><span class="tlabel">Hear it</span><span class="tstate"></span></button>
-      <button class="toggle" id="muteBtn2" type="button" aria-label="Sounds" title="Sounds: music and sound effects"><span class="ticon" aria-hidden="true">🎵</span><span class="tlabel">Sounds</span><span class="tstate">ON</span></button>
+      <button class="toggle" id="muteBtn2" type="button" aria-label="Sounds" title="Sounds: music and sound effects"><span class="ticon note" aria-hidden="true"><svg class="ico" viewBox="0 0 40 40" aria-hidden="true"><path d="M14 8l20-5v23.5a5.5 4.5 0 1 1-3-4V11l-14 3.5V30.5a5.5 4.5 0 1 1-3-4z" fill="currentColor"/></svg></span><span class="tlabel">Sounds</span><span class="tstate">ON</span></button>
     </div>
   </div>
   <div class="qrow">
@@ -364,7 +370,7 @@
     <h2 id="setTitle">⚙️ Grown-ups' settings</h2>
     <p class="small">Choose the level each game plays at. Children move up a level automatically when they earn 3 stars.</p>
     <div id="setRows"></div>
-    <div class="setrow" id="voiceRow"><label class="nm" for="voiceSel">🗣️ Voice<span class="desc">Automatic picks a female British voice when this device has one. No voice? Turn off silent mode and turn up the volume.</span></label>
+    <div class="setrow" id="voiceRow"><label class="nm" for="voiceSel">Voice <span class="vstate" id="voiceTalkState"></span><span class="desc">Automatic picks a female British voice when this device has one. No voice? Turn off silent mode and turn up the volume.</span></label>
       <select id="voiceSel"></select><button class="lvl" id="voiceTest" aria-label="Test the voice" style="width:auto;padding:0 14px">▶ Test</button></div>
     <div class="btnrow">
       <button class="chunky r" id="resetBtn">Reset all progress</button>
@@ -977,6 +983,7 @@
       b.setAttribute("aria-label", what + (on ? " on. Tap to turn off." : " off. Tap to turn on.")); }
     setT($("muteBtn"), save.sound, "Sounds"); setT($("muteBtn2"), save.sound, "Sounds");
     var sp = $("speechToggle"); setT(sp, save.speech, "Talking");
+    var vt = $("voiceTalkState"); if (vt){ vt.textContent = save.speech ? "Talking ON" : "Talking OFF"; vt.classList.toggle("off", !save.speech); }
     if (!synth){ sp.style.display = "none"; $("sayBtn").style.display = "none"; }
   }
   function startRound(mode){
