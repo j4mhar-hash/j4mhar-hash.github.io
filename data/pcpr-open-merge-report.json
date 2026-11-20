@@ -1,0 +1,74 @@
+{
+  "before": 43998,
+  "after": 45246,
+  "netNew": 1248,
+  "feeds": [
+    {
+      "key": "cps",
+      "operator": "ChargePlace Scotland",
+      "raw": 1475,
+      "added": 665,
+      "matched": 676,
+      "enriched": 654,
+      "represented": 22,
+      "skipped": 134,
+      "privateMarked": 2
+    },
+    {
+      "key": "pogo",
+      "operator": "PoGo Charge",
+      "raw": 162,
+      "added": 132,
+      "matched": 26,
+      "enriched": 26,
+      "represented": 0,
+      "skipped": 4,
+      "privateMarked": 7
+    },
+    {
+      "key": "mer",
+      "operator": "Mer",
+      "raw": 183,
+      "added": 161,
+      "matched": 22,
+      "enriched": 22,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 4
+    },
+    {
+      "key": "arnoldclark",
+      "operator": "Arnold Clark",
+      "raw": 125,
+      "added": 120,
+      "matched": 5,
+      "enriched": 3,
+      "represented": 2,
+      "skipped": 0,
+      "privateMarked": 0
+    },
+    {
+      "key": "gozero",
+      "operator": "Go Zero",
+      "raw": 57,
+      "added": 57,
+      "matched": 0,
+      "enriched": 0,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 0
+    },
+    {
+      "key": "evdot",
+      "operator": "EV Dot",
+      "raw": 118,
+      "added": 113,
+      "matched": 5,
+      "enriched": 4,
+      "represented": 1,
+      "skipped": 0,
+      "privateMarked": 0
+    }
+  ],
+  "generated": "2026-11-20T12:44:53.708Z"
+}
