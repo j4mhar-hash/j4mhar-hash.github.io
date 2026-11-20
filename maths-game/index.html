@@ -258,6 +258,14 @@
     .setrow .nm{font-size:15px;} .setrow .desc{font-size:12px;}
     .toggle{min-width:58px;} .plabel{display:none;} .parent{padding:6px;}
   }
+  /* Hear it feedback */
+  .toggle.say.speaking{background:#fff4c2; animation:pulse 0.9s ease-in-out infinite;}
+  .toggle.say.speaking .ticon{animation:wobble .6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 5px 0 rgba(29,43,83,.22), 0 0 0 0 rgba(255,210,63,.9);} 50%{box-shadow:0 5px 0 rgba(29,43,83,.22), 0 0 0 12px rgba(255,210,63,0);}}
+  .bubble.flash{animation:flash .9s ease-out;}
+  @keyframes flash{0%{background:#fff4c2; transform:scale(1.04);} 100%{background:#fff; transform:scale(1);}}
+  .caption-toast{max-width:min(92vw,820px); margin:8px auto 0; background:var(--ink); color:#fff; font-size:clamp(16px,2.6vw,22px); font-weight:bold; padding:8px 16px; border-radius:16px; text-align:center; animation:pop .25s;}
+  .caption-toast.tip{background:#7b5cff;}
 </style>
 </head>
 <body>
@@ -328,6 +336,7 @@
     <svg class="mascot" id="gameOwl" viewBox="0 0 200 200" aria-hidden="true"><use href="#owl"/></svg>
     <div class="bubble" id="question">How many?</div>
   </div>
+  <div class="caption-toast" id="caption" hidden aria-live="polite"></div>
   <div class="board" id="board"></div>
   <div class="answers" id="answers"></div>
   <div class="feedback" id="feedback" aria-live="polite"></div>
@@ -355,7 +364,7 @@
     <h2 id="setTitle">⚙️ Grown-ups' settings</h2>
     <p class="small">Choose the level each game plays at. Children move up a level automatically when they earn 3 stars.</p>
     <div id="setRows"></div>
-    <div class="setrow" id="voiceRow"><label class="nm" for="voiceSel">🗣️ Voice<span class="desc">Automatic picks a female British voice when this device has one.</span></label>
+    <div class="setrow" id="voiceRow"><label class="nm" for="voiceSel">🗣️ Voice<span class="desc">Automatic picks a female British voice when this device has one. No voice? Turn off silent mode and turn up the volume.</span></label>
       <select id="voiceSel"></select><button class="lvl" id="voiceTest" aria-label="Test the voice" style="width:auto;padding:0 14px">▶ Test</button></div>
     <div class="btnrow">
       <button class="chunky r" id="resetBtn">Reset all progress</button>
@@ -476,11 +485,58 @@
     // some browsers (older Safari, Chrome on first load) fill the list late without firing the event
     [250, 1000, 3000].forEach(function(ms){ setTimeout(function(){ if (!voiceList.length) pickVoice(); }, ms); });
   }
-  function say(text, force){
-    if (!synth || (!save.speech && !force) || !text) return;
-    if (!voiceList.length) pickVoice();
-    try { synth.cancel(); var u = new SpeechSynthesisUtterance(text); u.lang = voice && voice.lang ? voice.lang : "en-GB"; if (voice) u.voice = voice; u.rate = 0.9; u.pitch = 1.1; synth.speak(u); } catch(e){}
+  /* iOS-safe speech:
+     - speak() runs synchronously in the caller (tap handlers call this directly, no timers before it);
+     - cancel() only when something is actually speaking/pending (cancel()+speak() can silently drop on iOS),
+       with a watchdog that re-speaks if the utterance never starts;
+     - resume() before speaking (iOS can get stuck "paused");
+     - voice object re-fetched from a fresh getVoices() list; if none, just lang en-GB. */
+  var curUtt = null, spokeAt = 0, sawStart = false, silentTipShown = false;
+  function freshVoice(){
+    if (!voice) return null;
+    try { var vs = synth.getVoices() || [];
+      for (var i=0;i<vs.length;i++) if (vs[i].voiceURI === voice.voiceURI && vs[i].name === voice.name) return vs[i]; } catch(e){}
+    return null;
   }
+  function makeUtt(text, hooks){
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-GB";
+    var v = freshVoice(); if (v){ try { u.voice = v; u.lang = v.lang || "en-GB"; } catch(e){} }
+    u.rate = 0.9; u.pitch = 1.1; u.volume = 1;
+    u.onstart = function(){ sawStart = true; if (hooks && hooks.start) hooks.start(); };
+    u.onend = u.onerror = function(){ if (curUtt === u) curUtt = null; if (hooks && hooks.end) hooks.end(); };
+    return u;
+  }
+  function say(text, force, hooks){
+    if (!synth || (!save.speech && !force) || !text) return false;
+    try {
+      if (!voiceList.length) pickVoice();
+      var busy = synth.speaking || synth.pending;
+      if (busy) synth.cancel();
+      try { synth.resume(); } catch(e){}
+      var u = makeUtt(text, hooks);
+      curUtt = u; window.__lastUtterance = u;          // keep a reference so Safari doesn't garbage-collect it mid-speech
+      spokeAt = Date.now(); speechUnlocked = true;
+      synth.speak(u);
+      // watchdog: if iOS dropped it (typically right after cancel), try once more
+      setTimeout(function(){
+        if (curUtt === u && !synth.speaking && !synth.pending){
+          try { synth.resume(); var u2 = makeUtt(text, hooks); curUtt = u2; window.__lastUtterance = u2; synth.speak(u2); } catch(e){}
+        }
+      }, busy ? 120 : 400);
+      return true;
+    } catch(e){ return false; }
+  }
+  // One-time silent "unlock" on the first tap that didn't itself speak, so later timed speech (e.g. reading the next question) is allowed on iOS.
+  var speechUnlocked = false;
+  function unlockSpeech(){
+    if (speechUnlocked || !synth) return;
+    speechUnlocked = true;
+    if (Date.now() - spokeAt < 1000) return;
+    try { synth.resume(); var u = new SpeechSynthesisUtterance(" "); u.volume = 0; u.lang = "en-GB"; window.__unlockUtterance = u; synth.speak(u); } catch(e){}
+  }
+  document.addEventListener("click", unlockSpeech, false);   // bubbling: runs after the button's own handler
+
 
   /* ---------- helpers ---------- */
   function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
@@ -954,7 +1010,7 @@
       ans.appendChild(b);
     });
     $("gameOwl").classList.remove("happy","think");
-    later(function(){ say(speakText(q)); }, 250);
+    if (state.qi === 0) say(speakText(q)); else later(function(){ say(speakText(q)); }, 250);
   }
   function choose(o, btn){
     if (state.busy) return;
@@ -1119,9 +1175,28 @@
   /* ---------- wiring ---------- */
   function toggleSound(){ save.sound = !save.sound; persist(); syncToggles(); ctx(); sfx.tap(); }
   $("muteBtn").addEventListener("click", toggleSound); $("muteBtn2").addEventListener("click", toggleSound);
-  $("speechToggle").addEventListener("click", function(){ save.speech = !save.speech; persist(); syncToggles(); sfx.tap(); if (save.speech) say("I'll read the questions to you!"); else if (synth) synth.cancel(); });
-  $("sayBtn").addEventListener("click", function(){ if (state && state.q) say(speakText(state.q), true); });
-  $("homeBtn").addEventListener("click", function(){ clearTimers(); if (synth) synth.cancel(); sfx.tap(); renderStart(); });
+  $("speechToggle").addEventListener("click", function(){ save.speech = !save.speech; persist(); syncToggles(); sfx.tap(); if (save.speech) say("I'll read the questions to you!"); else if (synth && (synth.speaking || synth.pending)) synth.cancel(); });
+  function hearIt(){
+    if (!state || !state.q) return;
+    var text = speakText(state.q), btn = $("sayBtn");
+    // speak FIRST, synchronously inside the tap (iOS requirement); explicit request, so it ignores the Talking toggle
+    var ok = say(text, true, {
+      start:function(){ btn.classList.add("speaking"); },
+      end:function(){ btn.classList.remove("speaking"); hideCaption(); }
+    });
+    ctx();
+    btn.classList.add("speaking");
+    showCaption(text);
+    var bub = $("question"); bub.classList.remove("flash"); void bub.offsetWidth; bub.classList.add("flash");
+    setTimeout(function(){ if (!(synth && (synth.speaking || synth.pending))){ btn.classList.remove("speaking"); } }, 1800);
+    setTimeout(function(){ if (!sawStart && !silentTipShown){ silentTipShown = true; showCaption("Can't hear Ollie? Turn off silent mode and turn up the volume. 🔔", true); } }, 2200);
+    if (!ok){ showCaption(text); }
+  }
+  var capT = null;
+  function showCaption(text, tip){ var c = $("caption"); c.textContent = (tip ? "" : "🔈 ") + text; c.classList.toggle("tip", !!tip); c.hidden = false; clearTimeout(capT); capT = setTimeout(hideCaption, tip ? 5000 : Math.min(9000, 2500 + text.length * 60)); }
+  function hideCaption(){ var c = $("caption"); if (c && !c.classList.contains("tip")) c.hidden = true; }
+  $("sayBtn").addEventListener("click", hearIt);
+  $("homeBtn").addEventListener("click", function(){ clearTimers(); if (synth && (synth.speaking || synth.pending)) synth.cancel(); hideCaption(); $("caption").hidden = true; sfx.tap(); renderStart(); });
   $("againBtn").addEventListener("click", function(){ sfx.tap(); startRound(state.mode); });
   $("menuBtn").addEventListener("click", function(){ sfx.tap(); renderStart(); });
   $("startOwl").addEventListener("click", function(){ ctx(); bump($("startOwl"), "happy"); sfx.right(); say("Hello! I'm Ollie the owl. Pick a game!"); });
