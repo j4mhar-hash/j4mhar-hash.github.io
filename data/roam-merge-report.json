@@ -1,0 +1,15 @@
+{
+  "before": 47226,
+  "after": 47440,
+  "netNew": 214,
+  "raw": 442,
+  "added": 214,
+  "matched": 223,
+  "enriched": 194,
+  "represented": 29,
+  "skipped": 5,
+  "privateMarked": 0,
+  "roamPrefix": 214,
+  "generated": "2026-11-23T13:01:57.404Z",
+  "note": "ROAM Charging open data from https://data.evc.ninja/public/v1/data (23 Nov 2026). Prices are used as published; the file does not say they exclude VAT, so 20% was not added. Three-phase power is voltage × amperage × 3 / 1000."
+}
