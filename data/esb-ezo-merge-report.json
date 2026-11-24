@@ -1,0 +1,41 @@
+{
+  "before": 47440,
+  "after": 47561,
+  "netNew": 121,
+  "feeds": [
+    {
+      "key": "ezo",
+      "operator": "EZO",
+      "raw": 214,
+      "added": 18,
+      "matched": 196,
+      "enriched": 196,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 13
+    },
+    {
+      "key": "esbecars",
+      "operator": "ESB ecars",
+      "raw": 123,
+      "added": 11,
+      "matched": 112,
+      "enriched": 112,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 0
+    },
+    {
+      "key": "esbenergy",
+      "operator": "ESB Energy",
+      "raw": 204,
+      "added": 92,
+      "matched": 112,
+      "enriched": 112,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 1
+    }
+  ],
+  "generated": "2026-11-24T14:01:05.279Z"
+}
