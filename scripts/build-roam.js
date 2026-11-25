@@ -109,6 +109,8 @@ function isPrivateText(name, address) {
   if (/\brestricted\b/i.test(blob)) return true;
   if (/\bfleet\s+(depot|services|only|yard|vehicles)\b/i.test(blob)) return true;
   if (/\b(staff|private|company)\s+fleet\b/i.test(blob)) return true;
+  const cleaned = blob.replace(/\bschool\s+(rd|road|st|street|lane|close|avenue|drive|way)\b/gi, ' ');
+  if (/\b(school|academy)\b/i.test(cleaned)) return true;
   return false;
 }
 
@@ -226,6 +228,20 @@ function findMatch(item, baseItems, grid) {
   return best;
 }
 
+const NAME_REFRESH = new Set(['3crAuMu6S5du7AK0SvxC', 'W3gkniZzfBiZCg1G7Oxo']);
+
+function applyInPlace(base, feed) {
+  let changed = false;
+  if (feed.n && base.n !== feed.n) { base.n = feed.n; changed = true; }
+  if (feed.a != null && (base.a !== feed.a || base.o !== feed.o)) { base.a = feed.a; base.o = feed.o; changed = true; }
+  if (feed.cap != null && base.cap !== feed.cap) { base.cap = feed.cap; changed = true; }
+  if (feed.k != null && base.k !== feed.k) { base.k = feed.k; changed = true; }
+  if (feed.c && feed.c.length && JSON.stringify(base.c || []) !== JSON.stringify(feed.c)) { base.c = feed.c.slice(); changed = true; }
+  if (feed.fee && base.fee !== feed.fee) { base.fee = feed.fee; changed = true; }
+  if (feed.access === 'private' && base.access !== 'private') { base.access = 'private'; changed = true; }
+  return changed;
+}
+
 function applyOfficial(base, feed, dist) {
   let changed = false;
   if (feed.k != null && base.k !== feed.k) { base.k = feed.k; changed = true; }
@@ -269,6 +285,10 @@ function assertPrivate() {
   if (isPrivateText('Cally Palace Hotel and Golf Course', 'Cally Ave, Gatehouse of Fleet, Castle Douglas')) {
     throw new Error('Gatehouse of Fleet was marked private');
   }
+  if (isPrivateText('Birstall Council Sibson Road Car Park', 'School Lane, Birstall')) {
+    throw new Error('School Lane was marked private');
+  }
+  if (!isPrivateText('Cheney School', 'Cheney Ln Headington')) throw new Error('School not private');
   if (!isPrivateText('Residents Bay', 'High Street')) throw new Error('Residents not private');
   if (!isPrivateText('Staff car park', 'Depot Lane')) throw new Error('Staff depot not private');
 }
@@ -297,23 +317,39 @@ function main() {
   for (const loc of locations) {
     const item = compact(loc, tariffs);
     if (!item) { skipped++; continue; }
-    prepared.push({ item, match: findMatch(item, baseItems, grid) });
+    prepared.push({ item, locId: String(loc.id), match: findMatch(item, baseItems, grid) });
   }
   prepared.sort((a, b) => (a.match ? a.match.dist : 1e9) - (b.match ? b.match.dist : 1e9));
-  for (const { item, match } of prepared) {
+  const welwyn = { matchedId: null, added: false };
+  for (const { item, locId, match } of prepared) {
     if (item.access === 'private') privateMarked++;
+    const existing = byId.get(item.id);
+    if (existing && String(existing.id).startsWith('roam:')) {
+      matched++;
+      if (applyInPlace(existing, item)) enriched++;
+      continue;
+    }
     if (match) {
       const base = baseItems[match.i];
       if (claimed.has(base.id)) {
         if ((samePlace(item.n, base.n) || sameCharger(item.n, base.n)) && match.dist <= 40) { matched++; represented++; continue; }
-        byId.set(item.id, item); added++; continue;
+        byId.set(item.id, item); added++;
+        if (locId === 'KwieeoonSWHtLmRWMth5') welwyn.added = true;
+        continue;
       }
       claimed.add(base.id);
       matched++;
-      if (applyOfficial(base, item, match.dist)) enriched++;
+      if (isRoam(base.op)) {
+        if (NAME_REFRESH.has(locId) && item.n && base.n !== item.n) { base.n = item.n; enriched++; }
+      } else if (applyOfficial(base, item, match.dist)) {
+        if (item.n && base.n !== item.n) base.n = item.n;
+        enriched++;
+      }
+      if (locId === 'KwieeoonSWHtLmRWMth5') welwyn.matchedId = base.id;
     } else {
       byId.set(item.id, item);
       added++;
+      if (locId === 'KwieeoonSWHtLmRWMth5') welwyn.added = true;
     }
   }
   const outItems = [...byId.values()].map(stripInternal);
@@ -344,9 +380,10 @@ function main() {
     raw: locations.length, added, matched, enriched, represented, skipped, privateMarked,
     roamPrefix: outItems.filter(s => String(s.id).startsWith('roam:')).length,
     generated: meta.generated,
-    note: 'ROAM Charging open data from https://data.evc.ninja/public/v1/data (23 Nov 2026). Prices are used as published; the file does not say they exclude VAT, so 20% was not added. Three-phase power is voltage × amperage × 3 / 1000.',
+    welwyn,
+    note: 'ROAM Charging refresh from https://data.evc.ninja/public/v1/data (25 Nov 2026). Existing roam: ids are updated in place. Prices are used as published; the tariffs have no VAT field, so 20% was not added.',
   }, null, 2));
-  console.log({ before: beforeCount, after: outItems.length, added, matched, enriched, represented, skipped, privateMarked });
+  console.log({ before: beforeCount, after: outItems.length, added, matched, enriched, represented, skipped, privateMarked, welwyn });
 }
 
 main();

@@ -1,15 +1,19 @@
 {
-  "before": 47226,
-  "after": 47440,
-  "netNew": 214,
-  "raw": 442,
-  "added": 214,
-  "matched": 223,
-  "enriched": 194,
+  "before": 47561,
+  "after": 47561,
+  "netNew": 0,
+  "raw": 443,
+  "added": 0,
+  "matched": 438,
+  "enriched": 10,
   "represented": 29,
   "skipped": 5,
-  "privateMarked": 0,
+  "privateMarked": 4,
   "roamPrefix": 214,
-  "generated": "2026-11-23T13:01:57.404Z",
-  "note": "ROAM Charging open data from https://data.evc.ninja/public/v1/data (23 Nov 2026). Prices are used as published; the file does not say they exclude VAT, so 20% was not added. Three-phase power is voltage × amperage × 3 / 1000."
+  "generated": "2026-11-25T08:21:37.816Z",
+  "welwyn": {
+    "matchedId": "blink:d8590bab-ef20-4ed2-93c8-679c3818d407",
+    "added": false
+  },
+  "note": "ROAM Charging refresh from https://data.evc.ninja/public/v1/data (25 Nov 2026). Existing roam: ids are updated in place. Prices are used as published; the tariffs have no VAT field, so 20% was not added."
 }
