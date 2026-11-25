@@ -1,0 +1,41 @@
+{
+  "before": 47561,
+  "after": 47849,
+  "netNew": 288,
+  "feeds": [
+    {
+      "key": "allego",
+      "operator": "Allego",
+      "raw": 77,
+      "added": 71,
+      "matched": 6,
+      "enriched": 6,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 0
+    },
+    {
+      "key": "evpoint",
+      "operator": "ev-point (EG Group)",
+      "raw": 38,
+      "added": 15,
+      "matched": 23,
+      "enriched": 23,
+      "represented": 0,
+      "skipped": 0,
+      "privateMarked": 0
+    },
+    {
+      "key": "lidl",
+      "operator": "Lidl",
+      "raw": 417,
+      "added": 202,
+      "matched": 215,
+      "enriched": 208,
+      "represented": 7,
+      "skipped": 0,
+      "privateMarked": 1
+    }
+  ],
+  "generated": "2026-11-25T10:22:05.290Z"
+}
